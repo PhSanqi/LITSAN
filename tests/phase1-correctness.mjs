@@ -18,9 +18,9 @@ import { EmbeddedMemoryCore } from "../dist/embedded-memory-core.js";
 import { withFileMutationLock } from "../dist/file-mutation-lock.js";
 import { MemoryCoreHttpError } from "../dist/local-memory-client.js";
 import { handleMemoryControlAction } from "../dist/memory-control-actions.js";
-import { createMemhubMcpServer } from "../dist/mcp.js";
+import { createLitsanMcpServer } from "../dist/mcp.js";
 import { JsonProjectRegistry, validateProjectId } from "../dist/project-registry.js";
-import { createMemhubRuntime } from "../dist/runtime.js";
+import { createLitsanRuntime } from "../dist/runtime.js";
 import { upsertL1Turn } from "../dist/turn-log.js";
 
 const root = await createTestRoot("memhub-phase1-");
@@ -186,7 +186,7 @@ async function startCore() {
 }
 
 function runtimeAt(stateRoot, accountId) {
-  return createMemhubRuntime({ controlRoot: stateRoot, accountId, memoryEndpoint: core.endpoint,
+  return createLitsanRuntime({ controlRoot: stateRoot, accountId, memoryEndpoint: core.endpoint,
     memoryToken: "phase1-test-token", architectureRoot: join(root, "architecture") });
 }
 
@@ -258,7 +258,7 @@ async function testFactoryRoot() {
   const stateRoot = join(root, "factory-X");
   const otherRoot = join(root, "factory-Y");
   isolateTestEnvironment(otherRoot, join(root, "architecture"));
-  const server = createMemhubMcpServer({ controlRoot: stateRoot, accountId: "factory-account", memoryEndpoint: core.endpoint,
+  const server = createLitsanMcpServer({ controlRoot: stateRoot, accountId: "factory-account", memoryEndpoint: core.endpoint,
     memoryToken: "phase1-test-token", architectureRoot: join(root, "architecture") });
   const client = new Client({ name: "phase1", version: "1.0.0" });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -272,26 +272,26 @@ async function testFactoryRoot() {
     let text = data.result_chunk;
     let offset = data.result_transport.next_offset;
     while (offset !== null) {
-      const next = JSON.parse((await client.callTool({ name: "memhub_result", arguments: { result_id: data.result_transport.result_id, offset } })).content[0].text);
+      const next = JSON.parse((await client.callTool({ name: "litsan_result", arguments: { result_id: data.result_transport.result_id, offset } })).content[0].text);
       text += next.result_chunk;
       offset = next.result_transport.next_offset;
     }
     return JSON.parse(text);
   };
   try {
-    const plan = await call("memmy_project_manage", { action: "plan", operation: "create", project: "memhub", description: "factory root" });
-    await call("memmy_project_manage", { action: "execute", authorization_id: plan.authorization_id });
+    const plan = await call("litsan_project_manage", { action: "plan", operation: "create", project: "memhub", description: "factory root" });
+    await call("litsan_project_manage", { action: "execute", authorization_id: plan.authorization_id });
     assert.equal((await new JsonProjectRegistry(join(stateRoot, "project-registry.json")).list("factory-account"))[0].projectId, "memhub");
     await setDistillationConfig(stateRoot, { auto_enabled: true, turn_threshold: 2 });
     for (const eventId of ["factory-first", "factory-second"]) {
-      await call("memmy_turn", { action: "commit", event_id: eventId, conversation_id: "factory-chat", project: "memhub", user_text: "user ".repeat(13_000), assistant_text: "assistant" });
+      await call("litsan_turn", { action: "commit", event_id: eventId, conversation_id: "factory-chat", project: "memhub", user_text: "user ".repeat(13_000), assistant_text: "assistant" });
     }
     assert.equal((await listCaptureEvents(stateRoot, "factory-account")).length, 2);
     assert.equal((await listDistillationJobs(stateRoot, "factory-account")).length, 1);
-    const resumed = await call("memmy_turn", { action: "resume", conversation_id: "factory-chat" });
+    const resumed = await call("litsan_turn", { action: "resume", conversation_id: "factory-chat" });
     assert.equal(resumed.turns.length, 2);
     await assert.rejects(readdir(join(stateRoot, "result-spool")), { code: "ENOENT" }, "readonly resume uses in-memory continuation without a spool");
-    const architecture = await call("memmy_project", { action: "architecture_plan", project: "memhub", content: "# Factory architecture" });
+    const architecture = await call("litsan_project", { action: "architecture_plan", project: "memhub", content: "# Factory architecture" });
     assert.ok(architecture.path.startsWith(join(stateRoot, "project-architecture") + sep));
     await assert.rejects(stat(otherRoot), { code: "ENOENT" }, "explicit controlRoot must own all default state paths");
   } finally {

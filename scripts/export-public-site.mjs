@@ -24,12 +24,12 @@ for (const [route, source] of pages) {
   const publicSource = source.replace(/<a class="console-entry"[^>]*>.*?<\/a>/g, "");
   // Rewrite only *navigation/asset attributes*, never code examples such as
   // http://127.0.0.1:3001/memhub/mcp inside the documentation.
-  const html = publicSource.replace(/((?:href|src)=["'])\/memhub(?=\/|["'])/g, "$1/Memhub");
+  const html = publicSource.replace(/((?:href|src)=["'])\/memhub(?=\/|["'])/g, "$1/LITSAN");
   const privateLink = /(?:href|src)=["'][^"']*\/(?:user|admin)(?:\/|["'?#])/i;
-  if (privateLink.test(html) || /(?:href|src)=["']\/Memhub\/(?:user|admin)/i.test(html)) {
+  if (privateLink.test(html) || /(?:href|src)=["']\/LITSAN\/(?:user|admin)/i.test(html)) {
     throw new Error(`Private workspace link found in public route: ${route || "/"}`);
   }
-  if (/打开我的记忆|Open my memory|EXAMPLE PROJECT<\/span><b>Memhub<\/b>/.test(html)) {
+  if (/打开我的记忆|Open my memory|EXAMPLE PROJECT<\/span><b>LITSAN<\/b>/.test(html)) {
     throw new Error(`Personalized landing content found in public route: ${route || "/"}`);
   }
   if (/class="console-entry"|>进入管理台<|>Open console</.test(html)) {

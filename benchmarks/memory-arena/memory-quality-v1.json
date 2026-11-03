@@ -1,0 +1,86 @@
+{
+  "benchmark_id": "memhub-memory-quality-locomo-v1",
+  "status": "public-candidate",
+  "dataset": {
+    "name": "LoCoMo",
+    "source_file": ".review-runtime/memory-arena/OmniMemEval/data/locomo/locomo10.json",
+    "questions": 1540,
+    "excluded_category_ids": [
+      5
+    ],
+    "category_map": {
+      "1": "multi_hop",
+      "2": "temporal",
+      "3": "open_domain",
+      "4": "single_hop",
+      "5": "adversarial_excluded"
+    },
+    "gold": "dataset evidence turn IDs"
+  },
+  "scope": {
+    "primary": "memory construction and retrieval only",
+    "excluded_from_primary": [
+      "answer generation",
+      "reader-model reasoning",
+      "LLM-as-a-Judge",
+      "BLEU/F1 over generated answers"
+    ],
+    "end_to_end_qa": "appendix only"
+  },
+  "retrieval_budget": {
+    "top_k": [
+      1,
+      5,
+      10,
+      20
+    ],
+    "dual_speaker_semantics": "K items per speaker lane; evidence coverage uses the union of lanes at the same K; no synthetic global rank",
+    "single_bank_semantics": "K items from the native single ranked lane"
+  },
+  "primary_metrics": {
+    "provenance_recall_at_k": "Gold evidence turn recall from explicit source provenance; unavailable when a backend does not expose a source-turn mapping",
+    "hit_at_k": "Fraction of eligible questions with at least one gold evidence turn recovered",
+    "mrr": "Reciprocal rank of first provenance-supported gold evidence hit; for dual-speaker retrieval report best per-lane rank and label it per-lane MRR",
+    "gold_evidence_similarity": {
+      "model": "BAAI/bge-small-en-v1.5",
+      "aggregation": "cosine similarity; best retrieved fragment per gold evidence turn, then query macro and evidence micro means",
+      "purpose": "continuous semantic coverage for abstractive memories; never reported as strict Recall@K"
+    },
+    "context_tokens": "retrieved context footprint using the fixed local tokenizer in the evaluator",
+    "search_latency_ms": [
+      "mean",
+      "p50",
+      "p95",
+      "max"
+    ],
+    "empty_rate": true,
+    "failure_rate": true,
+    "construction_time": true,
+    "internal_llm_tokens": "memory-system write/extraction calls only; answer/judge calls excluded",
+    "memory_footprint": true,
+    "gold_session_recall_at_k": "Supplementary only. When a backend exposes session provenance but not source-turn provenance, derive gold sessions from LoCoMo evidence turn IDs and measure recovered gold sessions at K. This is weaker than turn-level Recall@K and must be labeled session-level."
+  },
+  "semantic_evaluator": {
+    "llm_judge": false,
+    "fixed_embedding_model": "BAAI/bge-small-en-v1.5",
+    "max_fragment_chars": 1200,
+    "thresholded_hit_claim": false
+  },
+  "fairness": {
+    "same_dataset": true,
+    "same_queries": true,
+    "same_top_k_budget": true,
+    "preserve_native_memory_representation": true,
+    "do_not_require_raw_turn_verbatim_storage": true,
+    "report_missing_provenance_as_unavailable_not_zero": true,
+    "memhub_core_ab": "same frozen memory snapshot; only retrieval ranking mode differs"
+  },
+  "comparability": {
+    "provenance_levels": {
+      "turn": "Strongest: retrieved item maps to exact LoCoMo evidence turn ID; eligible for Evidence Turn Recall@K/MRR.",
+      "session": "Supplementary: retrieved item maps only to source session; report Gold Session Recall/Hit/MRR and never relabel as turn recall.",
+      "semantic": "Representation coverage only: fixed-embedding Gold Evidence Similarity; not a provenance hit."
+    },
+    "cross_level_rule": "Do not rank or numerically compare turn-level Recall@K and session-level Recall@K as if they were the same metric."
+  }
+}

@@ -2,14 +2,14 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { resolve } from "node:path";
-import { loopbackPortOccupied, probeService, waitForService, type MemhubServiceKind } from "./service-readiness.js";
+import { loopbackPortOccupied, probeService, waitForService, type LitsanServiceKind } from "./service-readiness.js";
 
 export interface ManagedServiceSpec {
   name: string;
   entrypoint: string;
   args: string[];
   healthUrl: string;
-  kind: MemhubServiceKind;
+  kind: LitsanServiceKind;
   cwd: string;
   env?: Record<string, string>;
 }
@@ -58,7 +58,7 @@ export class ManagedProcessStack {
   private readonly retryJitter: number;
 
   constructor(input: ManagedProcessStackOptions) {
-    if (input.services.length === 0) throw new Error("Memhub stack needs at least one service");
+    if (input.services.length === 0) throw new Error("LITSAN stack needs at least one service");
     if (new Set(input.services.map((item) => item.name)).size !== input.services.length) {
       throw new Error("duplicate managed service name");
     }

@@ -9,7 +9,7 @@ const maxLatencyMs = integerOption("--max-latency-ms", timeoutMs, 100, 30_000);
 const base = explicitBase ? normalizeBase(explicitBase) : inferBaseFromNetworkCheck();
 
 if (!base) {
-  console.error("Unable to resolve the public Memhub base URL. Pass --base or MEMHUB_PUBLIC_HOST.");
+  console.error("Unable to resolve the public LITSAN base URL. Pass --base or MEMHUB_PUBLIC_HOST.");
   process.exit(2);
 }
 

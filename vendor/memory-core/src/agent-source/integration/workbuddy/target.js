@@ -1,7 +1,7 @@
 import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { resolveWorkbuddyHomeDirectory } from "../../agent-paths.js";
-import { removeMemmySkillDirectory, replaceMemmySkillDirectory } from "../skill-directory.js";
+import { removeLitsanSkillDirectory, replaceLitsanSkillDirectory } from "../skill-directory.js";
 const WORKBUDDY_TARGET_ID = "workbuddy";
 const WORKBUDDY_DISPLAY_NAME = "WorkBuddy";
 export function createWorkbuddySkillTarget(deps = {}) {
@@ -17,12 +17,12 @@ export function createWorkbuddySkillTarget(deps = {}) {
             if (!root) {
                 throw new Error("WorkBuddy is not installed or its directory is unavailable");
             }
-            await replaceMemmySkillDirectory(root, manifest);
+            await replaceLitsanSkillDirectory(root, manifest);
         },
         async uninstall(_targetId) {
             const root = await this.resolveRootDirectory();
             if (root) {
-                await removeMemmySkillDirectory(root);
+                await removeLitsanSkillDirectory(root);
             }
         },
         async isInstalled(_targetId) {
@@ -30,8 +30,8 @@ export function createWorkbuddySkillTarget(deps = {}) {
             if (!root) {
                 return false;
             }
-            const content = await readTextFile(join(root, "skills", "memmy-memory", "SKILL.md"));
-            return content.includes("name: memmy-memory") && content.includes("## Agent Loop");
+            const content = await readTextFile(join(root, "skills", "litsan-memory", "SKILL.md"));
+            return content.includes("name: litsan-memory") && content.includes("## Agent Loop");
         }
     };
 }

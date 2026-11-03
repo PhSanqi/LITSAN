@@ -9,6 +9,7 @@ import {
 import { auditDistillationPipeline } from "../dist/distillation-audit.js";
 import { discoverDistillationJobs } from "../dist/distillation-discovery.js";
 import { reconcileCompletedL2DerivedJob } from "../dist/distillation-derived-recovery.js";
+import { assignCaptureProjects } from "../dist/capture-project-assignments.js";
 import {
   listDistillationJobs,
   retryDistillationJob,
@@ -78,6 +79,26 @@ const l3Job = (account, project, id, resultId, sources, minute) => {
     evidence
   };
 };
+const l3Noop = (account, project, id, sources, minute) => {
+  const timestamp = iso(minute);
+  const evidence = sources.map(l2Artifact);
+  return {
+    job_id: id,
+    account_id: account,
+    target: "l3",
+    scope: "project",
+    project_id: project,
+    status: "completed",
+    reason: "upstream",
+    created_at: timestamp,
+    updated_at: timestamp,
+    completed_at: timestamp,
+    result_kind: "noop",
+    evidence_refs: evidence.map((item) => item.ref),
+    evidence_hash: `hash-${id}`,
+    evidence
+  };
+};
 
 const jobsRoot = await mkdtemp(join(tmpdir(), "memhub-anomaly-jobs-"));
 const accountId = "anomaly-governance-account";
@@ -104,6 +125,13 @@ try {
       minute
     )
   );
+  const betaHistoricalNoop = l3Noop(
+    accountId,
+    "beta",
+    "beta-l3-historical-noop",
+    [betaSource],
+    35
+  );
   const legacyFailure = {
     job_id: "legacy-migration-poisoned",
     account_id: accountId,
@@ -123,7 +151,7 @@ try {
   await mkdir(join(jobsRoot, "distillation"), { recursive: true });
   await writeFile(join(jobsRoot, "distillation", "jobs.json"), JSON.stringify({
     version: 2,
-    jobs: [...kookSources, kookAggregate, betaSource, ...betaRevisions, legacyFailure]
+    jobs: [...kookSources, kookAggregate, betaSource, ...betaRevisions, betaHistoricalNoop, legacyFailure]
   }, null, 2));
 
   const loaded = await listDistillationJobs(jobsRoot, accountId);
@@ -141,7 +169,7 @@ try {
   });
   assert.equal(audit.recovery.completed_l2_missing_l3, 0);
   assert.equal(audit.recovery.completed_l2_conflicting_l3, 0,
-    "many-L2 -> one-L3 and same-artifact revision lineage are valid provenance shapes");
+    "many-L2 -> one-L3, same-artifact revisions, and completed noop + canonical L3 are valid provenance shapes");
   assert.equal(audit.jobs.failed, 1);
   assert.equal(audit.jobs.actionable_failed, 0);
   assert.equal(audit.jobs.historical_failed, 1);
@@ -167,7 +195,7 @@ try {
   });
   assert.equal(lineage.already_queued, true);
   assert.equal(lineage.derived_job_id, "beta-l3-r3",
-    "latest completed revision of the same stable L3 artifact should represent the lineage");
+    "latest completed artifact revision should represent the lineage even when a newer exact noop also exists");
 } finally {
   await rm(jobsRoot, { recursive: true, force: true });
 }
@@ -221,6 +249,26 @@ try {
   })).event;
   await markCaptureIngested(captureRoot, captureAccount, privateEvent.event_id);
 
+  const keepGlobalEvent = (await storeCaptureEvent(captureRoot, device, {
+    event_id: "explicit-keep-global",
+    host: "codex",
+    conversation_id: "explicit-keep-global",
+    continuity_id: "explicit-keep-global",
+    timestamp: "2026-10-09T11:02:30.000Z",
+    user_text: "Keep this durable evidence global rather than assigning it to a project.",
+    assistant_text: "This event remains deliberately global.",
+    capture_status: "complete"
+  })).event;
+  await markCaptureIngested(captureRoot, captureAccount, keepGlobalEvent.event_id);
+  await assignCaptureProjects({
+    stateRoot: captureRoot,
+    accountId: captureAccount,
+    projects: { resolve: async () => null },
+    assignedBy: "admin",
+    keepGlobal: true,
+    eventIds: [keepGlobalEvent.event_id]
+  });
+
   await storeCaptureEvent(captureRoot, device, {
     event_id: "codex:memhub-plugin-e2e-legacy:turn-1",
     host: "codex",
@@ -244,7 +292,7 @@ try {
   assert.equal(discovery.workspace_resolved, 1);
   assert.equal(discovery.privacy_excluded, 1);
   assert.equal(discovery.unresolved, 1,
-    "arbitrary non-canonical workspaces must remain unresolved instead of being guessed");
+    "arbitrary non-canonical workspaces remain unresolved, while explicit keep-global evidence is resolved");
 
   const audit = await auditDistillationPipeline({
     stateRoot: captureRoot,
@@ -255,6 +303,8 @@ try {
   assert.equal(audit.evidence.workspace_resolved, 1);
   assert.equal(audit.evidence.privacy_excluded, 1);
   assert.equal(audit.evidence.unresolved_project, 1);
+  assert.equal(audit.review_samples.unresolved_project.some((item) => item.event_id === keepGlobalEvent.event_id), false,
+    "explicit keep-global evidence must never appear as unresolved project debt");
   assert.equal(audit.capture.complete_uningested, 1,
     "raw capture stats still preserve the historical synthetic record");
   assert.equal(audit.recovery.complete_uningested_requires_review, 0,

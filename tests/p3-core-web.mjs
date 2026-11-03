@@ -27,7 +27,7 @@ import { LocalMemoryRestClient, MemoryCoreHttpError } from '../dist/local-memory
 import { webPath, webRoutePath, webSecurityHeaders } from '../dist/gateway-http.js';
 import { renderConsole, renderDocs, renderLanding, renderUnprovisionedAccount } from '../dist/web-ui.js';
 import { handleMemoryControlAction } from '../dist/memory-control-actions.js';
-import { createMemhubRuntime } from '../dist/runtime.js';
+import { createLitsanRuntime } from '../dist/runtime.js';
 import { recordCompletedDistillationRevision, listDistillationJobs, retireDistillationMemory } from '../dist/distillation-jobs.js';
 import { hydrateMemoryEvidence } from '../dist/memory-hydration.js';
 
@@ -700,7 +700,7 @@ test('P3-F4 final ledger save failure retries via existing web action after Core
 
 test('WEB-05 regular users manage only their account project todos', async () => {
   const stateRoot = join(root, 'todos');
-  const runtime = createMemhubRuntime({ controlRoot: stateRoot, accountId: 'p3', disableArchitecture: true });
+  const runtime = createLitsanRuntime({ controlRoot: stateRoot, accountId: 'p3', disableArchitecture: true });
   await runtime.projects.create('p3', { projectId: 'own', description: 'own project' });
   await runtime.projects.create('other', { projectId: 'foreign', description: 'foreign project' });
   const invoke = async body => {
@@ -766,7 +766,7 @@ test('WEB-01/02/03 loopback gateway paginates past 500, retires ledger, and sani
       const account = await addAccount(stateRoot, 'gateway');
       await setAccountRole(stateRoot, account.account_id, 'admin');
       const token = await ensureLocalAdminToken(stateRoot);
-      const runtime = createMemhubRuntime({ controlRoot: stateRoot, accountId: account.account_id, disableArchitecture: true });
+      const runtime = createLitsanRuntime({ controlRoot: stateRoot, accountId: account.account_id, disableArchitecture: true });
       await runtime.projects.create(account.account_id, { projectId: 'alpha', description: 'fixture' });
       await recordCompletedDistillationRevision({ stateRoot, accountId: account.account_id, target: 'l2', projectId: 'alpha',
         evidence: [{ ref: 'l1:test', kind: 'turn', timestamp: at }], resultId: 'after-500', content: 'timeline', committedAt: at });

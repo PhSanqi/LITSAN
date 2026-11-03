@@ -1,6 +1,7 @@
+import { litsanEnv } from "../utils/litsan-compat.js";
 /**
  * Loads external env, packaged public manifest, or development .env before
- * analytics reads MEMMY_CLOUD_SERVICE.
+ * analytics reads LITSAN_CLOUD_SERVICE.
  */
 import { cloudServiceFromDesktopRuntimeManifest, } from "../contracts/desktop-runtime-manifest.js";
 import { config as loadDotenv } from "dotenv";
@@ -9,13 +10,13 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 function hasCloudService(filePath) {
     try {
-        return /^\s*MEMMY_CLOUD_SERVICE\s*=/m.test(readFileSync(filePath, "utf8"));
+        return /^\s*(?:LITSAN|MEMMY)_CLOUD_SERVICE\s*=/m.test(readFileSync(filePath, "utf8"));
     }
     catch {
         return false;
     }
 }
-/** Walk upward to find a .env that defines MEMMY_CLOUD_SERVICE. */
+/** Walk upward to find a .env that defines LITSAN_CLOUD_SERVICE. */
 export function findRepoEnvFile(startDir) {
     let current = startDir;
     for (;;) {
@@ -33,12 +34,13 @@ export function findRepoEnvFile(startDir) {
 /** Load external env, then the packaged manifest, then a development .env. */
 export function loadCloudServiceEnv(options = {}) {
     const env = options.env ?? process.env;
-    if (Object.prototype.hasOwnProperty.call(env, "MEMMY_CLOUD_SERVICE")) {
-        const externalValue = env.MEMMY_CLOUD_SERVICE?.trim();
+    if (litsanEnv("LITSAN_CLOUD_SERVICE", env) !== undefined) {
+        const externalValue = litsanEnv("LITSAN_CLOUD_SERVICE", env)?.trim();
         if (externalValue) {
-            env.MEMMY_CLOUD_SERVICE = externalValue;
+            env.LITSAN_CLOUD_SERVICE = externalValue;
             return "environment";
         }
+        delete env.LITSAN_CLOUD_SERVICE;
         delete env.MEMMY_CLOUD_SERVICE;
     }
     const moduleDir = options.moduleDir ?? dirname(fileURLToPath(import.meta.url));
@@ -48,7 +50,7 @@ export function loadCloudServiceEnv(options = {}) {
         if (!existsSync(manifestPath)) {
             throw new Error("Packaged desktop runtime manifest is missing");
         }
-        env.MEMMY_CLOUD_SERVICE = cloudServiceFromDesktopRuntimeManifest(readFileSync(manifestPath, "utf8"));
+        env.LITSAN_CLOUD_SERVICE = cloudServiceFromDesktopRuntimeManifest(readFileSync(manifestPath, "utf8"));
         return manifestPath;
     }
     const envPath = findRepoEnvFile(options.cwd ?? process.cwd()) ?? findRepoEnvFile(moduleDir);

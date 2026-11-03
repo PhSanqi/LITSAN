@@ -1,3 +1,6 @@
+import type { TurnSessionWriter } from "./core/ports/memory.js";
+import type { AccountId, UserId } from "./contracts/identity.js";
+import type { ProjectReader } from "./core/ports/projects.js";
 import { recoverCaptureIngest } from "./capture-recovery.js";
 import { auditDistillationPipeline } from "./distillation-audit.js";
 import { discoverDistillationJobs } from "./distillation-discovery.js";
@@ -11,7 +14,13 @@ import {
   renewDistillationJobLease,
   type DistillationJob
 } from "./distillation-jobs.js";
-import type { MemhubRuntime } from "./runtime.js";
+
+export interface DistillationControlDeps {
+  userId: UserId;
+  memoryClient: TurnSessionWriter;
+  accountId: AccountId;
+  projects: Pick<ProjectReader, "resolve">;
+}
 
 /**
  * Capture/queue control-plane actions used by the MCP distillation tool.
@@ -20,7 +29,7 @@ import type { MemhubRuntime } from "./runtime.js";
  */
 export async function auditDistillationControl(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: DistillationControlDeps;
 }) {
   const { stateRoot, runtime } = input;
   return auditDistillationPipeline({
@@ -32,7 +41,7 @@ export async function auditDistillationControl(input: {
 
 export async function recoverDistillationControl(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: DistillationControlDeps;
   eventId: string;
   projectId: string;
   dryRun: boolean;
@@ -42,7 +51,7 @@ export async function recoverDistillationControl(input: {
 
 export async function discoverDistillationControl(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: DistillationControlDeps;
   dryRun: boolean;
 }) {
   const { stateRoot, runtime, dryRun } = input;
@@ -60,7 +69,7 @@ export async function discoverDistillationControl(input: {
 
 export async function nextDistillationControl(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: DistillationControlDeps;
   sourceHarness: string;
   leaseToken?: string;
   jobId?: string;
@@ -78,7 +87,7 @@ export async function nextDistillationControl(input: {
   }) => Promise<string | null>;
   renderNext: (
     job: DistillationJob, evidenceOffset: number, evidenceChunkChars: number
-  ) => Record<string, unknown>;
+  ) => Record<string, unknown> | Promise<Record<string, unknown>>;
 }): Promise<Record<string, unknown>> {
   const { stateRoot, runtime, sourceHarness, leaseToken } = input;
   if (input.evidenceOffset < 0) throw new TypeError("evidence_offset must be non-negative");
@@ -86,17 +95,30 @@ export async function nextDistillationControl(input: {
     throw new TypeError("evidence_chunk_chars must be between 10000 and 200000");
   }
   if (input.jobId) {
-    const job = (await listDistillationJobs(stateRoot, runtime.accountId))
+    let job = (await listDistillationJobs(stateRoot, runtime.accountId))
       .find((item) => item.job_id === input.jobId);
     if (!job) throw new Error("distillation job not found for account");
-    assertActiveDistillationLease(job, sourceHarness, leaseToken);
     if (input.kind && input.kind !== job.target) {
       throw new Error(`distillation target mismatch: job expects ${job.target}`);
     }
     if (input.scope && input.scope !== job.scope) {
       throw new Error(`distillation scope mismatch: job expects ${job.scope}`);
     }
-    return input.renderNext(job, input.evidenceOffset, input.evidenceChunkChars);
+    // Restructure returns an explicit next job_id command; legacy job_id calls still only resume leases.
+    if (job.l2_restructure && input.leaseTokenSupported && !leaseToken &&
+        (job.status === "pending" || (job.status === "leased" && Date.parse(job.leased_until ?? "") <= Date.now()))) {
+      if (input.project || input.workspaceProject) {
+        const projectId = await input.resolveProjectScope({ project: input.project, workspaceProject: input.workspaceProject });
+        if (projectId !== job.project_id) throw new Error("distillation job scope mismatch");
+      }
+      job = await leaseDistillationJob(stateRoot, runtime.accountId, {
+        jobId: job.job_id, harness: sourceHarness, leaseSeconds: input.leaseSeconds, useLeaseToken: true
+      }) ?? undefined;
+      if (!job) throw new Error("distillation job is no longer available for lease");
+      return await input.renderNext(job, input.evidenceOffset, input.evidenceChunkChars);
+    }
+    assertActiveDistillationLease(job, sourceHarness, leaseToken);
+    return await input.renderNext(job, input.evidenceOffset, input.evidenceChunkChars);
   }
 
   let projectFilter: string | null | undefined;
@@ -109,7 +131,7 @@ export async function nextDistillationControl(input: {
   }
   const leaseInput = {
     projectId: projectFilter,
-    target: input.kind as "l2" | "l3" | "l4" | "skill" | undefined,
+    target: input.kind as "l2" | "l3" | "l4" | "global_state" | "skill" | undefined,
     harness: sourceHarness,
     leaseSeconds: input.leaseSeconds,
     useLeaseToken: input.leaseTokenSupported
@@ -127,7 +149,7 @@ export async function nextDistillationControl(input: {
       });
     } catch (error) {
       discovery_error = error instanceof Error ? error.message : String(error);
-      console.error("[memhub] on-demand distillation discovery:", discovery_error);
+      console.error("[litsan] on-demand distillation discovery:", discovery_error);
     }
     job = await leaseDistillationJob(stateRoot, runtime.accountId, leaseInput);
   }
@@ -145,14 +167,14 @@ export async function nextDistillationControl(input: {
     };
   }
   return {
-    ...input.renderNext(job, input.evidenceOffset, input.evidenceChunkChars),
+    ...await input.renderNext(job, input.evidenceOffset, input.evidenceChunkChars),
     ...(discovery ? { discovery } : {})
   };
 }
 
 export async function renewDistillationControl(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: DistillationControlDeps;
   jobId: string;
   sourceHarness: string;
   leaseToken?: string;
@@ -173,7 +195,7 @@ export async function renewDistillationControl(input: {
 
 export async function skipDistillationControl(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: DistillationControlDeps;
   jobId: string;
   sourceHarness: string;
   leaseToken?: string;

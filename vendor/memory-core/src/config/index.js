@@ -1,3 +1,4 @@
+import { defaultLitsanHome, litsanEnv } from "../utils/litsan-compat.js";
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -7,7 +8,7 @@ import { resolveTimeZone } from "../utils/time.js";
 const ACCOUNT_EVOLUTION_THINKING_BUDGET = 1_000;
 const ASYNC_EVOLUTION_TIMEOUT_MS = 3 * 60_000;
 export const MEMORY_SUMMARY_MAX_TOKENS = 512;
-export const DEFAULT_MEMMY_CONFIG = {
+export const DEFAULT_LITSAN_CONFIG = {
     version: 1,
     domain: "",
     roleRouting: {
@@ -17,7 +18,7 @@ export const DEFAULT_MEMMY_CONFIG = {
     storage: {
         mode: "local",
         backend: "sqlite",
-        sqlitePath: join(homedir(), ".memmy", "memory-service", "memory.sqlite"),
+        sqlitePath: join(defaultLitsanHome(), "memory-service", "memory.sqlite"),
         endpoint: "http://127.0.0.1:18960",
         token: undefined
     },
@@ -214,11 +215,11 @@ export const DEFAULT_MEMMY_CONFIG = {
 };
 export function defaultConfigPaths() {
     return [
-        process.env.MEMMY_CONFIG,
-        join(homedir(), ".memmy", "config.yaml")
+        litsanEnv("LITSAN_CONFIG", process.env),
+        join(defaultLitsanHome(), "config.yaml")
     ].filter((value) => Boolean(value));
 }
-export function loadMemmyConfig(configPath) {
+export function loadLitsanConfig(configPath) {
     const selectedPath = configPath
         ? resolve(configPath)
         : defaultConfigPaths().find((candidate) => existsSync(candidate))
@@ -227,10 +228,10 @@ export function loadMemmyConfig(configPath) {
         ? parseConfigFile(selectedPath)
         : {};
     const configuredTimeZone = optionalString(asRecord(asRecord(rootConfig.agents).defaults).timezone);
-    const memmyMemoryConfig = asRecord(rootConfig.memmyMemory);
-    const fileConfig = resolveRuntimeMemmyMemoryConfig(memmyMemoryConfig, rootConfig);
+    const litsanMemoryConfig = asRecord((rootConfig.litsanMemory ?? rootConfig.memmyMemory));
+    const fileConfig = resolveRuntimeLitsanMemoryConfig(litsanMemoryConfig, rootConfig);
     const envConfig = configFromEnv();
-    const merged = normalizeConfig(deepMerge(DEFAULT_MEMMY_CONFIG, fileConfig, envConfig));
+    const merged = normalizeConfig(deepMerge(DEFAULT_LITSAN_CONFIG, fileConfig, envConfig));
     return {
         config: {
             ...merged,
@@ -249,55 +250,55 @@ function parseConfigFile(path) {
 }
 function configFromEnv() {
     return compactRecord({
-        domain: process.env.MEMMY_MEMORY_DOMAIN ?? process.env.MEMMY_DOMAIN,
-        userId: process.env.MEMMY_MEMORY_USER_ID ?? process.env.MEMMY_USER_ID ?? process.env.MEMORY_SERVICE_USER_ID,
+        domain: litsanEnv("LITSAN_MEMORY_DOMAIN", process.env) ?? litsanEnv("LITSAN_DOMAIN", process.env),
+        userId: litsanEnv("LITSAN_MEMORY_USER_ID", process.env) ?? litsanEnv("LITSAN_USER_ID", process.env) ?? process.env.MEMORY_SERVICE_USER_ID,
         storage: compactRecord({
-            mode: process.env.MEMMY_MEMORY_MODE,
-            backend: process.env.MEMMY_MEMORY_BACKEND,
-            sqlitePath: process.env.MEMMY_MEMORY_DB ?? process.env.MEMORY_SERVICE_DB,
-            endpoint: process.env.MEMMY_MEMORY_URL ?? process.env.MEMORY_SERVICE_URL,
-            token: process.env.MEMMY_MEMORY_TOKEN ?? process.env.MEMORY_SERVICE_TOKEN
+            mode: litsanEnv("LITSAN_MEMORY_MODE", process.env),
+            backend: litsanEnv("LITSAN_MEMORY_BACKEND", process.env),
+            sqlitePath: litsanEnv("LITSAN_MEMORY_DB", process.env) ?? process.env.MEMORY_SERVICE_DB,
+            endpoint: litsanEnv("LITSAN_MEMORY_URL", process.env) ?? process.env.MEMORY_SERVICE_URL,
+            token: litsanEnv("LITSAN_MEMORY_TOKEN", process.env) ?? process.env.MEMORY_SERVICE_TOKEN
         }),
         summary: compactRecord({
-            provider: process.env.MEMMY_SUMMARY_PROVIDER,
-            vendor: process.env.MEMMY_SUMMARY_VENDOR,
-            endpoint: process.env.MEMMY_SUMMARY_ENDPOINT,
-            model: process.env.MEMMY_SUMMARY_MODEL,
-            apiKey: process.env.MEMMY_SUMMARY_API_KEY,
-            temperature: numberEnv("MEMMY_SUMMARY_TEMPERATURE"),
-            maxTokens: numberEnv("MEMMY_SUMMARY_MAX_TOKENS"),
-            timeoutMs: numberEnv("MEMMY_SUMMARY_TIMEOUT_MS"),
-            maxRetries: numberEnv("MEMMY_SUMMARY_MAX_RETRIES")
+            provider: litsanEnv("LITSAN_SUMMARY_PROVIDER", process.env),
+            vendor: litsanEnv("LITSAN_SUMMARY_VENDOR", process.env),
+            endpoint: litsanEnv("LITSAN_SUMMARY_ENDPOINT", process.env),
+            model: litsanEnv("LITSAN_SUMMARY_MODEL", process.env),
+            apiKey: litsanEnv("LITSAN_SUMMARY_API_KEY", process.env),
+            temperature: numberEnv("LITSAN_SUMMARY_TEMPERATURE"),
+            maxTokens: numberEnv("LITSAN_SUMMARY_MAX_TOKENS"),
+            timeoutMs: numberEnv("LITSAN_SUMMARY_TIMEOUT_MS"),
+            maxRetries: numberEnv("LITSAN_SUMMARY_MAX_RETRIES")
         }),
         evolution: compactRecord({
-            provider: process.env.MEMMY_EVOLUTION_PROVIDER,
-            vendor: process.env.MEMMY_EVOLUTION_VENDOR,
-            endpoint: process.env.MEMMY_EVOLUTION_ENDPOINT,
-            model: process.env.MEMMY_EVOLUTION_MODEL,
-            apiKey: process.env.MEMMY_EVOLUTION_API_KEY,
-            enableThinking: booleanEnv("MEMMY_EVOLUTION_ENABLE_THINKING"),
-            temperature: numberEnv("MEMMY_EVOLUTION_TEMPERATURE"),
-            maxTokens: numberEnv("MEMMY_EVOLUTION_MAX_TOKENS"),
-            timeoutMs: numberEnv("MEMMY_EVOLUTION_TIMEOUT_MS"),
-            maxRetries: numberEnv("MEMMY_EVOLUTION_MAX_RETRIES")
+            provider: litsanEnv("LITSAN_EVOLUTION_PROVIDER", process.env),
+            vendor: litsanEnv("LITSAN_EVOLUTION_VENDOR", process.env),
+            endpoint: litsanEnv("LITSAN_EVOLUTION_ENDPOINT", process.env),
+            model: litsanEnv("LITSAN_EVOLUTION_MODEL", process.env),
+            apiKey: litsanEnv("LITSAN_EVOLUTION_API_KEY", process.env),
+            enableThinking: booleanEnv("LITSAN_EVOLUTION_ENABLE_THINKING"),
+            temperature: numberEnv("LITSAN_EVOLUTION_TEMPERATURE"),
+            maxTokens: numberEnv("LITSAN_EVOLUTION_MAX_TOKENS"),
+            timeoutMs: numberEnv("LITSAN_EVOLUTION_TIMEOUT_MS"),
+            maxRetries: numberEnv("LITSAN_EVOLUTION_MAX_RETRIES")
         }),
         embedding: compactRecord({
-            provider: process.env.MEMMY_EMBEDDING_PROVIDER,
-            endpoint: process.env.MEMMY_EMBEDDING_ENDPOINT,
-            model: process.env.MEMMY_EMBEDDING_MODEL,
-            apiKey: process.env.MEMMY_EMBEDDING_API_KEY,
-            maxInputTokens: numberEnv("MEMMY_EMBEDDING_MAX_INPUT_TOKENS"),
-            batchSize: numberEnv("MEMMY_EMBEDDING_BATCH_SIZE"),
-            timeoutMs: numberEnv("MEMMY_EMBEDDING_TIMEOUT_MS"),
-            maxRetries: numberEnv("MEMMY_EMBEDDING_MAX_RETRIES")
+            provider: litsanEnv("LITSAN_EMBEDDING_PROVIDER", process.env),
+            endpoint: litsanEnv("LITSAN_EMBEDDING_ENDPOINT", process.env),
+            model: litsanEnv("LITSAN_EMBEDDING_MODEL", process.env),
+            apiKey: litsanEnv("LITSAN_EMBEDDING_API_KEY", process.env),
+            maxInputTokens: numberEnv("LITSAN_EMBEDDING_MAX_INPUT_TOKENS"),
+            batchSize: numberEnv("LITSAN_EMBEDDING_BATCH_SIZE"),
+            timeoutMs: numberEnv("LITSAN_EMBEDDING_TIMEOUT_MS"),
+            maxRetries: numberEnv("LITSAN_EMBEDDING_MAX_RETRIES")
         }),
         algorithm: compactRecord({
-            enableMemoryAdd: booleanEnv("MEMMY_ENABLE_MEMORY_ADD"),
-            enableMemorySearch: booleanEnv("MEMMY_ENABLE_MEMORY_SEARCH"),
-            enableQueryRewrite: booleanEnv("MEMMY_ENABLE_QUERY_REWRITE"),
+            enableMemoryAdd: booleanEnv("LITSAN_ENABLE_MEMORY_ADD"),
+            enableMemorySearch: booleanEnv("LITSAN_ENABLE_MEMORY_SEARCH"),
+            enableQueryRewrite: booleanEnv("LITSAN_ENABLE_QUERY_REWRITE"),
             retrieval: compactRecord({
-                readOnlyInjectionProfile: process.env.MEMMY_RETRIEVAL_INJECTION_PROFILE ??
-                    process.env.MEMMY_READONLY_INJECTION_PROFILE
+                readOnlyInjectionProfile: litsanEnv("LITSAN_RETRIEVAL_INJECTION_PROFILE", process.env) ??
+                    litsanEnv("LITSAN_READONLY_INJECTION_PROFILE", process.env)
             })
         })
     });
@@ -305,10 +306,10 @@ function configFromEnv() {
 function normalizeConfig(input) {
     const storage = normalizeStorage(asRecord(input.storage));
     const summary = {
-        ...normalizeLlm(asRecord(input.summary), DEFAULT_MEMMY_CONFIG.summary),
+        ...normalizeLlm(asRecord(input.summary), DEFAULT_LITSAN_CONFIG.summary),
         enableThinking: false
     };
-    const normalizedEvolution = normalizeLlm(asRecord(input.evolution), DEFAULT_MEMMY_CONFIG.evolution);
+    const normalizedEvolution = normalizeLlm(asRecord(input.evolution), DEFAULT_LITSAN_CONFIG.evolution);
     const evolution = input.evolutionSourceProvider === "memmy_account"
         ? {
             ...normalizedEvolution,
@@ -321,7 +322,7 @@ function normalizeConfig(input) {
     const algorithm = normalizeAlgorithm(asRecord(input.algorithm));
     return {
         version: 1,
-        domain: memoryDomainName(input.domain, DEFAULT_MEMMY_CONFIG.domain),
+        domain: memoryDomainName(input.domain, DEFAULT_LITSAN_CONFIG.domain),
         roleRouting: normalizeRoleRouting(asRecord(input.roleRouting)),
         userId: optionalString(input.userId),
         storage,
@@ -332,28 +333,28 @@ function normalizeConfig(input) {
         algorithm
     };
 }
-function resolveRuntimeMemmyMemoryConfig(input, rootConfig) {
+function resolveRuntimeLitsanMemoryConfig(input, rootConfig) {
     if (Object.prototype.hasOwnProperty.call(input, "profiles")
         || Object.prototype.hasOwnProperty.call(input, "activeProfile")) {
-        throw new Error("memmyMemory legacy profiles require the registered runtime config migration");
+        throw new Error("litsanMemory legacy profiles require the registered runtime config migration");
     }
     const routing = normalizeRoleRouting(asRecord(input.roleRouting));
     const assignmentMode = runtimeAssignmentMode(rootConfig);
     const hasCatalog = isRecord(rootConfig.modelAssignments);
     const accountMode = assignmentMode === "account" && hasCatalog;
     const evolution = accountMode
-        ? resolveAssignedLlm(rootConfig, assignmentMode, "memory_evolution", DEFAULT_MEMMY_CONFIG.evolution)
+        ? resolveAssignedLlm(rootConfig, assignmentMode, "memory_evolution", DEFAULT_LITSAN_CONFIG.evolution)
         : routing.evolution === "follow" && hasCatalog
-            ? resolveAssignedLlm(rootConfig, assignmentMode, "agent", DEFAULT_MEMMY_CONFIG.evolution)
+            ? resolveAssignedLlm(rootConfig, assignmentMode, "agent", DEFAULT_LITSAN_CONFIG.evolution)
             : asRecord(input.evolution);
     const rawSummary = asRecord(input.summary);
     // Account assignments are authoritative for both roles, even when an old
     // config file contains a stale fixed connection from another mode.
     const accountSummaryNeedsAssignment = accountMode;
     const summary = accountSummaryNeedsAssignment
-        ? resolveAssignedLlm(rootConfig, assignmentMode, "memory_summary", DEFAULT_MEMMY_CONFIG.summary)
+        ? resolveAssignedLlm(rootConfig, assignmentMode, "memory_summary", DEFAULT_LITSAN_CONFIG.summary)
         : routing.summary === "follow" && assignmentMode !== "account"
-            ? inheritLlmConnection(evolution, deepMerge(DEFAULT_MEMMY_CONFIG.summary, rawSummary))
+            ? inheritLlmConnection(evolution, deepMerge(DEFAULT_LITSAN_CONFIG.summary, rawSummary))
             : rawSummary;
     const effectiveRouting = assignmentMode === "account"
         ? { ...routing, summary: "fixed", evolution: "fixed" }
@@ -369,10 +370,10 @@ function resolveRuntimeMemmyMemoryConfig(input, rootConfig) {
 }
 function normalizeStorage(input) {
     return {
-        mode: storageMode(input.mode, DEFAULT_MEMMY_CONFIG.storage.mode),
-        backend: storageBackend(input.backend, DEFAULT_MEMMY_CONFIG.storage.backend),
+        mode: storageMode(input.mode, DEFAULT_LITSAN_CONFIG.storage.mode),
+        backend: storageBackend(input.backend, DEFAULT_LITSAN_CONFIG.storage.backend),
         sqlitePath: optionalPathString(input.sqlitePath),
-        endpoint: optionalString(input.endpoint) ?? DEFAULT_MEMMY_CONFIG.storage.endpoint,
+        endpoint: optionalString(input.endpoint) ?? DEFAULT_LITSAN_CONFIG.storage.endpoint,
         token: optionalString(input.token)
     };
 }
@@ -403,11 +404,11 @@ function normalizeLlm(input, defaults) {
 }
 function normalizeEmbedding(input) {
     return {
-        provider: embeddingProvider(input.provider, DEFAULT_MEMMY_CONFIG.embedding.provider),
-        mode: memoryEmbeddingMode(input.mode, DEFAULT_MEMMY_CONFIG.embedding.mode),
+        provider: embeddingProvider(input.provider, DEFAULT_LITSAN_CONFIG.embedding.provider),
+        mode: memoryEmbeddingMode(input.mode, DEFAULT_LITSAN_CONFIG.embedding.mode),
         sourceProvider: optionalString(input.sourceProvider),
         endpoint: optionalString(input.endpoint),
-        model: optionalString(input.model) ?? DEFAULT_MEMMY_CONFIG.embedding.model,
+        model: optionalString(input.model) ?? DEFAULT_LITSAN_CONFIG.embedding.model,
         apiKey: optionalString(input.apiKey),
         extraHeaders: stringRecord(input.extraHeaders),
         extraBody: unknownRecord(input.extraBody),
@@ -416,24 +417,24 @@ function normalizeEmbedding(input) {
             ? input.selectionError
             : undefined,
         maxInputTokens: positiveInteger(input.maxInputTokens),
-        batchSize: numberValue(input.batchSize, DEFAULT_MEMMY_CONFIG.embedding.batchSize),
-        timeoutMs: numberValue(input.timeoutMs, DEFAULT_MEMMY_CONFIG.embedding.timeoutMs),
-        maxRetries: numberValue(input.maxRetries, DEFAULT_MEMMY_CONFIG.embedding.maxRetries),
-        cache: booleanValue(input.cache, DEFAULT_MEMMY_CONFIG.embedding.cache),
-        normalize: booleanValue(input.normalize, DEFAULT_MEMMY_CONFIG.embedding.normalize)
+        batchSize: numberValue(input.batchSize, DEFAULT_LITSAN_CONFIG.embedding.batchSize),
+        timeoutMs: numberValue(input.timeoutMs, DEFAULT_LITSAN_CONFIG.embedding.timeoutMs),
+        maxRetries: numberValue(input.maxRetries, DEFAULT_LITSAN_CONFIG.embedding.maxRetries),
+        cache: booleanValue(input.cache, DEFAULT_LITSAN_CONFIG.embedding.cache),
+        normalize: booleanValue(input.normalize, DEFAULT_LITSAN_CONFIG.embedding.normalize)
     };
 }
 function normalizeAgentAccess(input) {
     return {
-        autoScanKnownAgents: booleanValue(input.autoScanKnownAgents, DEFAULT_MEMMY_CONFIG.agentAccess.autoScanKnownAgents),
-        watchFileChanges: booleanValue(input.watchFileChanges, DEFAULT_MEMMY_CONFIG.agentAccess.watchFileChanges),
-        autoInjectSkill: booleanValue(input.autoInjectSkill, DEFAULT_MEMMY_CONFIG.agentAccess.autoInjectSkill)
+        autoScanKnownAgents: booleanValue(input.autoScanKnownAgents, DEFAULT_LITSAN_CONFIG.agentAccess.autoScanKnownAgents),
+        watchFileChanges: booleanValue(input.watchFileChanges, DEFAULT_LITSAN_CONFIG.agentAccess.watchFileChanges),
+        autoInjectSkill: booleanValue(input.autoInjectSkill, DEFAULT_LITSAN_CONFIG.agentAccess.autoInjectSkill)
     };
 }
 function normalizeRoleRouting(input) {
     return {
-        summary: memoryRoleRouting(input.summary, DEFAULT_MEMMY_CONFIG.roleRouting.summary),
-        evolution: memoryRoleRouting(input.evolution, DEFAULT_MEMMY_CONFIG.roleRouting.evolution)
+        summary: memoryRoleRouting(input.summary, DEFAULT_LITSAN_CONFIG.roleRouting.summary),
+        evolution: memoryRoleRouting(input.evolution, DEFAULT_LITSAN_CONFIG.roleRouting.evolution)
     };
 }
 function resolveAssignedLlm(rootConfig, mode, capability, defaults) {
@@ -534,7 +535,7 @@ function resolveMemoryEmbedding(memory, rootConfig, mode, hasCatalog) {
         ? configuredMode
         : mode === "account" && hasCatalog
             ? "cloud"
-            : DEFAULT_MEMMY_CONFIG.embedding.mode;
+            : DEFAULT_LITSAN_CONFIG.embedding.mode;
     const activeAssignment = mode
         ? asRecord(asRecord(rootConfig.modelAssignments)[mode])
         : {};
@@ -587,7 +588,7 @@ function resolveMemoryEmbedding(memory, rootConfig, mode, hasCatalog) {
             mode: embeddingMode,
             provider: optionalString(custom.provider)
                 ?? optionalString(embedding.provider)
-                ?? DEFAULT_MEMMY_CONFIG.embedding.provider
+                ?? DEFAULT_LITSAN_CONFIG.embedding.provider
         };
     }
     if (!hasCatalog) {
@@ -636,7 +637,7 @@ function localEmbeddingConfig(embedding) {
         provider: "local",
         sourceProvider: "local",
         endpoint: undefined,
-        model: DEFAULT_MEMMY_CONFIG.embedding.model,
+        model: DEFAULT_LITSAN_CONFIG.embedding.model,
         apiKey: undefined,
         extraHeaders: undefined,
         extraBody: undefined,
@@ -678,150 +679,150 @@ function normalizeAlgorithm(input) {
     const session = asRecord(input.session);
     const retrieval = asRecord(input.retrieval);
     return {
-        enableMemoryAdd: booleanValue(input.enableMemoryAdd, DEFAULT_MEMMY_CONFIG.algorithm.enableMemoryAdd),
-        enableMemorySearch: booleanValue(input.enableMemorySearch, DEFAULT_MEMMY_CONFIG.algorithm.enableMemorySearch),
-        enableQueryRewrite: booleanValue(input.enableQueryRewrite, DEFAULT_MEMMY_CONFIG.algorithm.enableQueryRewrite),
+        enableMemoryAdd: booleanValue(input.enableMemoryAdd, DEFAULT_LITSAN_CONFIG.algorithm.enableMemoryAdd),
+        enableMemorySearch: booleanValue(input.enableMemorySearch, DEFAULT_LITSAN_CONFIG.algorithm.enableMemorySearch),
+        enableQueryRewrite: booleanValue(input.enableQueryRewrite, DEFAULT_LITSAN_CONFIG.algorithm.enableQueryRewrite),
         capture: {
-            maxTextChars: numberValue(capture.maxTextChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.maxTextChars),
-            maxToolOutputChars: numberValue(capture.maxToolOutputChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.maxToolOutputChars),
-            synthReflection: booleanValue(capture.synthReflection, DEFAULT_MEMMY_CONFIG.algorithm.capture.synthReflection),
-            embedAfterCapture: booleanValue(capture.embedAfterCapture, DEFAULT_MEMMY_CONFIG.algorithm.capture.embedAfterCapture),
-            alphaScoring: booleanValue(capture.alphaScoring, DEFAULT_MEMMY_CONFIG.algorithm.capture.alphaScoring),
-            batchMode: captureBatchMode(capture.batchMode, DEFAULT_MEMMY_CONFIG.algorithm.capture.batchMode),
-            batchThreshold: numberValue(capture.batchThreshold, DEFAULT_MEMMY_CONFIG.algorithm.capture.batchThreshold),
-            reflectionContextMode: reflectionContextMode(capture.reflectionContextMode, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionContextMode),
-            longEpisodeReflectMode: longEpisodeReflectMode(capture.longEpisodeReflectMode, DEFAULT_MEMMY_CONFIG.algorithm.capture.longEpisodeReflectMode),
-            downstreamStepCount: numberValue(capture.downstreamStepCount, DEFAULT_MEMMY_CONFIG.algorithm.capture.downstreamStepCount),
-            taskContextMaxChars: numberValue(capture.taskContextMaxChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.taskContextMaxChars),
-            downstreamContextMaxChars: numberValue(capture.downstreamContextMaxChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.downstreamContextMaxChars),
-            downstreamPerStepMaxChars: numberValue(capture.downstreamPerStepMaxChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.downstreamPerStepMaxChars),
-            synthOutcomeMaxChars: numberValue(capture.synthOutcomeMaxChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.synthOutcomeMaxChars),
-            reflectionBatchWindowSize: numberValue(capture.reflectionBatchWindowSize, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchWindowSize),
-            reflectionBatchOverlap: numberValue(capture.reflectionBatchOverlap, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchOverlap),
-            reflectionBatchDegradedWindowSize: numberValue(capture.reflectionBatchDegradedWindowSize, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchDegradedWindowSize),
-            reflectionBatchDegradedOverlap: numberValue(capture.reflectionBatchDegradedOverlap, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchDegradedOverlap),
-            reflectionBatchPrimaryMaxRetries: numberValue(capture.reflectionBatchPrimaryMaxRetries, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchPrimaryMaxRetries),
-            reflectionBatchDegradedMaxRetries: numberValue(capture.reflectionBatchDegradedMaxRetries, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchDegradedMaxRetries),
-            reflectionBatchStepStateChars: numberValue(capture.reflectionBatchStepStateChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchStepStateChars),
-            reflectionBatchStepThinkingChars: numberValue(capture.reflectionBatchStepThinkingChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchStepThinkingChars),
-            reflectionBatchStepActionChars: numberValue(capture.reflectionBatchStepActionChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchStepActionChars),
-            reflectionBatchToolInputChars: numberValue(capture.reflectionBatchToolInputChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchToolInputChars),
-            reflectionBatchToolOutputChars: numberValue(capture.reflectionBatchToolOutputChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchToolOutputChars),
-            reflectionBatchToolErrorChars: numberValue(capture.reflectionBatchToolErrorChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchToolErrorChars),
-            reflectionBatchOutcomeChars: numberValue(capture.reflectionBatchOutcomeChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchOutcomeChars),
-            reflectionBatchReflectionChars: numberValue(capture.reflectionBatchReflectionChars, DEFAULT_MEMMY_CONFIG.algorithm.capture.reflectionBatchReflectionChars)
+            maxTextChars: numberValue(capture.maxTextChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.maxTextChars),
+            maxToolOutputChars: numberValue(capture.maxToolOutputChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.maxToolOutputChars),
+            synthReflection: booleanValue(capture.synthReflection, DEFAULT_LITSAN_CONFIG.algorithm.capture.synthReflection),
+            embedAfterCapture: booleanValue(capture.embedAfterCapture, DEFAULT_LITSAN_CONFIG.algorithm.capture.embedAfterCapture),
+            alphaScoring: booleanValue(capture.alphaScoring, DEFAULT_LITSAN_CONFIG.algorithm.capture.alphaScoring),
+            batchMode: captureBatchMode(capture.batchMode, DEFAULT_LITSAN_CONFIG.algorithm.capture.batchMode),
+            batchThreshold: numberValue(capture.batchThreshold, DEFAULT_LITSAN_CONFIG.algorithm.capture.batchThreshold),
+            reflectionContextMode: reflectionContextMode(capture.reflectionContextMode, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionContextMode),
+            longEpisodeReflectMode: longEpisodeReflectMode(capture.longEpisodeReflectMode, DEFAULT_LITSAN_CONFIG.algorithm.capture.longEpisodeReflectMode),
+            downstreamStepCount: numberValue(capture.downstreamStepCount, DEFAULT_LITSAN_CONFIG.algorithm.capture.downstreamStepCount),
+            taskContextMaxChars: numberValue(capture.taskContextMaxChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.taskContextMaxChars),
+            downstreamContextMaxChars: numberValue(capture.downstreamContextMaxChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.downstreamContextMaxChars),
+            downstreamPerStepMaxChars: numberValue(capture.downstreamPerStepMaxChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.downstreamPerStepMaxChars),
+            synthOutcomeMaxChars: numberValue(capture.synthOutcomeMaxChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.synthOutcomeMaxChars),
+            reflectionBatchWindowSize: numberValue(capture.reflectionBatchWindowSize, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchWindowSize),
+            reflectionBatchOverlap: numberValue(capture.reflectionBatchOverlap, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchOverlap),
+            reflectionBatchDegradedWindowSize: numberValue(capture.reflectionBatchDegradedWindowSize, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchDegradedWindowSize),
+            reflectionBatchDegradedOverlap: numberValue(capture.reflectionBatchDegradedOverlap, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchDegradedOverlap),
+            reflectionBatchPrimaryMaxRetries: numberValue(capture.reflectionBatchPrimaryMaxRetries, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchPrimaryMaxRetries),
+            reflectionBatchDegradedMaxRetries: numberValue(capture.reflectionBatchDegradedMaxRetries, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchDegradedMaxRetries),
+            reflectionBatchStepStateChars: numberValue(capture.reflectionBatchStepStateChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchStepStateChars),
+            reflectionBatchStepThinkingChars: numberValue(capture.reflectionBatchStepThinkingChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchStepThinkingChars),
+            reflectionBatchStepActionChars: numberValue(capture.reflectionBatchStepActionChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchStepActionChars),
+            reflectionBatchToolInputChars: numberValue(capture.reflectionBatchToolInputChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchToolInputChars),
+            reflectionBatchToolOutputChars: numberValue(capture.reflectionBatchToolOutputChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchToolOutputChars),
+            reflectionBatchToolErrorChars: numberValue(capture.reflectionBatchToolErrorChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchToolErrorChars),
+            reflectionBatchOutcomeChars: numberValue(capture.reflectionBatchOutcomeChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchOutcomeChars),
+            reflectionBatchReflectionChars: numberValue(capture.reflectionBatchReflectionChars, DEFAULT_LITSAN_CONFIG.algorithm.capture.reflectionBatchReflectionChars)
         },
         reward: {
-            llmScoring: booleanValue(reward.llmScoring, DEFAULT_MEMMY_CONFIG.algorithm.reward.llmScoring),
-            gamma: numberValue(reward.gamma, DEFAULT_MEMMY_CONFIG.algorithm.reward.gamma),
-            lambda: numberValue(reward.lambda, DEFAULT_MEMMY_CONFIG.algorithm.reward.lambda),
-            delta: numberValue(reward.delta, DEFAULT_MEMMY_CONFIG.algorithm.reward.delta),
-            tauSoftmax: numberValue(reward.tauSoftmax, DEFAULT_MEMMY_CONFIG.algorithm.reward.tauSoftmax),
-            decayHalfLifeDays: numberValue(reward.decayHalfLifeDays, DEFAULT_MEMMY_CONFIG.algorithm.reward.decayHalfLifeDays),
-            implicitThreshold: numberValue(reward.implicitThreshold, DEFAULT_MEMMY_CONFIG.algorithm.reward.implicitThreshold),
-            feedbackWindowSec: numberValue(reward.feedbackWindowSec, DEFAULT_MEMMY_CONFIG.algorithm.reward.feedbackWindowSec),
-            summaryMaxChars: numberValue(reward.summaryMaxChars, DEFAULT_MEMMY_CONFIG.algorithm.reward.summaryMaxChars),
-            llmConcurrency: numberValue(reward.llmConcurrency, DEFAULT_MEMMY_CONFIG.algorithm.reward.llmConcurrency),
-            minExchangesForCompletion: numberValue(reward.minExchangesForCompletion, DEFAULT_MEMMY_CONFIG.algorithm.reward.minExchangesForCompletion),
-            minContentCharsForCompletion: numberValue(reward.minContentCharsForCompletion, DEFAULT_MEMMY_CONFIG.algorithm.reward.minContentCharsForCompletion),
-            toolHeavyRatio: numberValue(reward.toolHeavyRatio, DEFAULT_MEMMY_CONFIG.algorithm.reward.toolHeavyRatio),
-            minAssistantCharsForToolHeavy: numberValue(reward.minAssistantCharsForToolHeavy, DEFAULT_MEMMY_CONFIG.algorithm.reward.minAssistantCharsForToolHeavy)
+            llmScoring: booleanValue(reward.llmScoring, DEFAULT_LITSAN_CONFIG.algorithm.reward.llmScoring),
+            gamma: numberValue(reward.gamma, DEFAULT_LITSAN_CONFIG.algorithm.reward.gamma),
+            lambda: numberValue(reward.lambda, DEFAULT_LITSAN_CONFIG.algorithm.reward.lambda),
+            delta: numberValue(reward.delta, DEFAULT_LITSAN_CONFIG.algorithm.reward.delta),
+            tauSoftmax: numberValue(reward.tauSoftmax, DEFAULT_LITSAN_CONFIG.algorithm.reward.tauSoftmax),
+            decayHalfLifeDays: numberValue(reward.decayHalfLifeDays, DEFAULT_LITSAN_CONFIG.algorithm.reward.decayHalfLifeDays),
+            implicitThreshold: numberValue(reward.implicitThreshold, DEFAULT_LITSAN_CONFIG.algorithm.reward.implicitThreshold),
+            feedbackWindowSec: numberValue(reward.feedbackWindowSec, DEFAULT_LITSAN_CONFIG.algorithm.reward.feedbackWindowSec),
+            summaryMaxChars: numberValue(reward.summaryMaxChars, DEFAULT_LITSAN_CONFIG.algorithm.reward.summaryMaxChars),
+            llmConcurrency: numberValue(reward.llmConcurrency, DEFAULT_LITSAN_CONFIG.algorithm.reward.llmConcurrency),
+            minExchangesForCompletion: numberValue(reward.minExchangesForCompletion, DEFAULT_LITSAN_CONFIG.algorithm.reward.minExchangesForCompletion),
+            minContentCharsForCompletion: numberValue(reward.minContentCharsForCompletion, DEFAULT_LITSAN_CONFIG.algorithm.reward.minContentCharsForCompletion),
+            toolHeavyRatio: numberValue(reward.toolHeavyRatio, DEFAULT_LITSAN_CONFIG.algorithm.reward.toolHeavyRatio),
+            minAssistantCharsForToolHeavy: numberValue(reward.minAssistantCharsForToolHeavy, DEFAULT_LITSAN_CONFIG.algorithm.reward.minAssistantCharsForToolHeavy)
         },
         feedback: {
-            failureThreshold: numberValue(feedback.failureThreshold, DEFAULT_MEMMY_CONFIG.algorithm.feedback.failureThreshold),
-            failureWindow: numberValue(feedback.failureWindow, DEFAULT_MEMMY_CONFIG.algorithm.feedback.failureWindow),
-            valueDelta: numberValue(feedback.valueDelta, DEFAULT_MEMMY_CONFIG.algorithm.feedback.valueDelta),
-            minLowValueThreshold: numberValue(feedback.minLowValueThreshold, DEFAULT_MEMMY_CONFIG.algorithm.feedback.minLowValueThreshold),
-            useLlm: booleanValue(feedback.useLlm, DEFAULT_MEMMY_CONFIG.algorithm.feedback.useLlm),
-            cooldownMs: numberValue(feedback.cooldownMs, DEFAULT_MEMMY_CONFIG.algorithm.feedback.cooldownMs),
-            traceCharCap: numberValue(feedback.traceCharCap, DEFAULT_MEMMY_CONFIG.algorithm.feedback.traceCharCap),
-            evidenceLimit: numberValue(feedback.evidenceLimit, DEFAULT_MEMMY_CONFIG.algorithm.feedback.evidenceLimit)
+            failureThreshold: numberValue(feedback.failureThreshold, DEFAULT_LITSAN_CONFIG.algorithm.feedback.failureThreshold),
+            failureWindow: numberValue(feedback.failureWindow, DEFAULT_LITSAN_CONFIG.algorithm.feedback.failureWindow),
+            valueDelta: numberValue(feedback.valueDelta, DEFAULT_LITSAN_CONFIG.algorithm.feedback.valueDelta),
+            minLowValueThreshold: numberValue(feedback.minLowValueThreshold, DEFAULT_LITSAN_CONFIG.algorithm.feedback.minLowValueThreshold),
+            useLlm: booleanValue(feedback.useLlm, DEFAULT_LITSAN_CONFIG.algorithm.feedback.useLlm),
+            cooldownMs: numberValue(feedback.cooldownMs, DEFAULT_LITSAN_CONFIG.algorithm.feedback.cooldownMs),
+            traceCharCap: numberValue(feedback.traceCharCap, DEFAULT_LITSAN_CONFIG.algorithm.feedback.traceCharCap),
+            evidenceLimit: numberValue(feedback.evidenceLimit, DEFAULT_LITSAN_CONFIG.algorithm.feedback.evidenceLimit)
         },
         negativeExperience: {
-            enabled: booleanValue(negativeExperience.enabled, DEFAULT_MEMMY_CONFIG.algorithm.negativeExperience.enabled),
-            failureRTaskThreshold: numberValue(negativeExperience.failureRTaskThreshold, DEFAULT_MEMMY_CONFIG.algorithm.negativeExperience.failureRTaskThreshold),
-            maxAntiPatterns: numberValue(negativeExperience.maxAntiPatterns, DEFAULT_MEMMY_CONFIG.algorithm.negativeExperience.maxAntiPatterns),
-            maxPreferences: numberValue(negativeExperience.maxPreferences, DEFAULT_MEMMY_CONFIG.algorithm.negativeExperience.maxPreferences),
-            maxSourceIds: numberValue(negativeExperience.maxSourceIds, DEFAULT_MEMMY_CONFIG.algorithm.negativeExperience.maxSourceIds),
-            implicitConfidenceCap: numberValue(negativeExperience.implicitConfidenceCap, DEFAULT_MEMMY_CONFIG.algorithm.negativeExperience.implicitConfidenceCap)
+            enabled: booleanValue(negativeExperience.enabled, DEFAULT_LITSAN_CONFIG.algorithm.negativeExperience.enabled),
+            failureRTaskThreshold: numberValue(negativeExperience.failureRTaskThreshold, DEFAULT_LITSAN_CONFIG.algorithm.negativeExperience.failureRTaskThreshold),
+            maxAntiPatterns: numberValue(negativeExperience.maxAntiPatterns, DEFAULT_LITSAN_CONFIG.algorithm.negativeExperience.maxAntiPatterns),
+            maxPreferences: numberValue(negativeExperience.maxPreferences, DEFAULT_LITSAN_CONFIG.algorithm.negativeExperience.maxPreferences),
+            maxSourceIds: numberValue(negativeExperience.maxSourceIds, DEFAULT_LITSAN_CONFIG.algorithm.negativeExperience.maxSourceIds),
+            implicitConfidenceCap: numberValue(negativeExperience.implicitConfidenceCap, DEFAULT_LITSAN_CONFIG.algorithm.negativeExperience.implicitConfidenceCap)
         },
         l2Induction: {
-            useLlm: booleanValue(l2.useLlm, DEFAULT_MEMMY_CONFIG.algorithm.l2Induction.useLlm),
-            minEpisodesForInduction: numberValue(l2.minEpisodesForInduction, DEFAULT_MEMMY_CONFIG.algorithm.l2Induction.minEpisodesForInduction),
-            minEpisodesForActivation: numberValue(l2.minEpisodesForActivation, DEFAULT_MEMMY_CONFIG.algorithm.l2Induction.minEpisodesForActivation),
-            minSimilarity: numberValue(l2.minSimilarity, DEFAULT_MEMMY_CONFIG.algorithm.l2Induction.minSimilarity),
-            candidateTtlDays: numberValue(l2.candidateTtlDays, DEFAULT_MEMMY_CONFIG.algorithm.l2Induction.candidateTtlDays),
-            minTraceValue: numberValue(l2.minTraceValue, DEFAULT_MEMMY_CONFIG.algorithm.l2Induction.minTraceValue),
-            minGain: numberValue(l2.minGain, DEFAULT_MEMMY_CONFIG.algorithm.l2Induction.minGain),
-            archiveGain: numberValue(l2.archiveGain, DEFAULT_MEMMY_CONFIG.algorithm.l2Induction.archiveGain),
-            traceCharCap: numberValue(l2.traceCharCap, DEFAULT_MEMMY_CONFIG.algorithm.l2Induction.traceCharCap),
-            tauSoftmax: numberValue(l2.tauSoftmax, DEFAULT_MEMMY_CONFIG.algorithm.l2Induction.tauSoftmax),
-            gainEmaAlpha: numberValue(l2.gainEmaAlpha, DEFAULT_MEMMY_CONFIG.algorithm.l2Induction.gainEmaAlpha)
+            useLlm: booleanValue(l2.useLlm, DEFAULT_LITSAN_CONFIG.algorithm.l2Induction.useLlm),
+            minEpisodesForInduction: numberValue(l2.minEpisodesForInduction, DEFAULT_LITSAN_CONFIG.algorithm.l2Induction.minEpisodesForInduction),
+            minEpisodesForActivation: numberValue(l2.minEpisodesForActivation, DEFAULT_LITSAN_CONFIG.algorithm.l2Induction.minEpisodesForActivation),
+            minSimilarity: numberValue(l2.minSimilarity, DEFAULT_LITSAN_CONFIG.algorithm.l2Induction.minSimilarity),
+            candidateTtlDays: numberValue(l2.candidateTtlDays, DEFAULT_LITSAN_CONFIG.algorithm.l2Induction.candidateTtlDays),
+            minTraceValue: numberValue(l2.minTraceValue, DEFAULT_LITSAN_CONFIG.algorithm.l2Induction.minTraceValue),
+            minGain: numberValue(l2.minGain, DEFAULT_LITSAN_CONFIG.algorithm.l2Induction.minGain),
+            archiveGain: numberValue(l2.archiveGain, DEFAULT_LITSAN_CONFIG.algorithm.l2Induction.archiveGain),
+            traceCharCap: numberValue(l2.traceCharCap, DEFAULT_LITSAN_CONFIG.algorithm.l2Induction.traceCharCap),
+            tauSoftmax: numberValue(l2.tauSoftmax, DEFAULT_LITSAN_CONFIG.algorithm.l2Induction.tauSoftmax),
+            gainEmaAlpha: numberValue(l2.gainEmaAlpha, DEFAULT_LITSAN_CONFIG.algorithm.l2Induction.gainEmaAlpha)
         },
         l3Abstraction: {
-            useLlm: booleanValue(l3.useLlm, DEFAULT_MEMMY_CONFIG.algorithm.l3Abstraction.useLlm),
-            minPolicies: numberValue(l3.minPolicies, DEFAULT_MEMMY_CONFIG.algorithm.l3Abstraction.minPolicies),
-            minPolicyGain: numberValue(l3.minPolicyGain, DEFAULT_MEMMY_CONFIG.algorithm.l3Abstraction.minPolicyGain),
-            minPolicySupport: numberValue(l3.minPolicySupport, DEFAULT_MEMMY_CONFIG.algorithm.l3Abstraction.minPolicySupport),
-            clusterMinSimilarity: numberValue(l3.clusterMinSimilarity, DEFAULT_MEMMY_CONFIG.algorithm.l3Abstraction.clusterMinSimilarity),
-            policyCharCap: numberValue(l3.policyCharCap, DEFAULT_MEMMY_CONFIG.algorithm.l3Abstraction.policyCharCap),
-            traceCharCap: numberValue(l3.traceCharCap, DEFAULT_MEMMY_CONFIG.algorithm.l3Abstraction.traceCharCap),
-            traceEvidencePerPolicy: numberValue(l3.traceEvidencePerPolicy, DEFAULT_MEMMY_CONFIG.algorithm.l3Abstraction.traceEvidencePerPolicy),
-            cooldownDays: numberValue(l3.cooldownDays, DEFAULT_MEMMY_CONFIG.algorithm.l3Abstraction.cooldownDays),
-            confidenceDelta: numberValue(l3.confidenceDelta, DEFAULT_MEMMY_CONFIG.algorithm.l3Abstraction.confidenceDelta),
-            minConfidenceForRetrieval: numberValue(l3.minConfidenceForRetrieval, DEFAULT_MEMMY_CONFIG.algorithm.l3Abstraction.minConfidenceForRetrieval)
+            useLlm: booleanValue(l3.useLlm, DEFAULT_LITSAN_CONFIG.algorithm.l3Abstraction.useLlm),
+            minPolicies: numberValue(l3.minPolicies, DEFAULT_LITSAN_CONFIG.algorithm.l3Abstraction.minPolicies),
+            minPolicyGain: numberValue(l3.minPolicyGain, DEFAULT_LITSAN_CONFIG.algorithm.l3Abstraction.minPolicyGain),
+            minPolicySupport: numberValue(l3.minPolicySupport, DEFAULT_LITSAN_CONFIG.algorithm.l3Abstraction.minPolicySupport),
+            clusterMinSimilarity: numberValue(l3.clusterMinSimilarity, DEFAULT_LITSAN_CONFIG.algorithm.l3Abstraction.clusterMinSimilarity),
+            policyCharCap: numberValue(l3.policyCharCap, DEFAULT_LITSAN_CONFIG.algorithm.l3Abstraction.policyCharCap),
+            traceCharCap: numberValue(l3.traceCharCap, DEFAULT_LITSAN_CONFIG.algorithm.l3Abstraction.traceCharCap),
+            traceEvidencePerPolicy: numberValue(l3.traceEvidencePerPolicy, DEFAULT_LITSAN_CONFIG.algorithm.l3Abstraction.traceEvidencePerPolicy),
+            cooldownDays: numberValue(l3.cooldownDays, DEFAULT_LITSAN_CONFIG.algorithm.l3Abstraction.cooldownDays),
+            confidenceDelta: numberValue(l3.confidenceDelta, DEFAULT_LITSAN_CONFIG.algorithm.l3Abstraction.confidenceDelta),
+            minConfidenceForRetrieval: numberValue(l3.minConfidenceForRetrieval, DEFAULT_LITSAN_CONFIG.algorithm.l3Abstraction.minConfidenceForRetrieval)
         },
         skill: {
-            useLlm: booleanValue(skill.useLlm, DEFAULT_MEMMY_CONFIG.algorithm.skill.useLlm),
-            minEtaForRetrieval: numberValue(skill.minEtaForRetrieval, DEFAULT_MEMMY_CONFIG.algorithm.skill.minEtaForRetrieval),
-            minSupport: numberValue(skill.minSupport, DEFAULT_MEMMY_CONFIG.algorithm.skill.minSupport),
-            minGain: numberValue(skill.minGain, DEFAULT_MEMMY_CONFIG.algorithm.skill.minGain),
-            candidateTrials: numberValue(skill.candidateTrials, DEFAULT_MEMMY_CONFIG.algorithm.skill.candidateTrials),
-            cooldownMs: numberValue(skill.cooldownMs, DEFAULT_MEMMY_CONFIG.algorithm.skill.cooldownMs),
-            traceCharCap: numberValue(skill.traceCharCap, DEFAULT_MEMMY_CONFIG.algorithm.skill.traceCharCap),
-            evidenceLimit: numberValue(skill.evidenceLimit, DEFAULT_MEMMY_CONFIG.algorithm.skill.evidenceLimit),
-            etaDelta: numberValue(skill.etaDelta, DEFAULT_MEMMY_CONFIG.algorithm.skill.etaDelta),
-            archiveEta: numberValue(skill.archiveEta, DEFAULT_MEMMY_CONFIG.algorithm.skill.archiveEta),
-            repairCandidateMinEta: numberValue(skill.repairCandidateMinEta, DEFAULT_MEMMY_CONFIG.algorithm.skill.repairCandidateMinEta),
-            outputLanguageMode: skillOutputLanguageMode(skill.outputLanguageMode, DEFAULT_MEMMY_CONFIG.algorithm.skill.outputLanguageMode),
-            outcomeRTaskSuccessThreshold: numberValue(skill.outcomeRTaskSuccessThreshold, DEFAULT_MEMMY_CONFIG.algorithm.skill.outcomeRTaskSuccessThreshold),
-            outcomeRTaskFailureThreshold: numberValue(skill.outcomeRTaskFailureThreshold, DEFAULT_MEMMY_CONFIG.algorithm.skill.outcomeRTaskFailureThreshold),
-            failureEpisodeScorePenalty: numberValue(skill.failureEpisodeScorePenalty, DEFAULT_MEMMY_CONFIG.algorithm.skill.failureEpisodeScorePenalty),
-            failureEpisodeMaxRatio: numberValue(skill.failureEpisodeMaxRatio, DEFAULT_MEMMY_CONFIG.algorithm.skill.failureEpisodeMaxRatio)
+            useLlm: booleanValue(skill.useLlm, DEFAULT_LITSAN_CONFIG.algorithm.skill.useLlm),
+            minEtaForRetrieval: numberValue(skill.minEtaForRetrieval, DEFAULT_LITSAN_CONFIG.algorithm.skill.minEtaForRetrieval),
+            minSupport: numberValue(skill.minSupport, DEFAULT_LITSAN_CONFIG.algorithm.skill.minSupport),
+            minGain: numberValue(skill.minGain, DEFAULT_LITSAN_CONFIG.algorithm.skill.minGain),
+            candidateTrials: numberValue(skill.candidateTrials, DEFAULT_LITSAN_CONFIG.algorithm.skill.candidateTrials),
+            cooldownMs: numberValue(skill.cooldownMs, DEFAULT_LITSAN_CONFIG.algorithm.skill.cooldownMs),
+            traceCharCap: numberValue(skill.traceCharCap, DEFAULT_LITSAN_CONFIG.algorithm.skill.traceCharCap),
+            evidenceLimit: numberValue(skill.evidenceLimit, DEFAULT_LITSAN_CONFIG.algorithm.skill.evidenceLimit),
+            etaDelta: numberValue(skill.etaDelta, DEFAULT_LITSAN_CONFIG.algorithm.skill.etaDelta),
+            archiveEta: numberValue(skill.archiveEta, DEFAULT_LITSAN_CONFIG.algorithm.skill.archiveEta),
+            repairCandidateMinEta: numberValue(skill.repairCandidateMinEta, DEFAULT_LITSAN_CONFIG.algorithm.skill.repairCandidateMinEta),
+            outputLanguageMode: skillOutputLanguageMode(skill.outputLanguageMode, DEFAULT_LITSAN_CONFIG.algorithm.skill.outputLanguageMode),
+            outcomeRTaskSuccessThreshold: numberValue(skill.outcomeRTaskSuccessThreshold, DEFAULT_LITSAN_CONFIG.algorithm.skill.outcomeRTaskSuccessThreshold),
+            outcomeRTaskFailureThreshold: numberValue(skill.outcomeRTaskFailureThreshold, DEFAULT_LITSAN_CONFIG.algorithm.skill.outcomeRTaskFailureThreshold),
+            failureEpisodeScorePenalty: numberValue(skill.failureEpisodeScorePenalty, DEFAULT_LITSAN_CONFIG.algorithm.skill.failureEpisodeScorePenalty),
+            failureEpisodeMaxRatio: numberValue(skill.failureEpisodeMaxRatio, DEFAULT_LITSAN_CONFIG.algorithm.skill.failureEpisodeMaxRatio)
         },
         session: {
             followUpMode: "merge_follow_ups",
-            mergeMaxGapMs: numberValue(session.mergeMaxGapMs, DEFAULT_MEMMY_CONFIG.algorithm.session.mergeMaxGapMs)
+            mergeMaxGapMs: numberValue(session.mergeMaxGapMs, DEFAULT_LITSAN_CONFIG.algorithm.session.mergeMaxGapMs)
         },
         retrieval: {
-            tier1TopK: numberValue(retrieval.tier1TopK, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.tier1TopK),
-            tier2TopK: numberValue(retrieval.tier2TopK, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.tier2TopK),
-            tier3TopK: numberValue(retrieval.tier3TopK, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.tier3TopK),
-            candidatePoolFactor: numberValue(retrieval.candidatePoolFactor, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.candidatePoolFactor),
-            weightCosine: numberValue(retrieval.weightCosine, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.weightCosine),
-            weightPriority: numberValue(retrieval.weightPriority, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.weightPriority),
-            mmrLambda: numberValue(retrieval.mmrLambda, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.mmrLambda),
-            rrfConstant: numberValue(retrieval.rrfConstant, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.rrfConstant),
-            relativeThresholdFloor: numberValue(retrieval.relativeThresholdFloor, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.relativeThresholdFloor),
-            minRecallScore: numberValue(retrieval.minRecallScore, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.minRecallScore),
-            minSkillEta: numberValue(retrieval.minSkillEta, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.minSkillEta),
-            minTraceSim: numberValue(retrieval.minTraceSim, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.minTraceSim),
-            episodeGoalMinSim: numberValue(retrieval.episodeGoalMinSim, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.episodeGoalMinSim),
-            includeLowValue: booleanValue(retrieval.includeLowValue, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.includeLowValue),
-            tagFilter: retrievalTagFilter(retrieval.tagFilter, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.tagFilter),
-            keywordTopK: numberValue(retrieval.keywordTopK, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.keywordTopK),
-            skillEtaBlend: numberValue(retrieval.skillEtaBlend, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.skillEtaBlend),
-            smartSeed: booleanValue(retrieval.smartSeed, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.smartSeed),
-            smartSeedRatio: numberValue(retrieval.smartSeedRatio, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.smartSeedRatio),
-            multiChannelBypass: booleanValue(retrieval.multiChannelBypass, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.multiChannelBypass),
-            skillInjectionMode: skillInjectionMode(retrieval.skillInjectionMode, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.skillInjectionMode),
-            skillSummaryChars: numberValue(retrieval.skillSummaryChars, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.skillSummaryChars),
-            llmFilterEnabled: booleanValue(retrieval.llmFilterEnabled, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.llmFilterEnabled),
-            llmFilterMaxKeep: numberValue(retrieval.llmFilterMaxKeep, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.llmFilterMaxKeep),
-            llmFilterFallbackMaxKeep: numberValue(retrieval.llmFilterFallbackMaxKeep, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.llmFilterFallbackMaxKeep),
-            llmFilterMinCandidates: numberValue(retrieval.llmFilterMinCandidates, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.llmFilterMinCandidates),
-            llmFilterCandidateBodyChars: numberValue(retrieval.llmFilterCandidateBodyChars, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.llmFilterCandidateBodyChars),
-            readOnlyInjectionProfile: readOnlyInjectionProfile(retrieval.readOnlyInjectionProfile, DEFAULT_MEMMY_CONFIG.algorithm.retrieval.readOnlyInjectionProfile)
+            tier1TopK: numberValue(retrieval.tier1TopK, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.tier1TopK),
+            tier2TopK: numberValue(retrieval.tier2TopK, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.tier2TopK),
+            tier3TopK: numberValue(retrieval.tier3TopK, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.tier3TopK),
+            candidatePoolFactor: numberValue(retrieval.candidatePoolFactor, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.candidatePoolFactor),
+            weightCosine: numberValue(retrieval.weightCosine, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.weightCosine),
+            weightPriority: numberValue(retrieval.weightPriority, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.weightPriority),
+            mmrLambda: numberValue(retrieval.mmrLambda, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.mmrLambda),
+            rrfConstant: numberValue(retrieval.rrfConstant, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.rrfConstant),
+            relativeThresholdFloor: numberValue(retrieval.relativeThresholdFloor, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.relativeThresholdFloor),
+            minRecallScore: numberValue(retrieval.minRecallScore, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.minRecallScore),
+            minSkillEta: numberValue(retrieval.minSkillEta, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.minSkillEta),
+            minTraceSim: numberValue(retrieval.minTraceSim, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.minTraceSim),
+            episodeGoalMinSim: numberValue(retrieval.episodeGoalMinSim, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.episodeGoalMinSim),
+            includeLowValue: booleanValue(retrieval.includeLowValue, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.includeLowValue),
+            tagFilter: retrievalTagFilter(retrieval.tagFilter, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.tagFilter),
+            keywordTopK: numberValue(retrieval.keywordTopK, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.keywordTopK),
+            skillEtaBlend: numberValue(retrieval.skillEtaBlend, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.skillEtaBlend),
+            smartSeed: booleanValue(retrieval.smartSeed, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.smartSeed),
+            smartSeedRatio: numberValue(retrieval.smartSeedRatio, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.smartSeedRatio),
+            multiChannelBypass: booleanValue(retrieval.multiChannelBypass, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.multiChannelBypass),
+            skillInjectionMode: skillInjectionMode(retrieval.skillInjectionMode, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.skillInjectionMode),
+            skillSummaryChars: numberValue(retrieval.skillSummaryChars, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.skillSummaryChars),
+            llmFilterEnabled: booleanValue(retrieval.llmFilterEnabled, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.llmFilterEnabled),
+            llmFilterMaxKeep: numberValue(retrieval.llmFilterMaxKeep, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.llmFilterMaxKeep),
+            llmFilterFallbackMaxKeep: numberValue(retrieval.llmFilterFallbackMaxKeep, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.llmFilterFallbackMaxKeep),
+            llmFilterMinCandidates: numberValue(retrieval.llmFilterMinCandidates, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.llmFilterMinCandidates),
+            llmFilterCandidateBodyChars: numberValue(retrieval.llmFilterCandidateBodyChars, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.llmFilterCandidateBodyChars),
+            readOnlyInjectionProfile: readOnlyInjectionProfile(retrieval.readOnlyInjectionProfile, DEFAULT_LITSAN_CONFIG.algorithm.retrieval.readOnlyInjectionProfile)
         }
     };
 }
@@ -960,14 +961,14 @@ function compactRecord(input) {
         (!isRecord(value) || Object.keys(value).length > 0)));
 }
 function numberEnv(name) {
-    const value = process.env[name];
+    const value = litsanEnv(name, process.env);
     if (!value)
         return undefined;
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : undefined;
 }
 function booleanEnv(name) {
-    const value = process.env[name]?.trim().toLowerCase();
+    const value = litsanEnv(name, process.env)?.trim().toLowerCase();
     if (!value)
         return undefined;
     if (value === "1" || value === "true" || value === "yes" || value === "on")
@@ -1004,7 +1005,7 @@ function optionalPathString(value) {
         : expanded;
 }
 function expandEnvString(value) {
-    return value.replace(/\$\{([A-Z0-9_]+)\}/g, (_match, name) => process.env[name] ?? "");
+    return value.replace(/\$\{([A-Z0-9_]+)\}/g, (_match, name) => litsanEnv(name, process.env) ?? "");
 }
 function numberValue(value, fallback) {
     return typeof value === "number" && Number.isFinite(value) ? value : fallback;

@@ -25,7 +25,7 @@ export interface ResultTransportEnvelope {
 
 // Shared by transports for the same account: HTTP can recreate the MCP server
 // between continuation requests. Read-only Skill/evidence loads retain the full
-// JSON in memory, preserving memhub_result without filesystem writes. Results
+// JSON in memory, preserving litsan_result without filesystem writes. Results
 // expire on restart or TTL; callers can rerun the original read in either case.
 const inlineResults = new Map<string, Map<string, { text: string; createdAt: number; bytes: number }>>();
 const MAX_INLINE_RESULT_BYTES = 256 * 1024 * 1024;
@@ -103,17 +103,17 @@ export class JsonResultTransport {
       info = statSync(path);
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        throw new Error("result spool expired; rerun the original Memhub tool");
+        throw new Error("result spool expired; rerun the original LITSAN tool");
       }
       throw error;
     }
-    if (Date.now() - info.mtimeMs > RESULT_TTL_MS) throw new Error("result spool expired; rerun the original Memhub tool");
+    if (Date.now() - info.mtimeMs > RESULT_TTL_MS) throw new Error("result spool expired; rerun the original LITSAN tool");
     let text: string;
     try {
       text = readFileSync(path, "utf8");
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-        throw new Error("result spool expired; rerun the original Memhub tool");
+        throw new Error("result spool expired; rerun the original LITSAN tool");
       }
       throw error;
     }
@@ -167,7 +167,7 @@ export class JsonResultTransport {
       result_chunk: text.slice(offset, safeEnd),
       instructions: nextOffset === null
         ? "All chunks have been read. Parse the concatenated result_chunk text as the original JSON result."
-        : `Call memhub_result with result_id=${resultId}, offset=${nextOffset} to continue. Concatenate result_chunk values in offset order before parsing JSON.`
+        : `Call litsan_result with result_id=${resultId}, offset=${nextOffset} to continue. Concatenate result_chunk values in offset order before parsing JSON.`
     };
   }
 

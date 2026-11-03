@@ -1,0 +1,20 @@
+{
+  "name": "Memhub P0 retrieval harness smoke suite",
+  "snapshot_id": "synthetic-p0-v1",
+  "memory_snapshot": [
+    { "evidence_ref": "l3:current", "layer": "L3", "state": "active" },
+    { "evidence_ref": "l3:superseded", "layer": "L3", "state": "superseded" },
+    { "evidence_ref": "l2:history", "layer": "L2", "state": "historical" }
+  ],
+  "cases": [
+    {
+      "id": "current-truth-over-superseded",
+      "query": "What is the current project truth?",
+      "project": "memhub",
+      "required_evidence": ["l3:current"],
+      "optional_evidence": ["l2:history"],
+      "forbidden_evidence": ["l3:superseded"],
+      "expected_current_claims": ["current project truth"]
+    }
+  ]
+}

@@ -1,6 +1,6 @@
-# Memhub privacy and data-flow boundary
+# LITSAN privacy and data-flow boundary
 
-Memhub stores conversation history, durable user memory and project context. These are private data by default, including project architecture read from existing local architecture Markdown.
+LITSAN stores conversation history, durable user memory and project context. These are private data by default, including project architecture read from existing local architecture Markdown.
 
 ## Default policy
 
@@ -14,7 +14,7 @@ paths use it:
 - remote storage backend construction;
 - raw Memory REST clients.
 
-Loopback HTTP/HTTPS targets are allowed. Non-loopback targets are denied unless the caller makes an explicit code-level `allowRemote: true` decision. This compatibility escape hatch is deliberately not exposed as a normal end-user Memhub configuration.
+Loopback HTTP/HTTPS targets are allowed. Non-loopback targets are denied unless the caller makes an explicit code-level `allowRemote: true` decision. This compatibility escape hatch is deliberately not exposed as a normal end-user LITSAN configuration.
 
 ## Data classes
 
@@ -43,7 +43,7 @@ egress paths and are default-denied by the core privacy boundary.
 
 ### Adapter-to-Memory transport
 
-Configured MCP clients may submit and recall memory through the authenticated runtime. Raw Memory Core remains loopback-only in supported Memhub deployments; remote hosts use the authenticated Cloudflare-to-Memhub MCP boundary rather than exposing Memory Core directly.
+Configured MCP clients may submit and recall memory through the authenticated runtime. Raw Memory Core remains loopback-only in supported LITSAN deployments; remote hosts use the authenticated Cloudflare-to-LITSAN MCP boundary rather than exposing Memory Core directly.
 
 ### Installer/update traffic
 
@@ -61,7 +61,7 @@ Internet AI host
 Cloudflare Access / tunnel
      |
      v
-Memhub MCP Gateway (identity + account scope)
+LITSAN MCP Gateway (identity + account scope)
      |
      | loopback only
      v
@@ -80,7 +80,7 @@ An authorization should record at least: account, data class/capability, destina
 
 ## Current ownership
 
-- Memhub owns the vendored Memory Core runtime and AgentSourceCore helper.
-- Memhub owns the lightweight Project Architecture compatibility layer. Its private account/project canonical document can be replaced only through an explicit full-text plan/approval/execute flow; repository Markdown and legacy `normify-*` sources remain read-only.
+- LITSAN owns the vendored Memory Core runtime and AgentSourceCore helper.
+- LITSAN owns the lightweight Project Architecture compatibility layer. Its private account/project canonical document can be replaced only through an explicit full-text plan/approval/execute flow; repository Markdown and legacy `normify-*` sources remain read-only.
 - The production Memory Core remains loopback-only.
 - Legacy standalone Memory/AgentSourceCore/Normify source trees are retired.

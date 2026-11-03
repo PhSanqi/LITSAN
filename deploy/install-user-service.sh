@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Single systemd unit generator for Memhub.
+# Single systemd unit generator for LITSAN.
 #
 # `editions/common/linux/install.sh` calls this script with --render-only after
 # it has created the state root, and standalone operators run it directly.
@@ -39,7 +39,7 @@ while [[ $# -gt 0 ]]; do
     --architecture-root) ARCHITECTURE_ROOT="${2:-}"; shift 2 ;;
     --base-path) MEMHUB_BASE_PATH="${2:-}"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
-    *) echo "[memhub] unknown argument: $1" >&2; usage >&2; exit 2 ;;
+    *) echo "[litsan] unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
 done
 
@@ -105,12 +105,12 @@ CORE_HOME="$(dirname "$CORE_CONFIG")"
 UNIT_DIR="$HOME/.config/systemd/user"
 
 # This script installs a fresh unit set, not an in-place upgrade. Refuse any
-# existing Memhub unit before writing state or replacing a service definition.
+# existing LITSAN unit before writing state or replacing a service definition.
 # Even a dangling symlink is an occupied unit path.
 if [[ -z "$RENDER_DIR" ]]; then
   for unit in memhub-core.service memhub.service memhub-bridge.service memhub-stack.target memhub-local.service memhub-server.service memhub-local-stack.target memhub-server-stack.target; do
     if [[ -e "$UNIT_DIR/$unit" || -L "$UNIT_DIR/$unit" ]]; then
-      echo "[memhub] Existing Memhub systemd unit ($unit); refusing fresh install. Use a reviewed upgrade procedure." >&2
+      echo "[litsan] Existing LITSAN systemd unit ($unit); refusing fresh install. Use a reviewed upgrade procedure." >&2
       exit 2
     fi
   done

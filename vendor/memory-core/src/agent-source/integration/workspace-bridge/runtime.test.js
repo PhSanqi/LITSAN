@@ -1,10 +1,10 @@
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
-import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
-import { afterEach, describe, expect, it } from "vitest";
-import { loadMemmyWorkspaceBridgeRuntimeAsset } from "./runtime-loader.js";
+import { afterEach, describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { loadLitsanWorkspaceBridgeRuntimeAsset } from "./runtime-loader.js";
 import { openRuntimeSession, readRuntimeConfig } from "./runtime.js";
 
 const temporaryDirectories = [];
@@ -17,21 +17,21 @@ afterEach(() => {
 describe("Memory lifecycle runtime", () => {
     it("reads Memory connection and owner settings", async () => {
         const fixture = createFixture();
-        const configUrl = pathToFileURL(join(fixture, "memmy-memory-config.json"));
+        const configUrl = pathToFileURL(join(fixture, "litsan-memory-config.json"));
         const configPath = join(fixture, "config.yaml");
         writeFileSync(configUrl, JSON.stringify({
-            memmy_config_path: configPath,
+            litsan_config_path: configPath,
             userId: "installed-owner",
             workspaceHostId: "a".repeat(64),
         }));
         writeFileSync(configPath, [
-            "memmyMemory:",
+            "litsanMemory:",
             "  storage:",
             "    endpoint: http://127.0.0.1:18888",
             "    token: test-token",
             "",
         ].join("\n"));
-        await expect(readRuntimeConfig(configUrl, true)).resolves.toEqual({
+        assert.deepEqual(await readRuntimeConfig(configUrl, true), {
             endpoint: "http://127.0.0.1:18888",
             token: "test-token",
             userId: "installed-owner",
@@ -56,12 +56,12 @@ describe("Memory lifecycle runtime", () => {
                 workspaceRoot: fixture,
                 pinnedOwner: true,
             });
-            expect(session).toMatchObject({
+            assert.deepEqual({ sessionId: session.sessionId, projectId: session.projectId, workspaceRoot: session.workspaceRoot }, {
                 sessionId: "memory-session-1",
                 projectId: null,
                 workspaceRoot: null,
             });
-            expect(requests).toEqual([{
+            assert.deepEqual(requests, [{
                 path: "/api/v1/sessions/open",
                 body: {
                     sessionId: "codex-memory-project",
@@ -69,37 +69,39 @@ describe("Memory lifecycle runtime", () => {
                     workspacePath: fixture,
                 },
             }]);
-            expect(JSON.stringify(requests)).not.toContain("l3WorldModel");
+            assert.ok(!JSON.stringify(requests).includes("l3WorldModel"));
         } finally {
             await close(server);
         }
     });
 
     it("ships a self-contained lifecycle asset without retired L3 protocol code", async () => {
-        const asset = await loadMemmyWorkspaceBridgeRuntimeAsset();
+        const asset = await loadLitsanWorkspaceBridgeRuntimeAsset();
         const imports = [...asset.matchAll(/(?:from\s+|import\s*)["']([^"']+)["']/gu)]
             .map((match) => match[1]);
-        expect(imports.every((specifier) => specifier?.startsWith("node:"))).toBe(true);
-        expect(asset).not.toContain("environment-sync");
-        expect(asset).not.toContain("RuntimeWorkspaceBridge");
-        expect(asset).not.toContain("l3WorldModelProtocolVersion");
-        expect(asset).not.toContain("/api/v1/l3-world-model");
-        expect(asset).not.toContain("l3-world-model-boundary");
+        assert.ok(imports.every((specifier) => specifier?.startsWith("node:")));
+        assert.ok(!asset.includes("environment-sync"));
+        assert.ok(!asset.includes("RuntimeWorkspaceBridge"));
+        assert.ok(!asset.includes("l3WorldModelProtocolVersion"));
+        assert.ok(!asset.includes("/api/v1/l3-world-model"));
+        assert.ok(!asset.includes("l3-world-model-boundary"));
     });
 });
 
 function createFixture() {
-    const directory = mkdtempSync(join(tmpdir(), "memmy-runtime-lifecycle-"));
+    const scratch = new URL("../../../../../../.tmp-c3/", import.meta.url);
+    mkdirSync(scratch, { recursive: true });
+    const directory = mkdtempSync(new URL("litsan-runtime-lifecycle-", scratch));
     temporaryDirectories.push(directory);
     return directory;
 }
 function runtimeConfig(directory, endpoint) {
-    const configUrl = pathToFileURL(join(directory, "memmy-memory-config.json"));
+    const configUrl = pathToFileURL(join(directory, "litsan-memory-config.json"));
     writeFileSync(configUrl, JSON.stringify({
         endpoint,
         userId: "installed-owner",
         workspaceHostId: "a".repeat(64),
-        memmy_config_path: join(directory, "missing.yaml"),
+        litsan_config_path: join(directory, "missing.yaml"),
     }));
     return configUrl;
 }

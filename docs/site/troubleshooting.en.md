@@ -34,7 +34,7 @@ Confirm project selector is truly empty and the API request has no project filte
 
 ## L1 is missing
 
-For the MCP path, confirm the model executed `memmy_turn open` and `memmy_turn commit` with the intended project/workspace evidence. Per-turn L1 evidence is authoritative; the index is rebuildable metadata.
+For the MCP path, confirm the model executed `litsan_turn open` and `litsan_turn commit` with the intended project/workspace evidence. Per-turn L1 evidence is authoritative; the index is rebuildable metadata.
 
 ## L1 exists but L2/L3 does not update
 

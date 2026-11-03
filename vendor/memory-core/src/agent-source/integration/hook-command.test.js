@@ -1,67 +1,64 @@
-import { describe, expect, it } from "vitest";
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
 import { createNodeHookCommand, resolveNodeExecutable } from "./hook-command.js";
 const HOME = "/Users/test";
 describe("resolveNodeExecutable", () => {
-    it.each([
-        "/Applications/Memmy.app/Contents/MacOS/Memmy",
-        "/Volumes/Memmy Installer/Memmy.app/Contents/MacOS/Memmy",
+    for (const execPath of [
+        "/Applications/LITSAN.app/Contents/MacOS/LITSAN",
+        "/Volumes/LITSAN Installer/LITSAN.app/Contents/MacOS/LITSAN",
         "/Applications/Electron.app/Contents/MacOS/Electron",
-        "/applications/MEMMY.APP/contents/macos/Memmy"
-    ])("rejects a packaged app host from process.execPath: %s", (execPath) => {
-        expect(resolveNodeExecutable(runtime({ execPath, executable: [execPath, "/opt/homebrew/bin/node"] })))
-            .toBe("/opt/homebrew/bin/node");
+        "/applications/LITSAN.APP/contents/macos/LITSAN"
+    ]) it(`rejects a packaged app host from process.execPath: ${execPath}`, () => {
+        assert.equal(resolveNodeExecutable(runtime({ execPath, executable: [execPath, "/opt/homebrew/bin/node"] })), "/opt/homebrew/bin/node");
     });
     it("rejects packaged app hosts supplied through environment overrides", () => {
-        const appHost = "/Applications/Memmy.app/Contents/MacOS/Memmy";
-        expect(resolveNodeExecutable(runtime({
-            env: { MEMMY_HOOK_NODE: appHost, NODE: "/usr/local/bin/node" },
+        const appHost = "/Applications/LITSAN.app/Contents/MacOS/LITSAN";
+        assert.equal(resolveNodeExecutable(runtime({
+            env: { LITSAN_HOOK_NODE: appHost, NODE: "/usr/local/bin/node" },
             executable: [appHost, "/usr/local/bin/node"]
-        }))).toBe("/usr/local/bin/node");
+        })), "/usr/local/bin/node");
     });
     it("rejects a branded non-Node process executable", () => {
-        const execPath = "/usr/local/bin/memmy";
-        expect(resolveNodeExecutable(runtime({ execPath, executable: [execPath, "/opt/homebrew/bin/node"] })))
-            .toBe("/opt/homebrew/bin/node");
+        const execPath = "/usr/local/bin/litsan";
+        assert.equal(resolveNodeExecutable(runtime({ execPath, executable: [execPath, "/opt/homebrew/bin/node"] })), "/opt/homebrew/bin/node");
     });
     it("preserves override, process, known-path, and PATH fallback precedence", () => {
-        expect(resolveNodeExecutable(runtime({
-            env: { MEMMY_HOOK_NODE: "/custom/bin/node" },
+        assert.equal(resolveNodeExecutable(runtime({
+            env: { LITSAN_HOOK_NODE: "/custom/bin/node" },
             execPath: "/runtime/bin/node",
             executable: ["/custom/bin/node", "/runtime/bin/node"]
-        }))).toBe("/custom/bin/node");
-        expect(resolveNodeExecutable(runtime({
+        })), "/custom/bin/node");
+        assert.equal(resolveNodeExecutable(runtime({
             execPath: "/runtime/bin/node",
             executable: ["/runtime/bin/node", "/opt/homebrew/bin/node"]
-        }))).toBe("/runtime/bin/node");
-        expect(resolveNodeExecutable(runtime({
-            execPath: "/Applications/Memmy.app/Contents/MacOS/Memmy",
+        })), "/runtime/bin/node");
+        assert.equal(resolveNodeExecutable(runtime({
+            execPath: "/Applications/LITSAN.app/Contents/MacOS/LITSAN",
             executable: ["/usr/local/bin/node"]
-        }))).toBe("/usr/local/bin/node");
-        expect(resolveNodeExecutable(runtime())).toBe("node");
+        })), "/usr/local/bin/node");
+        assert.equal(resolveNodeExecutable(runtime()), "node");
     });
     it("skips absolute candidates that exist but are not executable files", () => {
-        expect(resolveNodeExecutable(runtime({
-            env: { MEMMY_HOOK_NODE: "/custom/bin/node" },
+        assert.equal(resolveNodeExecutable(runtime({
+            env: { LITSAN_HOOK_NODE: "/custom/bin/node" },
             executable: ["/opt/homebrew/bin/node"]
-        }))).toBe("/opt/homebrew/bin/node");
+        })), "/opt/homebrew/bin/node");
     });
 });
 describe("createNodeHookCommand", () => {
     it("single-quotes the command on POSIX platforms", () => {
-        expect(createNodeHookCommand("/Users/me/Library/Application Support/hook.mjs", runtime()))
-            .toBe("'node' '/Users/me/Library/Application Support/hook.mjs'");
+        assert.equal(createNodeHookCommand("/Users/me/Library/Application Support/hook.mjs", runtime()), "'node' '/Users/me/Library/Application Support/hook.mjs'");
     });
     it("double-quotes paths on Windows so cmd.exe and PowerShell can run them", () => {
         const nodePath = "C:/Program Files/nodejs/node.exe";
-        expect(createNodeHookCommand("C:/Users/me/.codex/hooks/memmy-resume-hook.mjs", runtime({
+        assert.equal(createNodeHookCommand("C:/Users/me/.codex/hooks/litsan-resume-hook.mjs", runtime({
             platform: "win32",
-            env: { MEMMY_HOOK_NODE: nodePath },
+            env: { LITSAN_HOOK_NODE: nodePath },
             executable: [nodePath]
-        }))).toBe("\"C:/Program Files/nodejs/node.exe\" \"C:/Users/me/.codex/hooks/memmy-resume-hook.mjs\"");
+        })), "\"C:/Program Files/nodejs/node.exe\" \"C:/Users/me/.codex/hooks/litsan-resume-hook.mjs\"");
     });
     it("leaves a bare command name unquoted on Windows", () => {
-        expect(createNodeHookCommand("C:/Users/me/.codex/hooks/memmy-resume-hook.mjs", runtime({ platform: "win32" })))
-            .toBe("node \"C:/Users/me/.codex/hooks/memmy-resume-hook.mjs\"");
+        assert.equal(createNodeHookCommand("C:/Users/me/.codex/hooks/litsan-resume-hook.mjs", runtime({ platform: "win32" })), "node \"C:/Users/me/.codex/hooks/litsan-resume-hook.mjs\"");
     });
 });
 function runtime(overrides = {}) {

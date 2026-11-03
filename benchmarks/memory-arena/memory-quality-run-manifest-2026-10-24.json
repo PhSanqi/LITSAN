@@ -1,0 +1,108 @@
+{
+  "schema": "memory-quality-run-manifest-v1",
+  "benchmark_contract": "memhub-memory-quality-locomo-v1",
+  "generated_at": "2026-10-24T22:14:00+08:00",
+  "git_head": "65d5884e30634900df44c255d8d830f1e92f4971",
+  "frozen_memhub_snapshot": {
+    "sqlite_sha256": "23022f07f60a3a38825db18803c3bd435c842ad8b52b38b327a843452a3dd777",
+    "state_copies": [
+      "memhub-ab-v1",
+      "memhub-ab-core"
+    ],
+    "isolation": "same frozen memory snapshot; ranking mode only"
+  },
+  "validated": {
+    "typescript_build": true,
+    "memhub_core_interface_contract": true,
+    "memhub_core_retrieval_e2e": true,
+    "memory_quality_unit_tests": "4/4 passed",
+    "deepseek_proxy_syntax": true,
+    "everos_integrated_session_provenance_matches_standalone": true
+  },
+  "backend_status": {
+    "memhub_v1": "complete",
+    "memhub_core": "complete",
+    "everos_corrected_context": "complete",
+    "everos_structured_trace": "complete",
+    "mem0": "blocked: extraction upstream transport instability persists across curl, Node, small-batch, and DNS-pinned tests; not scored",
+    "hindsight": "pending: construction intentionally deferred while same extraction upstream is unhealthy"
+  },
+  "artifacts": {
+    "benchmarks/memory-arena/memory-quality-protocol.md": {
+      "sha256": "9a6df837fef0db8d9aadb9d3ef5370ade84f0063534ad29e17001237133f9f2f",
+      "bytes": 14164
+    },
+    "benchmarks/memory-arena/memory-quality-v1.json": {
+      "sha256": "e38654fc6e54f38244dafb7fb017ec5668b61c562945bb90da77f38d721c49cb",
+      "bytes": 3647
+    },
+    "benchmarks/memory-arena/memory-quality-report-draft.md": {
+      "sha256": "1f53057771e3aad0f0eb5e015ed1d8b105a22ceef467af00754b54658caecd15",
+      "bytes": 13183
+    },
+    "benchmarks/memory-arena/evaluate_memory_quality.py": {
+      "sha256": "4712d9717f39870f7f9b7ea3f3773324e378cfdc6070537afb48fd7ad08f39a0",
+      "bytes": 30810
+    },
+    "benchmarks/memory-arena/test_memory_quality.py": {
+      "sha256": "050d09b682c35a3321e1aa8ed5df2aaa6284f26e4fd0d9fd9da2b3bcd908443c",
+      "bytes": 4118
+    },
+    "benchmarks/memory-arena/collect_locomo_http_trace.py": {
+      "sha256": "a6f51b83e84c2c46a25ac8c39aa177e75d321609d1fcbf5da984194166f3f640",
+      "bytes": 6831
+    },
+    "benchmarks/memory-arena/collect_everos_locomo_trace.py": {
+      "sha256": "c172619e4222a5529fbbb848ebc47b269b651974a6a2de45eb93b9c7ae546e98",
+      "bytes": 6215
+    },
+    "tests/memhub-core-interface-contract.mjs": {
+      "sha256": "bfe00a926f0a2c390d0cb647ea7a5f49d3cc9ed8109a1175d9b5d58df4eb0848",
+      "bytes": 1885
+    },
+    "tests/memhub-core-retrieval-e2e.mjs": {
+      "sha256": "d6ae72c911d3b2a938f8fa8540b4131f0f0bd4148b3625fcb51f929fdc867214",
+      "bytes": 2631
+    },
+    "scripts/memory-arena-deepseek-proxy.mjs": {
+      "sha256": "feacc201a2221bb1eb41abf4cda47da2d632fbf47f15158bd2b6056c337f9280",
+      "bytes": 12532
+    },
+    ".review-runtime/memory-arena/results/memory-quality/memhub-v1-frozen-eval.json": {
+      "sha256": "229e0f94d8e4d6b9ecd00ef962c1f4dcd96670743f4a5656cb9655b3b6d5a7f2",
+      "bytes": 10694
+    },
+    ".review-runtime/memory-arena/results/memory-quality/memhub-core-frozen-eval.json": {
+      "sha256": "c12cfa789105df30d1659c2a01b361f3c023e83cd66734e532b0070bce32b1e1",
+      "bytes": 10700
+    },
+    ".review-runtime/memory-arena/results/memory-quality/memhub-v1-frozen-trace-k20.json": {
+      "sha256": "fc80ffe8995ae51b72edc5a254592c3c0c2c74cc9c522824c231692993da6f89",
+      "bytes": 13757755
+    },
+    ".review-runtime/memory-arena/results/memory-quality/memhub-core-frozen-trace-k20.json": {
+      "sha256": "b25e8af067910aae449a46796c95fd14da3f3069dddb0b9957d7dbd96b260bb1",
+      "bytes": 13757694
+    },
+    ".review-runtime/memory-arena/results/memory-quality/memhub-full-semantic.json": {
+      "sha256": "b6d1b12a657a7a26a53c4022151028525e4a1e714a68d5f9e937e13c57b6bc68",
+      "bytes": 8416
+    },
+    ".review-runtime/memory-arena/results/memory-quality/everos-full-semantic.json": {
+      "sha256": "cc3b714f7a0e8dcf860f8564a3fe1fac64ec9c9ab930ec547a80ca615d75c83d",
+      "bytes": 8243
+    },
+    ".review-runtime/memory-arena/results/memory-quality/everos-structured-trace-k20.json": {
+      "sha256": "9967d2fb97a086da2a4ab8588e49b384532ce3df2611bf4d8d82c86752acdf9e",
+      "bytes": 37824634
+    },
+    ".review-runtime/memory-arena/results/memory-quality/everos-structured-eval.json": {
+      "sha256": "11ca7ea067e5543311ccee2fca9a6804661372ff7a194722dfa579d22114d136",
+      "bytes": 13225
+    },
+    ".review-runtime/memory-arena/results/memory-quality/everos-session-provenance.json": {
+      "sha256": "0dc1792d90916e63aebe81b96bbd04726c5b706a9ca2cc8413af41a9d7295f06",
+      "bytes": 2330
+    }
+  }
+}

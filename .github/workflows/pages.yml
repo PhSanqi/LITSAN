@@ -1,4 +1,4 @@
-name: Publish public Memhub site
+name: Publish public LITSAN site
 
 on:
   push:

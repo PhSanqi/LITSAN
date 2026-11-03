@@ -1,6 +1,6 @@
 # An installer may replace only its own exact Task Scheduler registration.
 # A familiar task name or a matching node.exe command line is not ownership.
-function Get-MemhubInstallTask {
+function Get-LitsanInstallTask {
   param([Parameter(Mandatory)][string]$Name)
   try {
     $matches = @(Get-ScheduledTask -TaskPath "\" -TaskName $Name -ErrorAction Stop)
@@ -12,7 +12,7 @@ function Get-MemhubInstallTask {
   }
 }
 
-function Assert-MemhubInstallTask {
+function Assert-LitsanInstallTask {
   param(
     [Parameter(Mandatory)]$Task,
     [Parameter(Mandatory)][string]$Name,
@@ -46,7 +46,7 @@ function Assert-MemhubInstallTask {
   }
 }
 
-function Assert-MemhubInstallTaskSet {
+function Assert-LitsanInstallTaskSet {
   param(
     [Parameter(Mandatory)][string]$StateRoot
   )
@@ -55,39 +55,39 @@ function Assert-MemhubInstallTaskSet {
     @{ Name = "Memhub-Stack"; Launcher = "stack.cmd"; Legacy = $false },
     # Historical task names are migration blockers only. They are never
     # created by the current installer.
-    @{ Name = "Memhub-Local-Stack"; Launcher = "stack-local.cmd"; Legacy = $true },
-    @{ Name = "Memhub-Server-Stack"; Launcher = "stack-server.cmd"; Legacy = $true },
-    @{ Name = "Memhub-Memory"; Launcher = "memory.cmd"; Legacy = $true },
-    @{ Name = "Memhub-Local"; Launcher = "gateway.cmd"; Legacy = $true },
-    @{ Name = "Memhub-Bridge"; Launcher = "bridge.cmd"; Legacy = $true },
-    @{ Name = "Memhub-Server-Memory"; Launcher = "memory-server.cmd"; Legacy = $true },
-    @{ Name = "Memhub-Server"; Launcher = "gateway-server.cmd"; Legacy = $true }
+    @{ Name = "LITSAN-Local-Stack"; Launcher = "stack-local.cmd"; Legacy = $true },
+    @{ Name = "LITSAN-Server-Stack"; Launcher = "stack-server.cmd"; Legacy = $true },
+    @{ Name = "LITSAN-Memory"; Launcher = "memory.cmd"; Legacy = $true },
+    @{ Name = "LITSAN-Local"; Launcher = "gateway.cmd"; Legacy = $true },
+    @{ Name = "LITSAN-Bridge"; Launcher = "bridge.cmd"; Legacy = $true },
+    @{ Name = "LITSAN-Server-Memory"; Launcher = "memory-server.cmd"; Legacy = $true },
+    @{ Name = "LITSAN-Server"; Launcher = "gateway-server.cmd"; Legacy = $true }
   )
   $managed = @()
   $legacy = @()
   foreach ($spec in $specs) {
-    $task = Get-MemhubInstallTask -Name $spec.Name
+    $task = Get-LitsanInstallTask -Name $spec.Name
     if ($null -eq $task) { continue }
-    Assert-MemhubInstallTask -Task $task -Name $spec.Name -Launcher (Join-Path $runtime $spec.Launcher)
+    Assert-LitsanInstallTask -Task $task -Name $spec.Name -Launcher (Join-Path $runtime $spec.Launcher)
     if ($spec.Legacy) { $legacy += $spec.Name }
     else { $managed += $spec.Name }
   }
   if ($legacy.Count) {
-    throw ("Legacy Memhub tasks ({0}) require an explicitly authorized, " +
+    throw ("Legacy LITSAN tasks ({0}) require an explicitly authorized, " +
       "version-matched migration. The installer will not stop, delete, or " +
       "replace them automatically." -f ($legacy -join ", "))
   }
   return $managed
 }
 
-function Remove-MemhubVerifiedStackTask {
+function Remove-LitsanVerifiedStackTask {
   param(
     [Parameter(Mandatory)][string]$Name,
     [Parameter(Mandatory)][string]$Launcher
   )
-  $task = Get-MemhubInstallTask -Name $Name
+  $task = Get-LitsanInstallTask -Name $Name
   if ($null -eq $task) { throw "Scheduled task $Name disappeared during install; refusing to continue" }
-  Assert-MemhubInstallTask -Task $task -Name $Name -Launcher $Launcher
+  Assert-LitsanInstallTask -Task $task -Name $Name -Launcher $Launcher
   & schtasks.exe /End /TN $Name 2>$null | Out-Null
   & schtasks.exe /Delete /F /TN $Name | Out-Null
   if ($LASTEXITCODE -ne 0) { throw "Failed to remove verified scheduled task $Name" }

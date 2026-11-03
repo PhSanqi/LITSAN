@@ -3,7 +3,7 @@ import { access, appendFile, chmod, mkdir, readFile, rename, rm, writeFile, } fr
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-const PROFILE_MARKER = "# Memmy CLI PATH";
+const PROFILE_MARKER = "# LITSAN CLI PATH";
 const PROFILE_LINE = 'export PATH="$HOME/.local/bin:$PATH"';
 export async function viewerCliStatus(options = {}) {
     const paths = resolveViewerCliPaths(options);
@@ -35,7 +35,7 @@ export async function installViewerCli(options = {}) {
 function resolveViewerCliPaths(options) {
     const home = options.home ?? homedir();
     const platform = options.platform ?? process.platform;
-    const name = platform === "win32" ? "memmy-memory.cmd" : "memmy-memory";
+    const name = platform === "win32" ? "litsan-memory.cmd" : "litsan-memory";
     return {
         home,
         platform,

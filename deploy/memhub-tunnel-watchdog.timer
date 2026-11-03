@@ -1,5 +1,5 @@
 [Unit]
-Description=Memhub dedicated Cloudflare Tunnel health watchdog timer
+Description=LITSAN dedicated Cloudflare Tunnel health watchdog timer
 
 [Timer]
 OnBootSec=90s

@@ -3,21 +3,8 @@ import { mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { withFileMutationLock } from "./file-mutation-lock.js";
 
-export interface ArchitectureRevisionRecord {
-  revision_id: string;
-  account_id: string;
-  project_id: string;
-  path: string;
-  before_exists: boolean;
-  before_fingerprint: string;
-  before_content: string;
-  proposed_content: string;
-  proposed_sha256: string;
-  status: "prepared" | "committed";
-  created_at: string;
-  committed_at?: string;
-  after_fingerprint?: string;
-}
+import type { ArchitectureRevisionRecord } from "./contracts/architecture.js";
+export type { ArchitectureRevisionRecord } from "./contracts/architecture.js";
 
 export async function prepareArchitectureRevision(input: {
   stateRoot: string;

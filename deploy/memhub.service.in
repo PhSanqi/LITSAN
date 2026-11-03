@@ -1,5 +1,5 @@
 [Unit]
-Description=Memhub MCP Gateway
+Description=LITSAN MCP Gateway
 After=network-online.target memhub-core.service
 Requires=memhub-core.service
 Wants=network-online.target

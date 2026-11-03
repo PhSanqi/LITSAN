@@ -33,7 +33,7 @@ function ExpectRefusal([scriptblock]$action, [string]$reason) {
   if (-not $denied) { throw "Expected refusal: $reason" }
 }
 function Verify {
-  Assert-MemhubStackProcessOwner -LockPath $lock -NodePath $node -StackEntry $entry -StateRoot $stateHome
+  Assert-LitsanStackProcessOwner -LockPath $lock -NodePath $node -StackEntry $entry -StateRoot $stateHome
 }
 try {
   New-Item -ItemType Directory -Force -Path $root | Out-Null

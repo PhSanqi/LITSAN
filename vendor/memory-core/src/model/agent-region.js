@@ -1,3 +1,4 @@
+import { litsanEnv } from "../utils/litsan-compat.js";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 export function packagedDesktopEditionManifestPath(modelDirectory = import.meta.dirname) {
@@ -15,7 +16,7 @@ export function resolveMemoryAgentRegion(sourceProvider, options = {}) {
     if (manifestRegion)
         return manifestRegion;
     const env = options.env ?? process.env;
-    return regionFromIdentity(env.MEMMY_APP_EDITION, env.MEMMY_ACCOUNT_CHANNEL) ?? "cn";
+    return regionFromIdentity(litsanEnv("LITSAN_APP_EDITION", env), litsanEnv("LITSAN_ACCOUNT_CHANNEL", env)) ?? "cn";
 }
 function readDesktopEditionManifest(path) {
     try {

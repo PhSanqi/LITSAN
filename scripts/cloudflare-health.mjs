@@ -235,7 +235,7 @@ function metricWarnings(metrics, http2AbResult = "unknown") {
         : http2AbResult === "passed"
           ? "verify transport choice against current matched-window public success rate and HA before changing production"
           : "a protocol A/B may help only after verifying TCP/7844 connectivity and a safe rollback path";
-      warnings.push(`${endpoint.url}: high QUIC connection churn (${endpoint.quic_closed_connections_per_hour} lifetime-average closed connections/hour, Memhub heuristic); ${guidance}`);
+      warnings.push(`${endpoint.url}: high QUIC connection churn (${endpoint.quic_closed_connections_per_hour} lifetime-average closed connections/hour, LITSAN heuristic); ${guidance}`);
     }
     for (const ingress of endpoint.connector_config?.ingress ?? []) {
       const origin = ingress.origin_request;

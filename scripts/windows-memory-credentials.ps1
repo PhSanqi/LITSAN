@@ -1,6 +1,6 @@
 # Used by both Windows editions. Memory Core may rewrite JSON-compatible
 # memory-config.yaml as YAML on first launch; never assume it remains JSON.
-function Resolve-MemhubMemoryToken {
+function Resolve-LitsanMemoryToken {
   param([string]$ConfigPath, [string]$MemoryDir)
   if (-not (Test-Path $ConfigPath)) {
     if (Test-Path (Join-Path $MemoryDir "memory.sqlite")) {
@@ -51,7 +51,7 @@ function Resolve-MemhubMemoryToken {
   }
 }
 
-function New-MemhubMemoryToken {
+function New-LitsanMemoryToken {
   $bytes = New-Object byte[] 32
   $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
   try { $rng.GetBytes($bytes) } finally { $rng.Dispose() }

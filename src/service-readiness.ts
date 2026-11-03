@@ -3,7 +3,7 @@ import { connect } from "node:net";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
-export type MemhubServiceKind = "core" | "gateway";
+export type LitsanServiceKind = "core" | "gateway";
 
 export interface ServiceProbe {
   ok: boolean;
@@ -13,7 +13,7 @@ export interface ServiceProbe {
 
 export interface ServiceBuildIdentity {
   vendorSha256: string | null;
-  memhubVersion: string | null;
+  litsanVersion: string | null;
 }
 
 export interface ServiceHealthProbe extends ServiceProbe {
@@ -22,7 +22,7 @@ export interface ServiceHealthProbe extends ServiceProbe {
 }
 
 /**
- * The build of this installation: the audited vendor tree hash and the Memhub
+ * The build of this installation: the audited vendor tree hash and the LITSAN
  * package version. Both are read from the running distribution, so a gateway
  * and the Core it supervises should report the same values.
  */
@@ -39,17 +39,17 @@ export function readLocalBuildIdentity(): ServiceBuildIdentity {
   const packageJson = readJson(join(root, "package.json"));
   const components = (manifest as { components?: { memory?: { sha256?: unknown } } } | undefined)?.components;
   const vendorSha256 = components?.memory?.sha256;
-  const memhubVersion = (packageJson as { version?: unknown } | undefined)?.version;
+  const litsanVersion = (packageJson as { version?: unknown } | undefined)?.version;
   return {
     vendorSha256: typeof vendorSha256 === "string" ? vendorSha256 : null,
-    memhubVersion: typeof memhubVersion === "string" ? memhubVersion : null
+    litsanVersion: typeof litsanVersion === "string" ? litsanVersion : null
   };
 }
 
 export function buildIdentitiesMatch(expected: ServiceBuildIdentity, actual: ServiceBuildIdentity | undefined): boolean {
   if (!actual) return false;
   if (!expected.vendorSha256 || !actual.vendorSha256 || expected.vendorSha256 !== actual.vendorSha256) return false;
-  if (!expected.memhubVersion || !actual.memhubVersion || expected.memhubVersion !== actual.memhubVersion) return false;
+  if (!expected.litsanVersion || !actual.litsanVersion || expected.litsanVersion !== actual.litsanVersion) return false;
   return true;
 }
 
@@ -57,12 +57,12 @@ export function assertLoopbackHealthUrl(raw: string): URL {
   const url = new URL(raw);
   if (url.protocol !== "http:" || !["127.0.0.1", "localhost", "[::1]"].includes(url.hostname) ||
       url.username || url.password || url.search || url.hash) {
-    throw new Error("Memhub service readiness requires a plain loopback HTTP URL");
+    throw new Error("LITSAN service readiness requires a plain loopback HTTP URL");
   }
   return url;
 }
 
-export async function probeService(url: string, kind: MemhubServiceKind, timeoutMs = 1_000): Promise<ServiceProbe> {
+export async function probeService(url: string, kind: LitsanServiceKind, timeoutMs = 1_000): Promise<ServiceProbe> {
   const { ok, status, reason } = await probeServiceHealth(url, kind, timeoutMs);
   return { ok, status, reason };
 }
@@ -75,7 +75,7 @@ export async function probeService(url: string, kind: MemhubServiceKind, timeout
  */
 export async function probeServiceHealth(
   url: string,
-  kind: MemhubServiceKind,
+  kind: LitsanServiceKind,
   timeoutMs = 1_000
 ): Promise<ServiceHealthProbe> {
   assertLoopbackHealthUrl(url);
@@ -112,16 +112,17 @@ export async function probeServiceHealth(
   }
 }
 
-function parseBuildIdentity(value: unknown): ServiceBuildIdentity | undefined {
+export function parseBuildIdentity(value: unknown): ServiceBuildIdentity | undefined {
   if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
   const candidate = value as Record<string, unknown>;
-  if (typeof candidate.vendorSha256 !== "string" || typeof candidate.memhubVersion !== "string") return undefined;
-  return { vendorSha256: candidate.vendorSha256, memhubVersion: candidate.memhubVersion };
+  const litsanVersion = candidate.litsanVersion ?? candidate.memhubVersion; // Legacy Core wire identity until C3 is installed.
+  if (typeof candidate.vendorSha256 !== "string" || typeof litsanVersion !== "string") return undefined;
+  return { vendorSha256: candidate.vendorSha256, litsanVersion };
 }
 
 export async function waitForService(options: {
   url: string;
-  kind: MemhubServiceKind;
+  kind: LitsanServiceKind;
   timeoutMs?: number;
   intervalMs?: number;
   probeTimeoutMs?: number;
@@ -150,12 +151,12 @@ export async function waitForService(options: {
     if (probe.ok) {
       if (options.isAlive && !options.isAlive()) throw new Error(`${options.kind} process exited during readiness`);
       if (options.kind === "core" && options.expectedBuild &&
-          (options.expectedBuild.vendorSha256 || options.expectedBuild.memhubVersion) &&
+          (options.expectedBuild.vendorSha256 || options.expectedBuild.litsanVersion) &&
           !buildIdentitiesMatch(options.expectedBuild, probe.build)) {
         const expected = describeBuild(options.expectedBuild);
         const actual = probe.build ? describeBuild(probe.build) : "no build identity";
         throw new Error(
-          `core build mismatch: Core reports ${actual} but this Memhub installation is ${expected}; ` +
+          `core build mismatch: Core reports ${actual} but this LITSAN installation is ${expected}; ` +
           "the running Memory Core is stale after an upgrade — restart or reinstall the stack"
         );
       }
@@ -168,7 +169,7 @@ export async function waitForService(options: {
 }
 
 function describeBuild(build: ServiceBuildIdentity): string {
-  return `vendor ${build.vendorSha256 ?? "<unknown>"} / memhub ${build.memhubVersion ?? "<unknown>"}`;
+  return `vendor ${build.vendorSha256 ?? "<unknown>"} / litsan ${build.litsanVersion ?? "<unknown>"}`;
 }
 
 export async function loopbackPortOccupied(url: string, timeoutMs = 400): Promise<boolean> {

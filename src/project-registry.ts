@@ -1,36 +1,9 @@
+import type { ProjectState, ProjectTodoStatus, ProjectTodo, ProjectDescriptor, ProjectSuggestion } from "./contracts/projects.js";
+export type { ProjectState, ProjectTodoStatus, ProjectTodo, ProjectDescriptor, ProjectSuggestion } from "./contracts/projects.js";
 import { randomUUID } from "node:crypto";
 import { mkdir, open, rename, stat, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { withFileMutationLock } from "./file-mutation-lock.js";
-
-export type ProjectState = "active" | "archived" | "merged" | "deleted";
-export type ProjectTodoStatus = "pending" | "done";
-
-export interface ProjectTodo {
-  id: string;
-  text: string;
-  status: ProjectTodoStatus;
-  createdAt: string;
-  updatedAt: string;
-  completedAt?: string;
-}
-
-export interface ProjectDescriptor {
-  projectId: string;
-  name: string;
-  description: string;
-  manualDescription?: string;
-  distilledDescription?: string;
-  descriptionSource?: "manual" | "distilled" | "legacy" | "empty";
-  descriptionEvidenceRefs?: string[];
-  descriptionUpdatedAt?: string;
-  todos?: ProjectTodo[];
-  aliases: string[];
-  state: ProjectState;
-  mergedInto?: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 interface StoredProject extends ProjectDescriptor {
   accountId: string;
@@ -39,11 +12,6 @@ interface StoredProject extends ProjectDescriptor {
 interface ProjectRegistryFile {
   version: 1;
   projects: StoredProject[];
-}
-
-export interface ProjectSuggestion extends ProjectDescriptor {
-  similarity: number;
-  matchedBy: string;
 }
 
 export class JsonProjectRegistry {
@@ -124,7 +92,9 @@ export class JsonProjectRegistry {
         let similarity = 0;
         let matchedBy = project.projectId;
         for (const candidate of candidates) {
-          const score = projectSimilarity(normalizedQuery, candidate);
+          const score = projectMentioned(normalizedQuery, candidate)
+            ? (normalizeProjectKey(normalizedQuery) === normalizeProjectKey(candidate) ? 1 : 0.99)
+            : projectSimilarity(normalizedQuery, candidate);
           if (score > similarity) {
             similarity = score;
             matchedBy = candidate;
@@ -254,18 +224,31 @@ export class JsonProjectRegistry {
     });
   }
 
-  async addTodo(accountId: string, projectRef: string, textRaw: string): Promise<ProjectDescriptor> {
+  async addTodo(accountId: string, projectRef: string, textRaw: string, todoIdRaw?: string): Promise<ProjectDescriptor> {
     const account = requireNonEmpty(accountId, "accountId");
     const projectId = await this.resolve(account, projectRef);
     if (!projectId) throw new Error(`unknown or inactive project: ${projectRef}`);
     const text = requireNonEmpty(textRaw, "todo text");
     if (text.length > 2000) throw new TypeError("todo text must not exceed 2000 characters");
+    const todoId = todoIdRaw === undefined ? undefined : requireNonEmpty(todoIdRaw, "todoId").toLowerCase();
+    if (todoId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(todoId))
+      throw new TypeError("add todo_id must be a UUID");
     return this.serialize(async () => {
       const file = await this.read(true);
       const project = requireActive(file, account, projectId);
+      if (todoId) {
+        const existing = (project.todos ?? []).find(item => item.id === todoId);
+        if (existing) {
+          if (existing.text !== text) throw new Error("todo_id already in use for different text");
+          return stripAccount(project);
+        }
+        // IDs must stay unique within an account when two projects are merged.
+        if (file.projects.some(item => item.accountId === account && item.projectId !== projectId && item.todos?.some(todo => todo.id === todoId)))
+          throw new Error("todo_id already in use");
+      }
       const now = new Date().toISOString();
       const todo: ProjectTodo = {
-        id: randomUUID(),
+        id: todoId ?? randomUUID(),
         text,
         status: "pending",
         createdAt: now,
@@ -292,7 +275,10 @@ export class JsonProjectRegistry {
     return this.serialize(async () => {
       const file = await this.read(true);
       const project = requireActive(file, account, projectId);
-      const todo = (project.todos ?? []).find((item) => item.id === todoId);
+      const todos = project.todos ?? [];
+      const todo = todos.find((item) => item.id === todoId)
+        ?? (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(todoId)
+          ? todos.find((item) => item.id === todoId.toLowerCase()) : undefined);
       if (!todo) throw new Error(`project todo not found: ${todoId}`);
       // Repeated complete/reopen is idempotent: do not manufacture a new change timestamp.
       if (todo.status === status) return stripAccount(project);
@@ -479,6 +465,14 @@ export function projectSimilarity(left: string, right: string): number {
   return Math.max(0, 1 - distance / Math.max(a.length, b.length));
 }
 
+function projectMentioned(query: string, candidate: string): boolean {
+  const name = candidate.normalize("NFKC").toLocaleLowerCase().trim();
+  if (name.length < 2) return false;
+  const escaped = name.replace(/[.*+?^{}()|[\]\\$]/g, "\\$&");
+  return new RegExp("(?<![\\p{Script=Latin}\\p{N}_])" + escaped + "(?![\\p{Script=Latin}\\p{N}_])", "u")
+    .test(query.normalize("NFKC").toLocaleLowerCase());
+}
+
 function levenshtein(left: string, right: string): number {
   const previous = Array.from({ length: right.length + 1 }, (_, index) => index);
   for (let i = 1; i <= left.length; i += 1) {
@@ -527,6 +521,8 @@ function ensureAliasesAvailable(file: ProjectRegistryFile, accountId: string, pr
 
 function stripAccount(project: StoredProject): ProjectDescriptor {
   const { accountId: _accountId, ...descriptor } = project;
+  // Merge snapshots remain on disk; actionable Todos belong only to the canonical target.
+  if (descriptor.state === "merged") descriptor.todos = [];
   return structuredClone(descriptor);
 }
 

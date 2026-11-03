@@ -1,3 +1,5 @@
+import { litsanEnv } from "../vendor/memory-core/src/utils/litsan-compat.js";
+import { sanitizeLitsanProtocolText } from "../vendor/memory-core/src/utils/litsan-context-tags.js";
 import { assertTestPaths, createTestRoot, testEnvironment } from "./test-isolation.mjs";
 import assert from "node:assert/strict";
 import Database from "better-sqlite3";
@@ -26,6 +28,10 @@ import { projectOptionLabel, renderConsole } from "../dist/web-ui.js";
 
 const root = await createTestRoot("memhub-vendor-regression-");
 try {
+  assert.equal(litsanEnv("MEMMY_CONFIG", { LITSAN_CONFIG: "new", MEMMY_CONFIG: "old" }), "new");
+  for (const tag of ["memmy_memory_context", "litsan_memory_context"]) {
+    assert.equal(sanitizeLitsanProtocolText(`<${tag}>history</${tag}>request`), "request");
+  }
   await testRegistryAuthoritativeReads();
   testProjectOptionLabels();
   await testRuntimeIsolation();
@@ -100,7 +106,7 @@ async function testRegistryAuthoritativeReads() {
 function testProjectOptionLabels() {
   for (const [name, projectId, expected] of [
     ["memhub", "memhub", "memhub"],
-    ["MemHub", "memhub", "MemHub"],
+    ["LITSAN", "memhub", "LITSAN · memhub"],
     ["Memory Hub", "memhub", "Memory Hub · memhub"],
     ["", "memhub", "memhub"],
     ["<Hub & Co>", "hub", "<Hub & Co> · hub"]
@@ -109,10 +115,10 @@ function testProjectOptionLabels() {
   }
   const account = { account_id: "acct-test", username: "tester", role: "admin" };
   const html = renderConsole({ account, accounts: [account], projects: [
-    { projectId: "memhub", name: "MemHub", aliases: [], state: "active" },
+    { projectId: "memhub", name: "LITSAN", aliases: [], state: "active" },
     { projectId: "hub", name: "<Hub & Co>", aliases: [], state: "active" }
   ], adminView: true, localControl: true, selectedAccountId: account.account_id });
-  assert.ok(html.includes('<option value="memhub">MemHub</option>'));
+  assert.ok(html.includes('<option value="memhub">LITSAN · memhub</option>'));
   assert.ok(html.includes('<option value="hub">&lt;Hub &amp; Co&gt; · hub</option>'));
 }
 
@@ -152,14 +158,14 @@ function testSkillMetadataPrefersStructuredTitle() {
     memoryLayer: "Skill",
     memoryKey: "skill.import:internal-key",
     memoryValue: "Purpose: audit durable memory without mutating it.",
-    info: { title: "Memhub Long-Term Content Audit" },
+    info: { title: "LITSAN Long-Term Content Audit" },
     properties: { internal_info: { skill: { status: "active", eta: 1 } } },
     tags: [],
     status: "activated",
     createdAt: "2026-10-08T00:00:00.000Z",
     updatedAt: "2026-10-08T00:00:00.000Z"
   };
-  assert.equal(skillMetaFromMemory(memory)?.name, "Memhub Long-Term Content Audit");
+  assert.equal(skillMetaFromMemory(memory)?.name, "LITSAN Long-Term Content Audit");
 }
 
 function testAgentSourceAutomationIsOptIn() {
@@ -583,6 +589,32 @@ async function testChineseNoVectorRetrievalAndFtsFallback() {
     assert.deepEqual(shortCjk.memories.map((memory) => memory.id), ["cjk-memory"]);
     assert.deepEqual(shortCjk.status, []);
 
+    const patternQuery = compileRetrievalQuery("这个结论的证据来源在哪里，能不能追到原始事实", null, {});
+    const insertPatternFixture = (id, value, updatedAt) => db.prepare(`INSERT INTO memories (
+      id, timeline, user_id, memory_value, tags_json, info_json, properties_json, memory_layer, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+      id, "2026-10-11", "cjk-user", value, "[]",
+      JSON.stringify({ project_id: "alpha" }),
+      JSON.stringify({ internal_info: { memory_layer: "L3", memory_kind: "project_profile" } }),
+      "L3", now, updatedAt
+    );
+    insertPatternFixture(
+      "cjk-pattern-target",
+      "调查记录保留这个结论的证据来源，并能沿证据链追到原始事实。",
+      "2026-10-10T23:00:00.000Z"
+    );
+    insertPatternFixture(
+      "cjk-pattern-recent-distractor",
+      "最近更新了一条普通证据记录，但不包含结论来源或原始事实。",
+      "2026-10-11T01:00:00.000Z"
+    );
+    const rankedPattern = repos.memories.searchPatternIds(patternQuery.patternTerms, {
+      userId: "cjk-user", projectIds: ["alpha"], includeUnscopedProject: true, memoryLayer: ["L3"]
+    }, 3);
+    assert.equal(rankedPattern[0]?.id, "cjk-pattern-target",
+      "Chinese pattern fallback must rank multi-fragment lexical evidence above a newer one-fragment distractor");
+    assert.ok((rankedPattern[0]?.score ?? 0) > (rankedPattern[1]?.score ?? 0));
+
     db.prepare("UPDATE memories SET memory_value = ?, updated_at = ? WHERE id = ?").run(
       "这里保存口令白虎 secret，并带当前标记 current_new。",
       "2026-10-11T00:01:00.000Z", "cjk-memory"
@@ -771,7 +803,7 @@ async function testAccountWideSkillRetrievalAndIsolation() {
       projectId: null, limit: 6, reusableSkillProjectIds: ["project-1", "project-2"] });
     const oldRankedIds = rankRecallHits(oldHits.sort((a, b) => b.score - a.score), searchRequest.query, 6).hits.map(row => row.hit.id);
     assert.equal(skillRequests, 1);
-    assert.deepEqual(recalled.reusableSkills.map(hit => hit.id), oldRankedIds, "Memhub reranking matches the old per-project fan-out");
+    assert.deepEqual(recalled.reusableSkills.map(hit => hit.id), oldRankedIds, "LITSAN reranking matches the old per-project fan-out");
 
     const betaSearchIds = betaSearch.hits.map((h) => h.id).sort();
     assert.deepEqual(betaSearchIds, ["skill-beta-1", "skill-beta-2"]);

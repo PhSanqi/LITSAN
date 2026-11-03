@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 
 import { canonicalJson } from "../vendor/memory-core/src/contracts/index.js";
-import { DEFAULT_MEMMY_CONFIG } from "../vendor/memory-core/src/config/index.js";
+import { DEFAULT_LITSAN_CONFIG } from "../vendor/memory-core/src/config/index.js";
 import { MemoryDb } from "../vendor/memory-core/src/storage/db.js";
 import { attachMemoryVector } from "../vendor/memory-core/src/storage/memory-vector-state.js";
 import { MemoryService } from "../vendor/memory-core/src/service/memory-service.js";
@@ -19,7 +19,7 @@ import { closeMemoryHttpServer, listenMemoryHttpServer } from "../vendor/memory-
 
 const execFileAsync = promisify(execFile);
 const root = fileURLToPath(new URL("..", import.meta.url));
-const scratch = "/tmp/p6me1";
+const scratch = join(root, ".tmp-c3", "p6me1");
 const at = "2026-10-20T00:00:00.000Z";
 const sha256Empty = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855";
 
@@ -29,7 +29,7 @@ async function tempDir() {
 }
 
 function exportConfig(overrides = {}) {
-  const config = structuredClone(DEFAULT_MEMMY_CONFIG);
+  const config = structuredClone(DEFAULT_LITSAN_CONFIG);
   config.algorithm = { ...config.algorithm, enableMemoryAdd: false, ...overrides };
   return config;
 }

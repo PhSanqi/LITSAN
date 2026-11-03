@@ -62,7 +62,7 @@ const summary = {
 };
 
 await writeJson(join(reportDir, "summary.json"), summary);
-process.stdout.write(`\n[memhub-stability] summary: ${join(reportDir, "summary.json")}\n`);
+process.stdout.write(`\n[litsan-stability] summary: ${join(reportDir, "summary.json")}\n`);
 process.stdout.write(JSON.stringify(summary, null, 2) + "\n");
 process.exitCode = summary.ok ? 0 : 1;
 
@@ -70,7 +70,7 @@ async function runStep(name, command, args) {
   const logPath = join(reportDir, `${name}.log`);
   const chunks = [];
   const started = new Date();
-  process.stdout.write(`\n[memhub-stability] ${name}\n`);
+  process.stdout.write(`\n[litsan-stability] ${name}\n`);
 
   const exitCode = await new Promise((resolveExit, rejectExit) => {
     const child = spawn(command, args, {
@@ -110,8 +110,8 @@ async function runStep(name, command, args) {
 async function skippedStep(name, reason) {
   const now = new Date();
   const logPath = join(reportDir, `${name}.log`);
-  const message = `[memhub-stability] skipped: ${reason}\n`;
-  process.stdout.write(`\n[memhub-stability] ${name}\n${message}`);
+  const message = `[litsan-stability] skipped: ${reason}\n`;
+  process.stdout.write(`\n[litsan-stability] ${name}\n${message}`);
   await writeFile(logPath, message, { mode: 0o600 });
   return {
     name,

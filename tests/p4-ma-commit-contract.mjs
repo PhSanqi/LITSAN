@@ -13,7 +13,7 @@ import { MemoryService } from '../vendor/memory-core/src/service/memory-service.
 import { createMemoryHttpServer, closeMemoryHttpServer } from '../vendor/memory-core/src/server/http.js';
 import { MemoryRestContextSource } from '../dist/memory-source.js';
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
-import { createMemhubMcpServerForRuntime } from '../dist/mcp.js';
+import { createLitsanMcpServerForRuntime } from '../dist/mcp.js';
 import { LocalMemoryRestClient, MemoryCoreHttpError } from '../dist/local-memory-client.js';
 import { submitDistillationControl, reconcileDistillationCommit, pruneDistillationCommitRecords,
   writeDistillationCommitFile } from '../dist/distillation-submit.js';
@@ -130,17 +130,26 @@ if (process.env.P4_MA_CRASH) {
         submitDistillationControl(submitInput(stateRoot, f.memory, job, text))));
       assert.equal(results.filter(r => r.status === 'fulfilled').length, 1);
       assert.equal(changes(f), 1);
-      const winning = results.find(r => r.status === 'fulfilled').value;
-      assert.equal(f.service.repos.memories.get(winning.memory.id).memoryValue, 'winner');
+      const winner = results.findIndex(r => r.status === 'fulfilled');
+      assert.equal(f.service.repos.memories.get(results[winner].value.memory.id).memoryValue, ['winner', 'loser'][winner]);
     } finally { await f.close(); }
   });
   test('R02 two jobs reread canonical history inside the artifact gate', async () => {
     const stateRoot = await root(), f = await coreFixture();
     try {
       const first = await lease(stateRoot, 'first'), second = await lease(stateRoot, 'second');
+      let entered, release;
+      const gateEntered = new Promise(done => { entered = done; });
+      const hold = new Promise(done => { release = done; });
+      const firstRun = submitDistillationControl(submitInput(stateRoot, { distill: async input => {
+        entered(); await hold; return f.memory.distill(input);
+      } }, first, '# Timeline\n## Prior event\nEvidence'));
+      // Promise invocation order does not decide which asynchronous reader acquires the gate.
+      await Promise.race([gateEntered, firstRun]);
+      const secondRun = submitDistillationControl(submitInput(stateRoot, f.memory, second, '# Timeline\n## Different event\nEvidence'));
+      release();
       const results = await Promise.allSettled([
-        submitDistillationControl(submitInput(stateRoot, f.memory, first, '# Timeline\n## Prior event\nEvidence')),
-        submitDistillationControl(submitInput(stateRoot, f.memory, second, '# Timeline\n## Different event\nEvidence'))
+        firstRun, secondRun
       ]);
       assert.equal(results[0].status, 'fulfilled'); assert.equal(results[1].status, 'rejected');
       assert.match(results[1].reason.message, /drop canonical timeline history/); assert.equal(changes(f), 1);
@@ -371,11 +380,11 @@ if (process.env.P4_MA_CRASH) {
       const operator = { stateRoot, runtime: input.runtime, mode: 'inspect' };
       const record = (await reconcileDistillationCommit(operator)).commits[0];
       assert.equal(record.payload.content, input.args.content);
-      const server = createMemhubMcpServerForRuntime(input.runtime, stateRoot), client = new Client({ name: 'ma-operator', version: '1' });
+      const server = createLitsanMcpServerForRuntime(input.runtime, stateRoot), client = new Client({ name: 'ma-operator', version: '1' });
       const [ct, st] = InMemoryTransport.createLinkedPair();
       try {
         await server.connect(st); await client.connect(ct);
-        const result = await client.callTool({ name: 'memhub_distill', arguments: { action: 'reconcile_commit', reconcile_mode: 'inspect', commit_id: record.commit_id } });
+        const result = await client.callTool({ name: 'litsan_distill', arguments: { action: 'reconcile_commit', reconcile_mode: 'inspect', commit_id: record.commit_id } });
         assert.ok(!result.isError, result.content[0].text);
         assert.equal(JSON.parse(result.content[0].text).generation, record.generation);
       } finally { await client.close(); await server.close(); }

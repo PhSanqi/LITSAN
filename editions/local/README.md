@@ -1,6 +1,8 @@
-# Memhub Local Edition
+# LITSAN Local Edition
 
-Local Edition runs Memory Core and the Memhub MCP runtime on one machine. It requires no Cloudflare/VPS and binds both services to loopback.
+LITSAN (formerly Memhub). Legacy `MEMHUB_*` / `MEMMY_*` environment variables still work.
+
+Local Edition runs Memory Core and the LITSAN MCP runtime on one machine. It requires no Cloudflare/VPS and binds both services to loopback.
 
 - Linux: `bash linux/install.sh`
 - Windows: `powershell -ExecutionPolicy Bypass -File .\windows\install.ps1`

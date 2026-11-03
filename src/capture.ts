@@ -1,3 +1,4 @@
+import { env } from "./brand.mjs";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync, readFileSync, statSync } from "node:fs";
 import { chmod, mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
@@ -9,15 +10,8 @@ import { redactSecrets } from "./secret-redaction.js";
 import { JsonProjectRegistry, normalizeProjectKey } from "./project-registry.js";
 import { canonicalWorkspaceProjectCandidate, resolveCaptureProject } from "./capture-project-resolution.js";
 
-export type CaptureSourceKind = "user_said" | "agent_inferred" | "tool_output" | "imported";
-
-export interface CaptureSectionSourceKinds {
-  user_text?: CaptureSourceKind;
-  assistant_text?: CaptureSourceKind;
-  reasoning_summary?: CaptureSourceKind;
-  tool_summary?: CaptureSourceKind;
-  content?: CaptureSourceKind;
-}
+import type { CaptureSectionSourceKinds } from "./contracts/capture.js";
+export type { CaptureSourceKind, CaptureSectionSourceKinds } from "./contracts/capture.js";
 
 export const TRUSTED_TURN_SOURCE_KINDS: Readonly<CaptureSectionSourceKinds> = Object.freeze({
   user_text: "user_said",
@@ -26,7 +20,7 @@ export const TRUSTED_TURN_SOURCE_KINDS: Readonly<CaptureSectionSourceKinds> = Ob
   tool_summary: "tool_output"
 });
 
-export interface MemhubCaptureEvent {
+export interface LitsanCaptureEvent {
   event_id: string;
   host: string;
   host_version?: string;
@@ -58,7 +52,7 @@ export interface CapturePrivacySummary {
   redactions?: CaptureRedactionSummary;
 }
 
-export interface StoredCaptureEvent extends MemhubCaptureEvent {
+export interface StoredCaptureEvent extends LitsanCaptureEvent {
   account_id: string;
   actor_id: string;
   received_at: string;
@@ -76,7 +70,7 @@ export interface CaptureIndexEntry {
   continuity_id: string;
   timestamp: string;
   project_hint?: string;
-  capture_status: MemhubCaptureEvent["capture_status"];
+  capture_status: LitsanCaptureEvent["capture_status"];
   ingested: boolean;
 }
 
@@ -108,7 +102,7 @@ export interface NormalizeCaptureOptions {
 export function normalizeCaptureEvent(
   value: unknown,
   options: NormalizeCaptureOptions = {}
-): MemhubCaptureEvent {
+): LitsanCaptureEvent {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError("capture event must be an object");
   const input = value as Record<string, unknown>;
   const redactSection = (text: string | undefined) =>
@@ -153,7 +147,7 @@ export function normalizeCaptureEvent(
       : redactions
         ? { excluded_sections: 0, fully_excluded: false, markers: [], redactions }
         : undefined;
-  const event: MemhubCaptureEvent = {
+  const event: LitsanCaptureEvent = {
     event_id: requiredId(input.event_id, "event_id", 200),
     host: requiredId(input.host, "host", 100),
     conversation_id: requiredId(input.conversation_id, "conversation_id", 500),
@@ -238,7 +232,7 @@ export function stripNoMemorySections(value: string | undefined): {
   return { ...(normalized ? { text: normalized } : {}), excludedSections };
 }
 
-export function captureIsFullyExcludedFromMemory(event: Pick<MemhubCaptureEvent, "provenance">): boolean {
+export function captureIsFullyExcludedFromMemory(event: Pick<LitsanCaptureEvent, "provenance">): boolean {
   const privacy = event.provenance?.memhub_privacy;
   return Boolean(privacy && typeof privacy === "object" && !Array.isArray(privacy) &&
     (privacy as Record<string, unknown>).fully_excluded === true);
@@ -395,7 +389,7 @@ function capturePayloadHash(event: StoredCaptureEvent): string {
   return createHash("sha256").update(JSON.stringify(canonical(persistent)), "utf8").digest("hex");
 }
 
-function assertCaptureCompleteness(event: MemhubCaptureEvent): void {
+function assertCaptureCompleteness(event: LitsanCaptureEvent): void {
   if (event.capture_status === "complete" && (!event.user_text || !event.assistant_text) &&
       !captureIsFullyExcludedFromMemory(event)) {
     throw new TypeError("complete capture requires both user_text and assistant_text");
@@ -753,7 +747,7 @@ function captureIndexPath(stateRoot: string): string {
 const captureProjectRegistries = new Map<string, JsonProjectRegistry>();
 
 function captureProjectRegistry(stateRoot: string): JsonProjectRegistry {
-  const path = resolve(process.env.MEMHUB_PROJECT_REGISTRY ?? join(stateRoot, "project-registry.json"));
+  const path = resolve(env("PROJECT_REGISTRY") ?? join(stateRoot, "project-registry.json"));
   let registry = captureProjectRegistries.get(path);
   if (!registry) { registry = new JsonProjectRegistry(path); captureProjectRegistries.set(path, registry); }
   return registry;
@@ -789,7 +783,7 @@ export interface CaptureProjectIndexRow extends CaptureIndexEntry {
 export async function readCaptureProjectIndexPage(stateRoot: string, accountId: string, options: {
   projectIds?: readonly string[]; continuityId?: string; conversationId?: string; completeOnly?: boolean;
   afterTimestamp?: string; offset?: number; limit: number; resolution?: "cached" | "pending";
-  includeAssignments?: boolean; resolvedPendingIds?: readonly string[];
+  includeAssignments?: boolean; resolvedPendingIds?: readonly string[]; branchId?: string;
 }): Promise<CaptureProjectIndexRow[]> {
   const projects = [...new Set(options.projectIds ?? [])];
   const refs = new Set(projects.map(normalizeProjectKey));
@@ -836,6 +830,12 @@ export async function readCaptureProjectIndexPage(stateRoot: string, accountId: 
       else if (options.resolution === "pending") { where.push(pending); params.push(...pendingParams); }
       else { where.push(`(${cached} OR ${pending})`); params.push(...projects, ...pendingIds, ...pendingParams); }
     }
+    if (options.branchId && options.branchId !== "main") {
+      if (!db.prepare("SELECT 1 FROM sqlite_master WHERE name='capture_branch_assignments'").get()) return [];
+      where.push(`(SELECT branch_id FROM capture_branch_assignments a WHERE a.account_id=capture_index.account_id
+        AND a.event_id=capture_index.event_id ORDER BY id DESC LIMIT 1)=?`);
+      params.push(options.branchId);
+    }
     if (options.continuityId) { where.push("continuity_id=?"); params.push(options.continuityId); }
     if (options.conversationId) { where.push("conversation_id=?"); params.push(options.conversationId); }
     if (options.completeOnly) where.push("capture_status='complete'");
@@ -854,6 +854,35 @@ export async function readIndexedCaptureEvent(stateRoot: string, row: CaptureInd
   const event = normalizeStoredCapture(JSON.parse(await readFile(captureEventPath(stateRoot, row.account_id, row.event_id), "utf8")), { redact });
   if (event.account_id !== row.account_id || event.event_id !== row.event_id) throw new Error("capture index/event identity mismatch");
   return event;
+}
+
+/**
+ * Read explicit account-global captures from the routing index. This is a
+ * bounded retrieval helper, not a project fallback: only rows whose current
+ * governed routing state is keep_global=1 are eligible.
+ */
+export async function listExplicitGlobalCaptureEvents(
+  stateRoot: string,
+  accountId: string,
+  limit = 200
+): Promise<Array<StoredCaptureEvent & { ingested: true }>> {
+  const rows = await withReadonlyCaptureIndex(stateRoot, accountId, (db) => {
+    if (!db) return [] as CaptureIndexEntry[];
+    const columns = new Set((db.pragma("table_info(capture_index)") as Array<{ name: string }>).map((column) => column.name));
+    if (!columns.has("keep_global") || !columns.has("privacy_excluded")) return [] as CaptureIndexEntry[];
+    const values = db.prepare(`SELECT account_id,event_id,conversation_id,continuity_id,timestamp,project_hint,capture_status,ingested
+      FROM capture_index WHERE account_id=? AND capture_status='complete' AND ingested=1
+      AND keep_global=1 AND privacy_excluded=0 ORDER BY timestamp DESC,event_id DESC LIMIT ?`)
+      .all(accountId, Math.max(1, Math.min(500, Math.trunc(limit)))) as Array<Record<string, unknown>>;
+    return values.map(captureIndexEntryFromRow);
+  });
+  const events: Array<StoredCaptureEvent & { ingested: true }> = [];
+  for (const row of rows) {
+    const event = await readIndexedCaptureEvent(stateRoot, row);
+    if (event.account_id !== accountId || event.capture_status !== "complete") continue;
+    events.push({ ...event, ingested: true });
+  }
+  return events;
 }
 
 const projectBackfills = new Map<string, { cancelled: boolean }>();
@@ -909,7 +938,7 @@ export function scheduleCaptureProjectBackfill(stateRoot: string, accountId: str
       for (const { event_id } of ids) {
         if (task.cancelled) return;
         try { events.push(await readIndexedCaptureEvent(stateRoot, { account_id: accountId, event_id } as CaptureIndexEntry)); }
-        catch { console.warn(`memhub: skipping capture project backfill ${event_id}`); }
+        catch { console.warn(`litsan: skipping capture project backfill ${event_id}`); }
         cursor = event_id;
       }
       await withCaptureIndexMutation(stateRoot, async () => {
@@ -922,14 +951,14 @@ export function scheduleCaptureProjectBackfill(stateRoot: string, accountId: str
                 workspace_project_key=?,privacy_excluded=?,user_preview=?,resolved_revision=?,mtime_ms=MAX(mtime_ms,?)
                 WHERE account_id=? AND event_id=? AND (resolved_revision IS NOT ? OR resolved_project_id IS NULL OR privacy_excluded IS NULL)`)
                 .run(result.projectId ?? "", result.source === "keep_global" ? 1 : 0, ...captureIndexRoutingValues(event), revision, Date.now(), accountId, event.event_id, revision);
-            } catch { console.warn(`memhub: skipping capture project backfill ${event.event_id}`); }
+            } catch { console.warn(`litsan: skipping capture project backfill ${event.event_id}`); }
           }
           db.prepare("UPDATE capture_project_backfill SET cursor=? WHERE account_id=? AND registry_version=?").run(cursor, accountId, revision);
         });
       });
       await new Promise<void>(done => setImmediate(done));
     }
-  }).catch(() => { if (!task.cancelled) console.warn("memhub: capture project backfill failed"); })
+  }).catch(() => { if (!task.cancelled) console.warn("litsan: capture project backfill failed"); })
     .finally(() => { if (projectBackfills.get(key) === task) projectBackfills.delete(key); });
 }
 
@@ -1247,14 +1276,14 @@ export async function withCaptureIndexMutation<T>(stateRoot: string, run: () => 
 }
 
 export function mergeCaptureEvent(
-  existing: MemhubCaptureEvent,
-  incoming: MemhubCaptureEvent
-): { updated: boolean; event: MemhubCaptureEvent } {
+  existing: LitsanCaptureEvent,
+  incoming: LitsanCaptureEvent
+): { updated: boolean; event: LitsanCaptureEvent } {
   for (const field of ["event_id", "host", "conversation_id"] as const) {
     if (existing[field] !== incoming[field]) throw new Error(`capture event conflict for ${field}`);
   }
   let updated = false;
-  const event: MemhubCaptureEvent = { ...existing };
+  const event: LitsanCaptureEvent = { ...existing };
   if (incoming.continuity_id !== existing.continuity_id) {
     if (existing.continuity_id !== existing.conversation_id) {
       throw new Error("capture event conflict for continuity_id");
@@ -1327,7 +1356,7 @@ function normalizeCaptureStatus(
   value: unknown,
   userText: unknown,
   assistantText: unknown
-): MemhubCaptureEvent["capture_status"] {
+): LitsanCaptureEvent["capture_status"] {
   if (value === "open" || value === "partial" || value === "complete" || value === "truncated" || value === "failed") {
     return value;
   }
@@ -1335,9 +1364,9 @@ function normalizeCaptureStatus(
 }
 
 function mergeCaptureStatus(
-  current: MemhubCaptureEvent["capture_status"],
-  incoming: MemhubCaptureEvent["capture_status"]
-): MemhubCaptureEvent["capture_status"] {
+  current: LitsanCaptureEvent["capture_status"],
+  incoming: LitsanCaptureEvent["capture_status"]
+): LitsanCaptureEvent["capture_status"] {
   if (current === incoming) return current;
   if (incoming === "complete") return "complete";
   if (current === "complete") return current;
@@ -1440,6 +1469,9 @@ export async function listFreshCaptureEvidence(
     continuityId?: string;
     afterTimestamp?: string;
     limit: number;
+    /** Internal bounded over-fetch for branch filtering; public fresh cap stays four. */
+    candidateLimit?: number;
+    branchId?: string;
   }
 ): Promise<StoredCaptureEvent[]> {
   const accountId = requiredId(accountIdRaw, "accountId", 500);
@@ -1447,8 +1479,10 @@ export async function listFreshCaptureEvidence(
   const continuityId = options.continuityId?.trim();
   if (!projects.length && !continuityId) return [];
   const after = options.afterTimestamp ? normalizeTimestamp(options.afterTimestamp) : undefined;
-  const limit = Number.isFinite(options.limit) ? Math.max(1, Math.min(4, Math.trunc(options.limit))) : 4;
-  const page = { projectIds: projects, continuityId, completeOnly: true, afterTimestamp: after, limit: Math.min(64, limit * 8) };
+  const limit = options.candidateLimit !== undefined
+    ? Math.max(1, Math.min(64, Math.trunc(options.candidateLimit)))
+    : Number.isFinite(options.limit) ? Math.max(1, Math.min(4, Math.trunc(options.limit))) : 4;
+  const page = { projectIds: projects, continuityId, branchId: options.branchId, completeOnly: true, afterTimestamp: after, limit: Math.min(options.candidateLimit === undefined ? 64 : 512, limit * 8) };
   const lookup = captureProjectLookup(stateRoot, accountId);
   const entries = await readCaptureProjectIndexPage(stateRoot, accountId, { ...page, ...(projects.length ? { resolution: "cached" as const } : {}) });
   if (projects.length) {
@@ -1469,13 +1503,13 @@ export async function listFreshCaptureEvidence(
         captureEventPath(stateRoot, accountId, entry.event_id), "utf8"
       )), { redact: true });
     } catch {
-      // A missing/corrupt capture file must never make memmy_context fail.
+      // A missing/corrupt capture file must never make litsan_context fail.
       // Log the index event id only; capture text is not touched here.
-      console.warn(`memhub: skipping unreadable capture evidence ${entry.event_id}`);
+      console.warn(`litsan: skipping unreadable capture evidence ${entry.event_id}`);
       continue;
     }
     if (event.account_id !== accountId || event.event_id !== entry.event_id) {
-      console.warn(`memhub: skipping capture evidence with mismatched identity ${entry.event_id}`);
+      console.warn(`litsan: skipping capture evidence with mismatched identity ${entry.event_id}`);
       continue;
     }
     const resolution = projects.length ? await resolveCaptureProject(event, async ref =>

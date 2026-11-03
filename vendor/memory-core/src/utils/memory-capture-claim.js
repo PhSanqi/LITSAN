@@ -1,12 +1,12 @@
 import { createHash } from "node:crypto";
 import { redactSecrets } from "../agent-source/adapters/secret-redactor.js";
-import { sanitizeMemmyProtocolText } from "./memmy-context-tags.js";
+import { sanitizeLitsanProtocolText } from "./litsan-context-tags.js";
 const QA_HASH_VERSION = "v1";
 export function normalizeMemoryCaptureSource(value) {
     return value.trim().toLowerCase();
 }
 export function normalizeMemoryCaptureText(value) {
-    return redactSecrets(sanitizeMemmyProtocolText(value))
+    return redactSecrets(sanitizeLitsanProtocolText(value))
         .replace(/\r\n?/g, "\n")
         .normalize("NFC")
         .trim();

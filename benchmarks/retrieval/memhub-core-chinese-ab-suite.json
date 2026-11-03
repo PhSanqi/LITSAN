@@ -1,0 +1,289 @@
+{
+  "name": "Memhub Core Chinese and mixed-language A/B suite",
+  "snapshot_id": "memhub-core-chinese-ab-v1",
+  "description": "Sanitized real EmbeddedMemoryCore retrieval cases for Chinese current-state, provenance, temporal, conflict-safe replacement, mixed-language, project isolation, and distractor pressure. Used to compare the legacy Memhub second-stage reranker with the unified memhub_core candidate.",
+  "default_account": "benchmark-account-a",
+  "memory_fixtures": [
+    {
+      "key": "zh-current-truth",
+      "kind": "l3",
+      "project": "memhub",
+      "artifact_id": "benchmark:zh:current-truth",
+      "title": "Memhub 中文当前规则",
+      "revisions": [
+        {
+          "evidence_key": "zh:current-truth@superseded",
+          "state": "superseded",
+          "content": "旧规则：Memhub 当前仍保留 Memory Core 之后的第二套 BM25 重排和固定 TopK。"
+        },
+        {
+          "evidence_key": "zh:current-truth@current",
+          "state": "current",
+          "content": "当前规则：Memhub 的检索目标是收敛为单一统一核心，底层只保留一套候选召回、融合、阈值、去重与多样性排序；上层 TKP 负责任务知识编排。"
+        }
+      ]
+    },
+    {
+      "key": "zh-old-ranking-history",
+      "kind": "l2",
+      "project": "memhub",
+      "artifact_id": "benchmark:zh:old-ranking-history",
+      "title": "旧检索方案历史",
+      "revisions": [
+        {
+          "evidence_key": "zh:old-ranking-history@current",
+          "state": "current",
+          "content": "历史记录：旧方案曾在 Memory Core 返回后再次执行 semantic 与 BM25 融合、Jaccard diversity 和固定 TopK，这属于过去的二次检索实验。"
+        }
+      ]
+    },
+    {
+      "key": "zh-provenance",
+      "kind": "l2",
+      "project": "memhub",
+      "artifact_id": "benchmark:zh:provenance",
+      "title": "中文漏召回原因记录",
+      "revisions": [
+        {
+          "evidence_key": "zh:provenance@current",
+          "state": "current",
+          "content": "排查结论：中文检索漏掉证据时，首先检查候选池是否覆盖目标词义、关键词通道是否生成有效中文片段，以及目标证据是否进入召回集合；不能指望 TKP 修复底层漏召回。"
+        }
+      ]
+    },
+    {
+      "key": "zh-temporal-latest",
+      "kind": "l2",
+      "project": "memhub",
+      "artifact_id": "benchmark:zh:temporal-latest",
+      "title": "最近一次中文检索变更",
+      "revisions": [
+        {
+          "evidence_key": "zh:temporal-latest@current",
+          "state": "current",
+          "content": "最近一次检索变更：把中文 current-state、provenance、temporal、conflict 与中英混合场景加入正式前后对照，并要求中文作为 memhub_core 的一等能力。"
+        }
+      ]
+    },
+    {
+      "key": "zh-temporal-old",
+      "kind": "l2",
+      "project": "memhub",
+      "artifact_id": "benchmark:zh:temporal-old",
+      "title": "较早的中文检索记录",
+      "revisions": [
+        {
+          "evidence_key": "zh:temporal-old@current",
+          "state": "current",
+          "content": "较早记录：曾经只测试中文二字 bigram 与 pattern fallback，没有覆盖完整的 current-state、provenance 和 mixed-language 前后对照。"
+        }
+      ]
+    },
+    {
+      "key": "zh-mixed-language",
+      "kind": "l2",
+      "project": "memhub",
+      "artifact_id": "benchmark:zh:mixed-language",
+      "title": "中英混合检索说明",
+      "revisions": [
+        {
+          "evidence_key": "zh:mixed-language@current",
+          "state": "current",
+          "content": "中英混合规则：查询可以同时包含 Current Truth、candidate pool、TKP 与中文关键词；tokenizer 必须保留英文 identifier，同时生成稳定的中文检索片段。"
+        }
+      ]
+    },
+    {
+      "key": "zh-source-synonym",
+      "kind": "l2",
+      "project": "memhub",
+      "artifact_id": "benchmark:zh:source-synonym",
+      "title": "证据依据与出处",
+      "revisions": [
+        {
+          "evidence_key": "zh:source-synonym@current",
+          "state": "current",
+          "content": "调查记录要求保留结论的依据和出处，并能沿着证据链回到原始事实；这里的依据与出处就是回答来源问题时需要寻找的 provenance。"
+        }
+      ]
+    },
+    {
+      "key": "zh-project-scope",
+      "kind": "l3",
+      "project": "other-project",
+      "artifact_id": "benchmark:zh:other-project",
+      "title": "其他项目中文秘密",
+      "revisions": [
+        {
+          "evidence_key": "zh:other-project@current",
+          "state": "current",
+          "content": "其他项目专属规则：跨项目中文秘密标记不得进入 Memhub 普通项目召回。"
+        }
+      ]
+    },
+    {
+      "key": "zh-global-preference",
+      "kind": "l4",
+      "project": null,
+      "artifact_id": "benchmark:zh:global-preference",
+      "title": "跨项目稳定偏好",
+      "revisions": [
+        {
+          "evidence_key": "zh:global-preference@current",
+          "state": "current",
+          "content": "跨项目稳定偏好：优先使用可验证证据，架构尽量保持最小充分，并避免维护两套功能重复的检索系统。"
+        }
+      ]
+    },
+    {
+      "key": "zh-skill",
+      "kind": "skill",
+      "project": "memhub",
+      "artifact_id": "benchmark:zh:skill",
+      "title": "中文检索审计流程",
+      "version": "1.0.0",
+      "revisions": [
+        {
+          "evidence_key": "zh:skill@current",
+          "state": "current",
+          "content": "# 中文检索审计流程\n\n用于检查候选池、中文分词、召回来源、cutoff reason 和最终证据覆盖。"
+        }
+      ]
+    },
+    {
+      "key": "zh-noise-a",
+      "kind": "l2",
+      "project": "memhub",
+      "artifact_id": "benchmark:zh:noise-a",
+      "title": "历史检索参数记录 A",
+      "revisions": [
+        {
+          "evidence_key": "zh:noise-a@current",
+          "state": "current",
+          "content": "历史检索参数测试记录：TopK、retrieval、current、evidence、candidate、中文、排序、检索、规则、来源等通用词重复出现，但这不是当前规则。"
+        }
+      ]
+    },
+    {
+      "key": "zh-noise-b",
+      "kind": "l2",
+      "project": "memhub",
+      "artifact_id": "benchmark:zh:noise-b",
+      "title": "历史检索参数记录 B",
+      "revisions": [
+        {
+          "evidence_key": "zh:noise-b@current",
+          "state": "current",
+          "content": "旧实验反复讨论 semantic retrieval、BM25、TopK、中文检索、证据来源与 current state，但内容仅用于制造高词面重合的干扰项。"
+        }
+      ]
+    },
+    {
+      "key": "zh-noise-c",
+      "kind": "l2",
+      "project": "memhub",
+      "artifact_id": "benchmark:zh:noise-c",
+      "title": "历史检索参数记录 C",
+      "revisions": [
+        {
+          "evidence_key": "zh:noise-c@current",
+          "state": "current",
+          "content": "候选池测试噪声：current truth、provenance、temporal、candidate pool、TKP、检索、中文、证据、来源、最近、当前。"
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "zh-current-state",
+      "query": "现在 Memhub 的检索到底是一套还是两套？当前规则是什么？",
+      "project": "memhub",
+      "required_evidence": ["zh:current-truth@current"],
+      "critical_evidence": ["zh:current-truth@current"],
+      "optional_evidence": ["zh:old-ranking-history@current", "zh:global-preference@current"],
+      "forbidden_evidence": ["zh:current-truth@superseded", "zh:other-project@current"]
+    },
+    {
+      "id": "zh-provenance-reason",
+      "query": "上次中文检索为什么会漏掉证据？应该从哪里查原因和证据来源？",
+      "project": "memhub",
+      "required_evidence": ["zh:provenance@current"],
+      "critical_evidence": ["zh:provenance@current"],
+      "optional_evidence": ["zh:source-synonym@current"],
+      "forbidden_evidence": ["zh:other-project@current"]
+    },
+    {
+      "id": "zh-temporal-latest",
+      "query": "最近一次中文检索测试加了什么？现在最新的变化是什么？",
+      "project": "memhub",
+      "required_evidence": ["zh:temporal-latest@current"],
+      "critical_evidence": ["zh:temporal-latest@current"],
+      "optional_evidence": ["zh:temporal-old@current"],
+      "forbidden_evidence": ["zh:other-project@current"]
+    },
+    {
+      "id": "zh-mixed-current-truth",
+      "query": "Current Truth 和 candidate pool 混着中文问时，TKP 前面的 tokenizer 应该怎么处理？",
+      "project": "memhub",
+      "required_evidence": ["zh:mixed-language@current"],
+      "critical_evidence": ["zh:mixed-language@current"],
+      "optional_evidence": ["zh:current-truth@current"],
+      "forbidden_evidence": ["zh:other-project@current"]
+    },
+    {
+      "id": "zh-source-synonym",
+      "query": "这个结论的证据来源在哪里，能不能追到原始事实？",
+      "project": "memhub",
+      "required_evidence": ["zh:source-synonym@current"],
+      "critical_evidence": ["zh:source-synonym@current"],
+      "optional_evidence": ["zh:provenance@current"],
+      "forbidden_evidence": ["zh:other-project@current"]
+    },
+    {
+      "id": "zh-skill-workflow",
+      "query": "怎么审计中文检索的候选池、分词、cutoff reason 和证据覆盖？",
+      "project": "memhub",
+      "capability_projects": ["memhub"],
+      "required_evidence": ["zh:skill@current"],
+      "critical_evidence": ["zh:skill@current"],
+      "optional_evidence": ["zh:provenance@current"],
+      "forbidden_evidence": ["zh:other-project@current"]
+    },
+    {
+      "id": "zh-project-isolation",
+      "query": "跨项目中文秘密标记是什么？",
+      "project": "memhub",
+      "required_evidence": [],
+      "critical_evidence": [],
+      "forbidden_evidence": ["zh:other-project@current"]
+    },
+    {
+      "id": "zh-distractor-current-state",
+      "query": "当前检索规则和 current state 到底是什么，别给我旧 TopK 实验记录",
+      "project": "memhub",
+      "limit": 3,
+      "required_evidence": ["zh:current-truth@current"],
+      "critical_evidence": ["zh:current-truth@current"],
+      "optional_evidence": ["zh:old-ranking-history@current"],
+      "forbidden_evidence": ["zh:current-truth@superseded", "zh:other-project@current"]
+    },
+    {
+      "id": "zh-distractor-provenance",
+      "query": "中文 provenance 问题里，我要的是漏召回原因和证据来源，不是泛泛的 retrieval 参数",
+      "project": "memhub",
+      "limit": 3,
+      "required_evidence": ["zh:provenance@current"],
+      "critical_evidence": ["zh:provenance@current"],
+      "optional_evidence": ["zh:source-synonym@current"],
+      "forbidden_evidence": ["zh:other-project@current"]
+    },
+    {
+      "id": "zh-global-preference",
+      "query": "跨项目稳定偏好里，对重复检索系统和可验证证据是什么态度？",
+      "project": null,
+      "required_evidence": ["zh:global-preference@current"],
+      "critical_evidence": ["zh:global-preference@current"],
+      "forbidden_evidence": ["zh:current-truth@current", "zh:other-project@current"]
+    }
+  ]
+}

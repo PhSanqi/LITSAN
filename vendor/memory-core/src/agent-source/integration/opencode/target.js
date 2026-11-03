@@ -1,23 +1,25 @@
+import { migrateOwnedIntegrationFiles } from "../legacy-files.js";
+import { defaultLitsanHome } from "../../../utils/litsan-compat.js";
 /** Target module. */
 import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { resolveOpencodeConfigDirectory } from "../../agent-paths.js";
-import { readMemmyMemoryServiceConfig } from "../memmy-runtime-config.js";
-import { removeMemmySkillDirectory, replaceMemmySkillDirectory } from "../skill-directory.js";
-import { renderMemmyOpencodePlugin, renderMemmyOpencodeResumeCommand } from "../templates/memmy-opencode-plugin.js";
-import { renderMemmyPluginSkillManifest } from "../templates/memmy-plugin.js";
-import { renderMemmySkillBootstrapManifest } from "../templates/memmy-skill-directory.js";
-import { loadMemmyWorkspaceBridgeRuntimeAsset } from "../workspace-bridge/runtime-loader.js";
+import { readLitsanMemoryServiceConfig } from "../litsan-runtime-config.js";
+import { removeLitsanSkillDirectory, replaceLitsanSkillDirectory } from "../skill-directory.js";
+import { renderLitsanOpencodePlugin, renderLitsanOpencodeResumeCommand } from "../templates/litsan-opencode-plugin.js";
+import { renderLitsanPluginSkillManifest } from "../templates/litsan-plugin.js";
+import { renderLitsanSkillBootstrapManifest } from "../templates/litsan-skill-directory.js";
+import { loadLitsanWorkspaceBridgeRuntimeAsset } from "../workspace-bridge/runtime-loader.js";
 const OPENCODE_TARGET_ID = "opencode";
 const OPENCODE_DISPLAY_NAME = "Opencode";
 const TARGET_FILE_NAME = "AGENTS.md";
 const PLUGIN_DIRECTORY_NAME = "plugins";
-const PLUGIN_FILE_NAME = "memmy-memory.js";
-const PLUGIN_CONFIG_FILE_NAME = "memmy-memory-config.json";
-const WORKSPACE_BRIDGE_FILE_NAME = "memmy-workspace-bridge.mjs";
+const PLUGIN_FILE_NAME = "litsan-memory.js";
+const PLUGIN_CONFIG_FILE_NAME = "litsan-memory-config.json";
+const WORKSPACE_BRIDGE_FILE_NAME = "litsan-workspace-bridge.mjs";
 const COMMAND_DIRECTORY_NAME = "commands";
-const RESUME_COMMAND_FILE_NAME = "memmy-resume.md";
+const RESUME_COMMAND_FILE_NAME = "litsan-resume.md";
 const START_MARKER = "<!-- memmy:start v=1 -->";
 const END_MARKER = "<!-- memmy:end v=1 -->";
 const LEGACY_CLI_START_MARKER = "<!-- memmy-memory cli : start -->";
@@ -25,7 +27,7 @@ const LEGACY_CLI_END_MARKER = "<!-- memmy-memory cli : end -->";
 /** Creates create opencode skill target. */
 export function createOpencodeSkillTarget(deps = {}) {
     const rootDirectory = deps.rootDirectory ?? resolveOpencodeConfigDirectory();
-    const memmyConfigPath = deps.memmyConfigPath ?? join(homedir(), ".memmy", "config.yaml");
+    const litsanConfigPath = (deps.litsanConfigPath ?? deps.memmyConfigPath) ?? join(defaultLitsanHome(), "config.yaml");
     return {
         targetId: OPENCODE_TARGET_ID,
         displayName: OPENCODE_DISPLAY_NAME,
@@ -36,8 +38,8 @@ export function createOpencodeSkillTarget(deps = {}) {
             await mkdir(rootDirectory, { recursive: true });
             const filePath = join(rootDirectory, TARGET_FILE_NAME);
             const existing = removeCliMarkerBlock(await readTextFile(filePath));
-            await writeFileAtomically(filePath, upsertMarkerBlock(existing, renderMemmySkillBootstrapManifest(manifest)));
-            await replaceMemmySkillDirectory(rootDirectory, manifest);
+            await writeFileAtomically(filePath, upsertMarkerBlock(existing, renderLitsanSkillBootstrapManifest(manifest)));
+            await replaceLitsanSkillDirectory(rootDirectory, manifest);
         },
         async uninstall(_targetId) {
             const root = await resolveExistingDirectory(rootDirectory);
@@ -49,28 +51,29 @@ export function createOpencodeSkillTarget(deps = {}) {
             if (existing.includes(START_MARKER)) {
                 await writeFileAtomically(filePath, removeMarkerBlock(existing));
             }
-            await removeMemmySkillDirectory(root);
+            await removeLitsanSkillDirectory(root);
         },
         async isInstalled(_targetId) {
             return (await readTextFile(join(rootDirectory, TARGET_FILE_NAME))).includes(START_MARKER);
         },
         async installPlugin(_targetId) {
+            await migrateOwnedIntegrationFiles(rootDirectory);
             await mkdir(rootDirectory, { recursive: true });
             const pluginDirectory = join(rootDirectory, PLUGIN_DIRECTORY_NAME);
             const commandDirectory = join(rootDirectory, COMMAND_DIRECTORY_NAME);
             await mkdir(pluginDirectory, { recursive: true });
             await mkdir(commandDirectory, { recursive: true });
             await writeFileAtomically(join(pluginDirectory, PLUGIN_CONFIG_FILE_NAME), `${JSON.stringify({
-                memmy_config_path: memmyConfigPath,
-                ...(await readMemmyMemoryServiceConfig(memmyConfigPath))
+                litsan_config_path: litsanConfigPath,
+                ...(await readLitsanMemoryServiceConfig(litsanConfigPath))
             }, null, 2)}\n`);
-            await writeFileAtomically(join(pluginDirectory, PLUGIN_FILE_NAME), renderMemmyOpencodePlugin());
-            await writeFileAtomically(join(pluginDirectory, WORKSPACE_BRIDGE_FILE_NAME), await loadMemmyWorkspaceBridgeRuntimeAsset());
-            await writeFileAtomically(join(commandDirectory, RESUME_COMMAND_FILE_NAME), renderMemmyOpencodeResumeCommand());
-            const manifest = renderMemmyPluginSkillManifest(_targetId);
+            await writeFileAtomically(join(pluginDirectory, PLUGIN_FILE_NAME), renderLitsanOpencodePlugin());
+            await writeFileAtomically(join(pluginDirectory, WORKSPACE_BRIDGE_FILE_NAME), await loadLitsanWorkspaceBridgeRuntimeAsset());
+            await writeFileAtomically(join(commandDirectory, RESUME_COMMAND_FILE_NAME), renderLitsanOpencodeResumeCommand());
+            const manifest = renderLitsanPluginSkillManifest(_targetId);
             const filePath = join(rootDirectory, TARGET_FILE_NAME);
-            await writeFileAtomically(filePath, upsertMarkerBlock(removeCliMarkerBlock(await readTextFile(filePath)), renderMemmySkillBootstrapManifest(manifest)));
-            await replaceMemmySkillDirectory(rootDirectory, manifest);
+            await writeFileAtomically(filePath, upsertMarkerBlock(removeCliMarkerBlock(await readTextFile(filePath)), renderLitsanSkillBootstrapManifest(manifest)));
+            await replaceLitsanSkillDirectory(rootDirectory, manifest);
         },
         async uninstallPlugin(_targetId) {
             const root = await resolveExistingDirectory(rootDirectory);
@@ -86,7 +89,7 @@ export function createOpencodeSkillTarget(deps = {}) {
             if (existing.includes(START_MARKER)) {
                 await writeFileAtomically(filePath, removeMarkerBlock(existing));
             }
-            await removeMemmySkillDirectory(root);
+            await removeLitsanSkillDirectory(root);
         }
     };
 }

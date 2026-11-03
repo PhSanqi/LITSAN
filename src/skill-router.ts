@@ -56,7 +56,7 @@ export function compactSkillContextItem(
       `Triggers: ${triggers.join(", ") || "none"}`,
       `Reliability: ${metadata.reliability} (${metadata.reliabilitySource})`,
       `Executor: ${executor}`,
-      `Load: memhub_skill action=load skill_id=${item.id}`
+      `Load: litsan_skill action=load skill_id=${item.id}`
     ].join("\n"),
     provenance: {
       ...(item.provenance ?? {}),

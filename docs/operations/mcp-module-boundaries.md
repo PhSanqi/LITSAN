@@ -8,7 +8,7 @@ The current runtime has one MCP implementation and a deliberately small transpor
 | `gateway-http.ts` | HTTP path/header parsing, loopback discrimination and web security helpers. |
 | `runtime.ts` | Constructs account-scoped Project/Branch/Memory runtime dependencies. |
 | `context-router.ts` | Resolves current-turn project scope and explicit Branch retrieval. |
-| `turn-log.ts` | `memmy_turn` L1 lifecycle and durable ingest entry. |
+| `turn-log.ts` | `litsan_turn` L1 lifecycle and durable ingest entry. |
 | `capture.ts` | Internal L1 event storage/index/idempotency compatibility layer. |
 | `capture-ingest.ts` | Deterministic L1 -> Memory Core ingest. |
 | `capture-recovery.ts` | Crash recovery from durable L1 events and ingest intents. |

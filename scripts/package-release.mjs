@@ -22,7 +22,7 @@ const variants = [
 
 // Standard archives are source-build distributions: the edition installers
 // run `npm ci` and `npm run build` when dependencies/dist are absent. Keep the
-// TypeScript source/build config, but do not ship repository-only tests/docs.
+// TypeScript source/build config and the documentation used by the web UI.
 const commonPaths = [
   "LICENSE",
   "CHANGELOG.md",
@@ -35,6 +35,7 @@ const commonPaths = [
   "src",
   "scripts",
   "web-assets",
+  "docs/site",
   "deploy/cloudflared-memhub.service.d.conf.example",
   "deploy/cloudflared-memhub.yml.example",
   "deploy/install-tunnel-watchdog.sh",

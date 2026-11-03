@@ -6,7 +6,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import test from 'node:test';
 
-const script = fileURLToPath(new URL('../scripts/check-memhub-tunnel', import.meta.url));
+const script = fileURLToPath(new URL('../scripts/check-litsan-tunnel', import.meta.url));
 // The watchdog is a Bash/systemd service; running its fixture on Windows
 // exercises neither the script nor its mocked executables.
 const watchdogTest = process.platform === 'linux' ? test : test.skip;
@@ -51,7 +51,7 @@ printf '%s\\n' "$*" >> "$MOCK_RESTART_LOG"
     ...process.env,
     PATH: `${bin}:${process.env.PATH ?? '/usr/bin:/bin'}`,
     MEMHUB_TUNNEL_WATCHDOG_STATE_DIR: dir,
-    MEMHUB_TUNNEL_WATCHDOG_PUBLIC_URL: 'https://memhub.example.test/',
+    MEMHUB_TUNNEL_WATCHDOG_PUBLIC_URL: 'https://litsan.example.test/',
     MEMHUB_TUNNEL_WATCHDOG_SERVICE: 'sanqi-plugin-cloudflared.service',
     MEMHUB_TUNNEL_WATCHDOG_RECOVERY_ATTEMPTS: '1',
     MEMHUB_TUNNEL_WATCHDOG_RECOVERY_DELAY: '0',
@@ -76,32 +76,33 @@ watchdogTest('healthy connector and complete public Landing cause no restart', t
   assert.deepEqual(f.restarts(),[]);
 });
 
-watchdogTest('three partial HA observations restart only dedicated Memhub connector', t => {
+watchdogTest('partial HA (one connector left) never restarts the connector', t => {
   const f=fixture(t);
-  for(let i=0;i<2;i++) { assert.equal(f.run({MOCK_HA:'2'}).status,0); assert.deepEqual(f.restarts(),[]); }
-  const result=f.run({MOCK_HA:'2'});
+  for(let i=0;i<4;i++) assert.match(f.run({MOCK_HA:'1'}).output,/restart suppressed while one connector remains/);
+  for(let i=0;i<4;i++) assert.equal(f.run({MOCK_HA:'2'}).status,0);
+  assert.deepEqual(f.restarts(),[]);
+});
+
+watchdogTest('three zero-HA observations restart only dedicated LITSAN connector', t => {
+  const f=fixture(t);
+  for(let i=0;i<2;i++) { assert.equal(f.run({MOCK_HA:'0'}).status,0); assert.deepEqual(f.restarts(),[]); }
+  const result=f.run({MOCK_HA:'0'});
   assert.equal(result.status,0,result.output);
-  assert.match(result.output,/recovered; dedicated HA=4\/4/);
+  assert.match(result.output,/recovered; dedicated HA=4\/2\+/);
   assert.deepEqual(f.restarts(),['--user restart sanqi-plugin-cloudflared.service']);
 });
 
-watchdogTest('200 with truncated Landing body triggers recovery only after three observations', t => {
-  const f=fixture(t);
-  for(let i=0;i<2;i++) { assert.equal(f.run({MOCK_PUBLIC_MODE:'partial'}).status,0); assert.deepEqual(f.restarts(),[]); }
-  const result=f.run({MOCK_PUBLIC_MODE:'partial'});
-  assert.equal(result.status,0,result.output);
-  assert.match(result.output,/public-body-incomplete/);
-  assert.deepEqual(f.restarts(),['--user restart sanqi-plugin-cloudflared.service']);
-});
-
-watchdogTest('200 partial body with failed curl exit is not treated as complete', t => {
-  const f=fixture(t);
-  for(let i=0;i<2;i++) { assert.equal(f.run({MOCK_PUBLIC_MODE:'timedout'}).status,0); assert.deepEqual(f.restarts(),[]); }
-  const result=f.run({MOCK_PUBLIC_MODE:'timedout'});
-  assert.equal(result.status,0,result.output);
-  assert.match(result.output,/public-body-incomplete/);
-  assert.deepEqual(f.restarts(),['--user restart sanqi-plugin-cloudflared.service']);
-});
+for (const mode of ['partial','timedout']) {
+  watchdogTest(`incomplete public Landing body (${mode}) is auxiliary and never restarts`, t => {
+    const f=fixture(t);
+    for(let i=0;i<2;i++) assert.equal(f.run({MOCK_PUBLIC_MODE:mode}).status,0);
+    const result=f.run({MOCK_PUBLIC_MODE:mode});
+    assert.equal(result.status,0,result.output);
+    assert.match(result.output,/full-body probe failed \(3\/3\)/);
+    assert.match(result.output,/auxiliary signal only/);
+    assert.deepEqual(f.restarts(),[]);
+  });
+}
 
 watchdogTest('missing or malformed HA metrics never restart the connector', t => {
   const f=fixture(t);
@@ -109,7 +110,7 @@ watchdogTest('missing or malformed HA metrics never restart the connector', t =>
   assert.deepEqual(f.restarts(),[]);
 });
 
-watchdogTest('unhealthy local Memhub suppresses connector restart', t => {
+watchdogTest('unhealthy local LITSAN suppresses connector restart', t => {
   const f=fixture(t);
   for(let i=0;i<4;i++) assert.match(f.run({MOCK_LOCAL_HTTP:'503',MOCK_HA:'0',MOCK_PUBLIC_MODE:'partial'}).output,/restart suppressed/);
   assert.deepEqual(f.restarts(),[]);

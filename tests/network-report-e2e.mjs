@@ -14,7 +14,7 @@ const server = createServer((request, response) => {
     `process_start_time_seconds ${Date.now() / 1000 - 3600}`
   ].join("\n") + "\n");
   if (request.url === "/config") return response.end(JSON.stringify({ config: { ingress: [{
-    hostname: "memhub.example.test", service: "http://127.0.0.1:3001",
+    hostname: "litsan.example.test", service: "http://127.0.0.1:3001",
     originRequest: { connectTimeout: 30, tcpKeepAlive: 30, keepAliveTimeout: 90, keepAliveConnections: 100 }
   }] } }));
   response.writeHead(404).end('{}');

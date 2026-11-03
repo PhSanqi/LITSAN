@@ -22,20 +22,23 @@ const powershell = (code) => spawnSync("powershell.exe", [
 
 try {
   for (const edition of ["local", "server"]) {
-    const source = await readFile(new URL(`../editions/${edition}/windows/install.ps1`, import.meta.url), "utf8");
-    const guardStart = source.indexOf(edition === "local"
-      ? "# Resolve existing credentials before stopping"
-      : "# Preserve the original Core token");
-    const guardEnd = source.indexOf("$StackEntry = ", guardStart);
-    const initializeStart = source.indexOf("if (-not $MemoryToken) {", guardEnd);
-    const initializeEnd = source.indexOf("\n$Accounts =", initializeStart);
-    assert.ok(guardStart >= 0 && guardEnd > guardStart && initializeEnd > initializeStart,
-      edition + " installer credential extraction boundaries");
-    assert.ok(guardEnd < source.indexOf("--action stop"),
-      "credential validation must run before stopping a live owner");
-    const guard = source.slice(guardStart, guardEnd);
-    const initialize = source.slice(initializeStart, initializeEnd);
-    const stateRoot = join(root, edition);
+    const wrapper = await readFile(new URL(`../editions/${edition}/windows/install.ps1`, import.meta.url), "utf8");
+    assert.match(wrapper, /common\\windows\\install\.ps1/);
+  }
+  const source = await readFile(new URL("../editions/common/windows/install.ps1", import.meta.url), "utf8");
+  const guardStart = source.indexOf('. (Join-Path $RepoRoot "scripts\\windows-memory-credentials.ps1")');
+  const tokenLineStart = source.indexOf("$MemoryToken = Resolve-LitsanMemoryToken", guardStart);
+  const guardEnd = source.indexOf("\n", tokenLineStart);
+  const initializeStart = source.indexOf("if (-not $MemoryToken) {", guardEnd);
+  const initializeEnd = source.indexOf("\n$Accounts =", initializeStart);
+  assert.ok(guardStart >= 0 && tokenLineStart > guardStart && guardEnd > tokenLineStart && initializeEnd > initializeStart,
+    "common installer credential extraction boundaries");
+  assert.ok(guardEnd < source.indexOf("--action stop"),
+    "credential validation must run before stopping a live owner");
+  const guard = source.slice(guardStart, guardEnd);
+  const initialize = source.slice(initializeStart, initializeEnd);
+  {
+    const stateRoot = join(root, "common");
     const memoryDir = join(stateRoot, "memory");
     const configPath = join(stateRoot, "memory-config.yaml");
     await mkdir(memoryDir, { recursive: true });
@@ -51,7 +54,7 @@ try {
       'Write-Output ("TOKEN=" + $MemoryToken)'
     ].join("\n"));
     const fresh = invoke();
-    assert.equal(fresh.status, 0, edition + " first install: " + fresh.stderr);
+    assert.equal(fresh.status, 0, "common first install: " + fresh.stderr);
     const config = JSON.parse((await readFile(configPath, "utf8")).replace(/^\uFEFF/, ""));
     const firstToken = config.memmyMemory.storage.token;
     assert.match(firstToken, /^[0-9a-f]{64}$/i);
@@ -63,10 +66,10 @@ try {
     const baseline = digest(await readFile(configPath));
     for (const phase of ["reinstall", "upgrade", "rollback"]) {
       const replay = invoke();
-      assert.equal(replay.status, 0, edition + " " + phase + ": " + replay.stderr);
+      assert.equal(replay.status, 0, "common " + phase + ": " + replay.stderr);
       assert.match(replay.stdout, new RegExp("TOKEN=" + firstToken));
       assert.equal(digest(await readFile(configPath)), baseline,
-        edition + " " + phase + " must preserve the exact Memory config bytes");
+        "common " + phase + " must preserve the exact Memory config bytes");
     }
 
     // Memory Core rewrites JSON-compatible memory-config.yaml into YAML on
@@ -86,7 +89,7 @@ try {
     ].join("\n");
     await writeFile(configPath, rewrittenYaml);
     const yamlResult = invoke();
-    assert.equal(yamlResult.status, 0, edition + " Core-rewritten YAML reinstall: " + yamlResult.stderr);
+    assert.equal(yamlResult.status, 0, "common Core-rewritten YAML reinstall: " + yamlResult.stderr);
     assert.match(yamlResult.stdout, new RegExp("TOKEN=" + firstToken));
     assert.equal(await readFile(configPath, "utf8"), rewrittenYaml);
 
@@ -112,7 +115,50 @@ try {
     await assert.rejects(readFile(configPath), { code: "ENOENT" });
     assert.equal(await readFile(join(memoryDir, "memory.sqlite"), "utf8"), "protected simulated database");
   }
-  console.log("memhub-windows-installer-credential-e2e: ok (local + server)");
+  const hostStart = source.indexOf('$LegacyServerEnvPath =');
+  const hostEnd = source.indexOf("\n}", hostStart) + "\n}".length;
+  assert.ok(hostStart >= 0 && hostEnd > hostStart, "public-host extraction boundaries");
+  assert.ok(hostStart < source.indexOf("--action stop"),
+    "public-host validation must run before stopping a live owner");
+  const hostBlock = source.slice(hostStart, hostEnd);
+  const legacySnapshots = [];
+  for (const [name, legacy, current, explicit, expected] of [
+    ["legacy", "MEMHUB_PUBLIC_HOST=legacy.example\r\n", null, null, "legacy.example"],
+    ["current", "MEMHUB_PUBLIC_HOST=legacy.example\n", "MEMHUB_PUBLIC_HOST=new.example\n", null, "new.example"],
+    ["ambiguous", "MEMHUB_PUBLIC_HOST=one.example\nMEMHUB_PUBLIC_HOST=two.example\n", null, null, null],
+    ["explicit", "MEMHUB_PUBLIC_HOST=legacy.example\n", null, "explicit.example", "explicit.example"],
+    ["empty", null, null, null, ""]
+  ]) {
+    const stateRoot = join(root, "host-" + name);
+    await mkdir(stateRoot);
+    if (legacy !== null) {
+      const path = join(stateRoot, "server.env");
+      await writeFile(path, legacy);
+      legacySnapshots.push([path, await readFile(path)]);
+    }
+    if (current !== null) await writeFile(join(stateRoot, "memhub.env"), current);
+    const result = powershell([
+      '$ErrorActionPreference = "Stop"',
+      `$StateRoot = ${quote(stateRoot)}`,
+      '$EnvPath = Join-Path $StateRoot "memhub.env"',
+      'function Invoke-HostBlock { param([string]$PublicHost)',
+      hostBlock,
+      'Write-Output ("HOST=" + $PublicHost)',
+      '}',
+      explicit === null ? "Invoke-HostBlock" : `Invoke-HostBlock -PublicHost ${quote(explicit)}`
+    ].join("\n"));
+    if (expected === null) {
+      assert.notEqual(result.status, 0, name);
+      assert.match(result.stderr, /ambiguous public host/i);
+    } else {
+      assert.equal(result.status, 0, name + ": " + result.stderr);
+      assert.ok(result.stdout.split(/\r?\n/).includes("HOST=" + expected), name + ": " + result.stdout);
+    }
+  }
+  for (const [path, bytes] of legacySnapshots) {
+    assert.deepEqual(await readFile(path), bytes, "legacy server.env must remain byte-for-byte unchanged");
+  }
+  console.log("memhub-windows-installer-credential-e2e: ok (common installer via local + server wrappers, legacy server.env host)");
   const ownership = spawnSync("powershell.exe", [
     "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File",
     join(repoRoot, "tests", "windows-task-ownership-e2e.ps1")
@@ -127,13 +173,6 @@ try {
   assert.equal(stackOwner.status, 0,
     "Windows stack PID/start/path regression: " + stackOwner.stderr + stackOwner.stdout);
   console.log(stackOwner.stdout.trim());
-  const legacyAudit = spawnSync("powershell.exe", [
-    "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File",
-    join(repoRoot, "tests", "windows-legacy-migration-audit-e2e.ps1")
-  ], { encoding: "utf8", timeout: 15_000, windowsHide: true });
-  assert.equal(legacyAudit.status, 0,
-    "Windows legacy migration read-only audit: " + legacyAudit.stderr + legacyAudit.stdout);
-  console.log(legacyAudit.stdout.trim());
   const stackRuntime = spawnSync(process.execPath, [
     join(repoRoot, "tests", "stack-runtime-smoke-windows.mjs")
   ], { encoding: "utf8", timeout: 90_000, windowsHide: true });

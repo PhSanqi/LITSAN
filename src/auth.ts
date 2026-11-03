@@ -5,7 +5,7 @@ import { withFileMutationLock } from "./file-mutation-lock.js";
 
 const VERSION = 1;
 
-export interface MemhubAccountRecord {
+export interface LitsanAccountRecord {
   account_id: string;
   created_at: string;
   role?: "user" | "admin";
@@ -17,10 +17,10 @@ export interface MemhubAccountRecord {
 
 interface AccountStore {
   version: 1;
-  accounts: Record<string, MemhubAccountRecord>;
+  accounts: Record<string, LitsanAccountRecord>;
 }
 
-export interface MemhubAccountSummary {
+export interface LitsanAccountSummary {
   username: string;
   account_id: string;
   created_at: string;
@@ -32,7 +32,7 @@ export async function hasAccounts(stateRoot: string): Promise<boolean> {
   return Object.keys((await load(stateRoot)).accounts).length > 0;
 }
 
-export async function listAccounts(stateRoot: string): Promise<MemhubAccountSummary[]> {
+export async function listAccounts(stateRoot: string): Promise<LitsanAccountSummary[]> {
   const data = await load(stateRoot);
   return Object.entries(data.accounts)
     .map(([username, record]) => ({
@@ -173,7 +173,7 @@ export async function resolveCloudflareAccount(
     }
 
     if (!options.allowJit) {
-      throw new Error("该 Cloudflare 邮箱未加入 Memhub 本地允许列表");
+      throw new Error("该 Cloudflare 邮箱未加入 LITSAN 本地允许列表");
     }
 
     const username = `cf-${createHash("sha256").update(email, "utf8").digest("hex").slice(0, 32)}`;
@@ -207,7 +207,7 @@ function filePath(stateRoot: string): string {
 async function load(stateRoot: string): Promise<AccountStore> {
   try {
     const data = JSON.parse(await readFile(filePath(stateRoot), "utf8")) as unknown;
-    if (!isAccountStore(data)) throw new Error("Memhub 账号数据库格式无效");
+    if (!isAccountStore(data)) throw new Error("LITSAN 账号数据库格式无效");
     return data;
   } catch (error) {
     if ((error as NodeJS.ErrnoException)?.code === "ENOENT") return { version: VERSION, accounts: {} };

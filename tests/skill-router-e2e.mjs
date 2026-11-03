@@ -2,12 +2,12 @@ import assert from "node:assert/strict";
 import { compactSkillContextItem, skillSelectionMetadataFromBody } from "../dist/skill-router.js";
 
 const body = `skill.import:abc123
-# Memhub Long-Term Content Audit
+# LITSAN Long-Term Content Audit
 
 Use a bounded read-first audit to diagnose missing durable state without mutating memory.
 
 ## When to use
-Use when Memhub appears to be missing memories, projects, architecture, skills, bindings, or long-term evolution state.
+Use when LITSAN appears to be missing memories, projects, architecture, skills, bindings, or long-term evolution state.
 
 ## Procedure
 SECRET FULL PROCEDURE THAT MUST NOT BE EAGERLY INJECTED.
@@ -23,9 +23,9 @@ const item = compactSkillContextItem({
   provenance: { tags: ["artifact:skill", "project:memhub", "audit", "memory-integrity", "confidence:0.8"] }
 });
 
-assert.match(item.content, /Skill candidate: Memhub Long-Term Content Audit/);
-assert.match(item.content, /When to use: Use when Memhub appears/);
-assert.match(item.content, /Load: memhub_skill action=load skill_id=skill-1/);
+assert.match(item.content, /Skill candidate: LITSAN Long-Term Content Audit/);
+assert.match(item.content, /When to use: Use when LITSAN appears/);
+assert.match(item.content, /Load: litsan_skill action=load skill_id=skill-1/);
 assert.doesNotMatch(item.content, /SECRET FULL PROCEDURE/);
 assert.equal(item.provenance.skillRouter.reliability, 0.8);
 assert.equal(item.provenance.skillRouter.scope, "project:memhub");
@@ -38,18 +38,18 @@ assert.equal(metadata.loadRequired, true);
 
 const structuredTitleMetadata = skillSelectionMetadataFromBody(
   "Purpose: audit durable project memory without mutating it.",
-  { projectId: "memhub", title: "Memhub Long-Term Content Audit" }
+  { projectId: "memhub", title: "LITSAN Long-Term Content Audit" }
 );
-assert.equal(structuredTitleMetadata.title, "Memhub Long-Term Content Audit");
+assert.equal(structuredTitleMetadata.title, "LITSAN Long-Term Content Audit");
 assert.doesNotMatch(structuredTitleMetadata.title, /^Purpose:/);
 
 const flattened = compactSkillContextItem({
   id: "skill-flat",
-  content: "Memhub Long-Term Content Audit # Memhub Long-Term Content Audit ## When to use Use when project memory appears missing or misrouted. ## Procedure SECRET FULL PROCEDURE",
+  content: "LITSAN Long-Term Content Audit # LITSAN Long-Term Content Audit ## When to use Use when project memory appears missing or misrouted. ## Procedure SECRET FULL PROCEDURE",
   authority: "remembered", scope: "capability", source: "memory-core", projectId: "memhub",
   provenance: { tags: ["artifact:skill", "project:memhub", "audit", "memory-v2", "layer:skill"] }
 });
-assert.equal(flattened.provenance.skillRouter.title, "Memhub Long-Term Content Audit");
+assert.equal(flattened.provenance.skillRouter.title, "LITSAN Long-Term Content Audit");
 assert.equal(flattened.provenance.skillRouter.whenToUse, "Use when project memory appears missing or misrouted.");
 assert.equal(flattened.provenance.skillRouter.summary, "Use when project memory appears missing or misrouted.");
 assert.doesNotMatch(flattened.content, /SECRET FULL PROCEDURE/);
@@ -57,11 +57,11 @@ assert.ok(!flattened.provenance.skillRouter.triggers.includes("memory-v2"));
 
 const recallHitShape = compactSkillContextItem({
   id: "skill-recall-hit",
-  content: "Memhub Long-Term Content Audit\n# Memhub Long-Term Content Audit A bounded, read-first audit of durable memory. ## When to use Use when memory appears missing. ## Procedure SECRET",
+  content: "LITSAN Long-Term Content Audit\n# LITSAN Long-Term Content Audit A bounded, read-first audit of durable memory. ## When to use Use when memory appears missing. ## Procedure SECRET",
   authority: "remembered", scope: "capability", source: "memory-core", projectId: "memhub",
   provenance: { tags: ["artifact:skill", "project:memhub", "audit"] }
 });
-assert.equal(recallHitShape.provenance.skillRouter.title, "Memhub Long-Term Content Audit");
+assert.equal(recallHitShape.provenance.skillRouter.title, "LITSAN Long-Term Content Audit");
 assert.doesNotMatch(recallHitShape.provenance.skillRouter.title, /bounded/i);
 
 const legacyFrontmatter = compactSkillContextItem({

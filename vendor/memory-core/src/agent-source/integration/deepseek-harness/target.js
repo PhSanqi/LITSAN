@@ -1,21 +1,23 @@
+import { migrateOwnedIntegrationFiles } from "../legacy-files.js";
+import { defaultLitsanHome } from "../../../utils/litsan-compat.js";
 import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { resolveDeepseekHarnessHomeDirectory } from "../../agent-paths.js";
-import { removeMemmySkillDirectory, replaceMemmySkillDirectory } from "../skill-directory.js";
-import { readMemmyMemoryServiceConfig } from "../memmy-runtime-config.js";
-import { createDeepseekHarnessPluginPackageManifest, DEEPSEEK_HARNESS_PLUGIN_CLIENT, DEEPSEEK_HARNESS_PLUGIN_INDEX } from "../templates/memmy-deepseek-harness-plugin.js";
-import { renderMemmyPluginSkillManifest } from "../templates/memmy-plugin.js";
-import { loadMemmyWorkspaceBridgeRuntimeAsset } from "../workspace-bridge/runtime-loader.js";
+import { removeLitsanSkillDirectory, replaceLitsanSkillDirectory } from "../skill-directory.js";
+import { readLitsanMemoryServiceConfig } from "../litsan-runtime-config.js";
+import { createDeepseekHarnessPluginPackageManifest, DEEPSEEK_HARNESS_PLUGIN_CLIENT, DEEPSEEK_HARNESS_PLUGIN_INDEX } from "../templates/litsan-deepseek-harness-plugin.js";
+import { renderLitsanPluginSkillManifest } from "../templates/litsan-plugin.js";
+import { loadLitsanWorkspaceBridgeRuntimeAsset } from "../workspace-bridge/runtime-loader.js";
 const TARGET_ID = "deepseek_harness";
 const DISPLAY_NAME = "DeepSeek Harness";
-const PATCH_START = "# memmy-memory plugin:start";
-const PATCH_END = "# memmy-memory plugin:end";
-const PLUGIN_PACKAGE_NAME = "@memmy/memmy-memory";
+const PATCH_START = "# litsan-memory plugin:start";
+const PATCH_END = "# litsan-memory plugin:end";
+const PLUGIN_PACKAGE_NAME = "@litsan/litsan-memory";
 export function createDeepseekHarnessSkillTarget(deps = {}) {
     const rootDirectory = deps.rootDirectory ?? resolveDeepseekHarnessHomeDirectory();
-    const memmyConfigPath = deps.memmyConfigPath ?? join(homedir(), ".memmy", "config.yaml");
-    const pluginDirectory = join(rootDirectory, "profiles", "node_modules", "@memmy", "memmy-memory");
+    const litsanConfigPath = (deps.litsanConfigPath ?? deps.memmyConfigPath) ?? join(defaultLitsanHome(), "config.yaml");
+    const pluginDirectory = join(rootDirectory, "profiles", "node_modules", "@litsan", "litsan-memory");
     const patchPath = join(rootDirectory, "cordis.patch.yml");
     return {
         targetId: TARGET_ID,
@@ -27,10 +29,10 @@ export function createDeepseekHarnessSkillTarget(deps = {}) {
             if (!(await this.resolveRootDirectory())) {
                 throw new Error("DeepSeek Harness is not installed or its directory is unavailable");
             }
-            await replaceMemmySkillDirectory(rootDirectory, manifest);
+            await replaceLitsanSkillDirectory(rootDirectory, manifest);
         },
         async uninstall() {
-            await removeMemmySkillDirectory(rootDirectory);
+            await removeLitsanSkillDirectory(rootDirectory);
         },
         async isInstalled() {
             if (!(await this.resolveRootDirectory()))
@@ -39,43 +41,44 @@ export function createDeepseekHarnessSkillTarget(deps = {}) {
             const pluginSource = await readTextFile(join(pluginDirectory, "index.mjs"));
             const clientSource = await readTextFile(join(pluginDirectory, "client.js"));
             const packageSource = await readTextFile(join(pluginDirectory, "package.json"));
-            const bridgeSource = await readTextFile(join(pluginDirectory, "memmy-workspace-bridge.mjs"));
+            const bridgeSource = await readTextFile(join(pluginDirectory, "litsan-workspace-bridge.mjs"));
             return patch.includes("name: " + yamlString(PLUGIN_PACKAGE_NAME)) &&
                 pluginSource === DEEPSEEK_HARNESS_PLUGIN_INDEX &&
                 clientSource === DEEPSEEK_HARNESS_PLUGIN_CLIENT &&
                 packageSource === JSON.stringify(createDeepseekHarnessPluginPackageManifest(), null, 2) + "\n" &&
-                bridgeSource === await loadMemmyWorkspaceBridgeRuntimeAsset();
+                bridgeSource === await loadLitsanWorkspaceBridgeRuntimeAsset();
         },
         async installPlugin() {
             if (!(await this.resolveRootDirectory())) {
                 throw new Error("DeepSeek Harness is not installed or its directory is unavailable");
             }
+            await migrateOwnedIntegrationFiles(rootDirectory);
             await mkdir(pluginDirectory, { recursive: true });
             await writeFileAtomically(join(pluginDirectory, "package.json"), JSON.stringify(createDeepseekHarnessPluginPackageManifest(), null, 2) + "\n");
             await writeFileAtomically(join(pluginDirectory, "index.mjs"), DEEPSEEK_HARNESS_PLUGIN_INDEX);
             await writeFileAtomically(join(pluginDirectory, "client.js"), DEEPSEEK_HARNESS_PLUGIN_CLIENT);
-            await writeFileAtomically(join(pluginDirectory, "memmy-workspace-bridge.mjs"), await loadMemmyWorkspaceBridgeRuntimeAsset());
-            await writeFileAtomically(join(pluginDirectory, "memmy-memory-config.json"), JSON.stringify({ memmy_config_path: memmyConfigPath, ...(await readMemmyMemoryServiceConfig(memmyConfigPath)) }, null, 2) + "\n");
-            await upsertPatch(patchPath, renderPluginPatch(memmyConfigPath));
-            await replaceMemmySkillDirectory(rootDirectory, renderMemmyPluginSkillManifest(TARGET_ID));
+            await writeFileAtomically(join(pluginDirectory, "litsan-workspace-bridge.mjs"), await loadLitsanWorkspaceBridgeRuntimeAsset());
+            await writeFileAtomically(join(pluginDirectory, "litsan-memory-config.json"), JSON.stringify({ litsan_config_path: litsanConfigPath, ...(await readLitsanMemoryServiceConfig(litsanConfigPath)) }, null, 2) + "\n");
+            await upsertPatch(patchPath, renderPluginPatch(litsanConfigPath));
+            await replaceLitsanSkillDirectory(rootDirectory, renderLitsanPluginSkillManifest(TARGET_ID));
         },
         async uninstallPlugin() {
             if (!(await this.resolveRootDirectory()))
                 return;
             await removePatch(patchPath);
             await rm(pluginDirectory, { recursive: true, force: true });
-            await removeMemmySkillDirectory(rootDirectory);
+            await removeLitsanSkillDirectory(rootDirectory);
         }
     };
 }
-function renderPluginPatch(memmyConfigPath) {
+function renderPluginPatch(litsanConfigPath) {
     return [
         PATCH_START,
         "- insert:",
-        "    - id: memmy-memory",
+        "    - id: litsan-memory",
         "      name: " + yamlString(PLUGIN_PACKAGE_NAME),
         "      config:",
-        "        memmyConfigPath: " + yamlString(memmyConfigPath),
+        "        litsanConfigPath: " + yamlString(litsanConfigPath),
         PATCH_END
     ].join("\n");
 }
@@ -110,7 +113,7 @@ function removePatchBlock(value) {
             return result;
         const end = result.indexOf(PATCH_END, start);
         if (end < 0)
-            throw new Error("Invalid Memmy patch block starting at " + PATCH_START);
+            throw new Error("Invalid LITSAN patch block starting at " + PATCH_START);
         const lineEnd = result.indexOf("\n", end + PATCH_END.length);
         const after = lineEnd < 0 ? result.length : lineEnd + 1;
         result = result.slice(0, start).trimEnd() + "\n" + result.slice(after).trimStart();

@@ -1,4 +1,4 @@
-// Single source of truth for the Memhub state roots.
+// Single source of truth for the LITSAN state roots.
 //
 // Plain ESM on purpose: `src/*.ts` and `scripts/*.mjs` both import this module
 // (scripts through the build output, or directly from `src/` when no build is
@@ -8,7 +8,8 @@
 //
 // `home` — the install/stack home used by run-stack, installers, core paths
 // and uninstall. Precedence:
-//   explicit --home > MEMHUB_HOME > existing ~/.memmy/memhub
+//   explicit --home > LITSAN_HOME (then legacy env prefixes)
+//   > existing ~/.litsan/memhub > existing ~/.memmy/memhub
 //   > legacy ~/.memhub with real state > default ~/.memmy/memhub
 //
 // `controlRoot` — the gateway control directory (accounts, project registry,
@@ -19,12 +20,13 @@
 //
 // The two names are not aliases: edition installs legitimately use
 // MEMHUB_HOME=<home> and MEMHUB_STATE_ROOT=<home>/server at the same time.
+import { brand, env as brandEnv } from "./brand.mjs";
 import { existsSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { posix, win32 } from "node:path";
 import { pathToFileURL } from "node:url";
 
-const DEFAULT_DIRS = [".memmy", "memhub"];
+const DEFAULT_DIRS = [brand.legacyDataDir, "memhub"];
 const LEGACY_DIR = ".memhub";
 const LEGACY_MARKERS = ["memhub.env", "accounts.json"];
 const warnedLegacyRoots = new Set();
@@ -92,7 +94,7 @@ function hasLegacyState(legacyRoot, paths) {
  */
 
 /**
- * Resolve the Memhub install/stack home. `MEMHUB_STATE_ROOT` is deliberately
+ * Resolve the LITSAN install/stack home. `MEMHUB_STATE_ROOT` is deliberately
  * ignored: it names the gateway control root, not the install home.
  *
  * @param {ResolveOptions} [options]
@@ -107,9 +109,11 @@ export function resolveHome(options = {}) {
   const explicit = nonEmpty(options.explicit) ?? nonEmpty(options.home);
   if (explicit) return paths.resolve(explicit);
 
-  const fromHome = nonEmpty(env.MEMHUB_HOME);
+  const fromHome = nonEmpty(brandEnv("HOME", env));
   if (fromHome) return paths.resolve(fromHome);
 
+  const litsanHome = paths.join(homeDir, brand.dataDir, "memhub");
+  if (isDirectory(litsanHome)) return litsanHome;
   const preferred = paths.join(homeDir, ...DEFAULT_DIRS);
   const legacy = paths.join(homeDir, LEGACY_DIR);
   // An existing but empty preferred dir must not shadow a legacy root that holds data.
@@ -121,13 +125,23 @@ export function resolveHome(options = {}) {
       warnedLegacyRoots.add(legacy);
       const warn = options.warn ?? ((message) => console.error(message));
       warn(
-        `[memhub] Legacy state root ${legacy} contains Memhub data; using it in place. ` +
-        `Memhub will not move or copy it (unified default: ${preferred}).`
+        `[litsan] Legacy state root ${legacy} contains LITSAN data; using it in place. ` +
+        `LITSAN will not move or copy it (unified default: ${preferred}).`
       );
     }
     return legacy;
   }
   return preferred;
+}
+
+/** @param {string[]} parts @param {ResolveOptions} [options] */
+export function resolveDataPath(parts, options = {}) {
+  const values = options.env ?? process.env;
+  const platform = options.platform ?? process.platform;
+  const paths = pathModule(platform);
+  const homeDir = paths.resolve(options.homeDir ?? homeDirectory(values, platform));
+  const preferred = paths.join(homeDir, brand.dataDir, ...parts);
+  return existsSync(preferred) ? preferred : paths.join(homeDir, brand.legacyDataDir, ...parts);
 }
 
 /**
@@ -144,7 +158,7 @@ export function resolveControlRoot(options = {}) {
   const explicit = nonEmpty(options.explicit) ?? nonEmpty(options.stateRoot) ?? nonEmpty(options.controlRoot);
   if (explicit) return paths.resolve(explicit);
 
-  const fromState = nonEmpty(env.MEMHUB_STATE_ROOT);
+  const fromState = nonEmpty(brandEnv("STATE_ROOT", env));
   if (fromState) return paths.resolve(fromState);
 
   const home = resolveHome(options);
@@ -178,18 +192,20 @@ export function resolveCoreState(options = {}) {
   const stateRoot = resolveHome(options);
   const coreDir = paths.join(stateRoot, "core");
   const legacyCoreDir = paths.join(homeDir, LEGACY_DIR, "core");
-  const memmyConfigPath = paths.join(homeDir, ".memmy", "config.yaml");
-  const memmyDbPath = paths.join(homeDir, ".memmy", "memory-service", "memory.sqlite");
+  const memmyConfigPath = paths.join(homeDir, brand.legacyDataDir, "config.yaml");
+  const litsanConfigPath = paths.join(homeDir, brand.dataDir, "config.yaml");
+  const memmyDbPath = paths.join(homeDir, brand.legacyDataDir, "memory-service", "memory.sqlite");
+  const litsanDbPath = paths.join(homeDir, brand.dataDir, "memory-service", "memory.sqlite");
   const canonicalConfig = paths.join(coreDir, "config.yaml");
   const canonicalDb = paths.join(coreDir, "memory.sqlite");
   const legacyCoreConfigPath = paths.join(legacyCoreDir, "config.yaml");
   const legacyCoreDbPath = paths.join(legacyCoreDir, "memory.sqlite");
 
-  // Existing unified state wins; then the oldest Memmy install (matching
-  // core-migration's source preference); then the legacy ~/.memhub/core path.
-  const configPath = [canonicalConfig, memmyConfigPath, legacyCoreConfigPath]
+  // Existing unified state wins; then existing LITSAN/old Memmy files;
+  // then the legacy ~/.memhub/core path.
+  const configPath = [canonicalConfig, litsanConfigPath, memmyConfigPath, legacyCoreConfigPath]
     .find((candidate) => existsSync(candidate)) ?? canonicalConfig;
-  const dbPath = [canonicalDb, memmyDbPath, legacyCoreDbPath]
+  const dbPath = [canonicalDb, litsanDbPath, memmyDbPath, legacyCoreDbPath]
     .find((candidate) => existsSync(candidate)) ?? canonicalDb;
 
   return {
@@ -218,7 +234,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
           : resolveHome();
     process.stdout.write(`${output}\n`);
   } catch (error) {
-    process.stderr.write(`[memhub] ${error instanceof Error ? error.message : String(error)}\n`);
+    process.stderr.write(`[litsan] ${error instanceof Error ? error.message : String(error)}\n`);
     process.exitCode = 1;
   }
 }

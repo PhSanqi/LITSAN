@@ -1,3 +1,5 @@
+import { memoryConfigKey } from "../utils/litsan-compat.js";
+import { litsanHeader } from "../utils/litsan-compat.js";
 import { readFile } from "node:fs/promises";
 import { parse as parseYaml } from "yaml";
 import { mutateMemoryConfig } from "../config/writer.js";
@@ -56,7 +58,7 @@ export function isViewerApiRequest(request, url) {
         const [verb, path] = route.split(" ");
         return method === verb && new RegExp(`^${path.replace(/:[^/]+/g, "[^/]+")}$`).test(url.pathname);
     });
-    return matched && (url.pathname === "/api/v1/events" || header(request, "x-memmy-viewer") === "1");
+    return matched && (url.pathname === "/api/v1/events" || header(request, "x-litsan-viewer") === "1");
 }
 export function assertLocalViewerRequest(request, url) {
     const remote = request.socket.remoteAddress;
@@ -84,8 +86,8 @@ export function assertLocalViewerRequest(request, url) {
         throw new MemoryServiceError("forbidden", "cross-site Viewer API requests are not allowed");
     }
     if (request.method !== "GET" && request.method !== "HEAD") {
-        if (header(request, "x-memmy-viewer") !== "1") {
-            throw new MemoryServiceError("forbidden", "Viewer write requests require x-memmy-viewer: 1");
+        if (header(request, "x-litsan-viewer") !== "1") {
+            throw new MemoryServiceError("forbidden", "Viewer write requests require x-litsan-viewer: 1");
         }
         const contentType = header(request, "content-type");
         if (!contentType?.toLowerCase().startsWith("application/json")) {
@@ -248,7 +250,7 @@ export async function routeViewerRequest(context, method, url, body) {
                 includeAudit: url.searchParams.get("includeAudit") === "true"
             }),
             headers: {
-                "content-disposition": `attachment; filename="memmy-memory-${new Date().toISOString().slice(0, 10)}.json"`
+                "content-disposition": `attachment; filename="litsan-memory-${new Date().toISOString().slice(0, 10)}.json"`
             }
         };
     }
@@ -371,9 +373,9 @@ async function patchViewerConfig(context, body) {
         }
     }
     await mutateMemoryConfig(context.configPath, (root) => {
-        const current = record(root.memmyMemory);
+        const current = record((root.litsanMemory ?? root.memmyMemory));
         const next = deepMerge(current, stripMaskedSecrets(patch));
-        root.memmyMemory = next;
+        root[memoryConfigKey(root)] = next;
         syncMemoryModelCatalog(root, next, patch);
     });
     const reload = context.service.reloadConfig({ reason: "viewer.config.patch" });
@@ -385,7 +387,7 @@ async function rawMemoryConfig(configPath) {
         return {};
     try {
         const parsed = parseYaml(await readFile(configPath, "utf8"));
-        return record(record(parsed).memmyMemory);
+        return record((record(parsed).litsanMemory ?? record(parsed).memmyMemory));
     }
     catch (error) {
         if (error instanceof Error && "code" in error && error.code === "ENOENT") {
@@ -458,7 +460,7 @@ function requiredString(value, key) {
     return value;
 }
 function header(request, name) {
-    const value = request.headers[name];
+    const value = litsanHeader(request.headers, name);
     return Array.isArray(value) ? value[0] : value;
 }
 function isLoopbackAddress(value) {

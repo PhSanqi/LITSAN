@@ -1,16 +1,16 @@
 # Distillation and tool failures
 
-Memhub distinguishes durable source evidence, Core writes and downstream distillation queue state. Failure recovery must preserve that ordering.
+LITSAN distinguishes durable source evidence, Core writes and downstream distillation queue state. Failure recovery must preserve that ordering.
 
 ## L1 ingest
 
-`memmy_turn` writes durable L1 event state first. A complete turn is then sent to Memory Core with deterministic session/turn/request identifiers. The local ingest marker is written only after Core returns success.
+`litsan_turn` writes durable L1 event state first. A complete turn is then sent to Memory Core with deterministic session/turn/request identifiers. The local ingest marker is written only after Core returns success.
 
 If a worker dies after Core commits but before the marker is written, the durable ingest intent allows recovery to replay the exact same request. If the marker is already durable but downstream L2 enqueue failed, recovery queues only the missing derived work and never replays the completed Core write.
 
 ## Read-only audit
 
-Use `memhub_distill action=audit` before recovery. The audit reports:
+Use `litsan_distill action=audit` before recovery. The audit reports:
 
 - complete but un-ingested L1 that requires review;
 - ingested evidence that is ready/waiting for L2 grouping;

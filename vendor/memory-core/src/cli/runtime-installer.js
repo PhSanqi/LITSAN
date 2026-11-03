@@ -1,3 +1,4 @@
+import { defaultLitsanHome } from "../utils/litsan-compat.js";
 import { createHash } from "node:crypto";
 import { createReadStream, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { chmod, copyFile, cp, mkdir, open, readFile, rename, rm, unlink, writeFile } from "node:fs/promises";
@@ -5,7 +6,7 @@ import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
-import { loadMemmyConfig } from "../config/index.js";
+import { loadLitsanConfig } from "../config/index.js";
 import { MEMORY_PROTOCOL_VERSION, MEMORY_SERVICE_VERSION } from "../version.js";
 const DEFAULT_RELEASES_URL = "https://github.com/MemTensor/memmy-agent/releases";
 const INSTALL_LOCK_TIMEOUT_MS = 15_000;
@@ -13,7 +14,7 @@ const SERVICE_STOP_TIMEOUT_MS = 5_000;
 export const DEFAULT_HEALTH_CHECK_TIMEOUT_MS = 120_000;
 export async function installMemoryRuntime(options = {}) {
     const healthCheckTimeoutMs = resolveHealthCheckTimeoutMs(options.healthCheckTimeoutMs);
-    const home = resolveHome(options.home ?? "~/.memmy");
+    const home = resolveHome(options.home ?? defaultLitsanHome());
     const serviceHome = join(home, "memory-service");
     const runtimeRoot = join(serviceHome, "runtime");
     const target = runtimeTarget(process.platform, process.arch);
@@ -141,16 +142,16 @@ export async function installMemoryRuntime(options = {}) {
         await installLock.release();
     }
 }
-export async function currentInstalledRuntime(home = "~/.memmy") {
+export async function currentInstalledRuntime(home = defaultLitsanHome()) {
     return readJsonFile(join(resolveHome(home), "memory-service", "current.json"));
 }
-export async function installedAgents(home = "~/.memmy") {
+export async function installedAgents(home = defaultLitsanHome()) {
     const installation = await readJsonFile(join(resolveHome(home), "memory-service", "installation.json"));
     return Array.isArray(installation?.agents)
         ? installation.agents.filter((agent) => typeof agent === "string" && agent.length > 0)
         : [];
 }
-export async function startInstalledMemoryService(home = "~/.memmy") {
+export async function startInstalledMemoryService(home = defaultLitsanHome()) {
     const resolvedHome = resolveHome(home);
     const serviceHome = join(resolvedHome, "memory-service");
     const installLock = await acquireInstallLock(join(serviceHome, "install.lock"));
@@ -170,7 +171,7 @@ export async function startInstalledMemoryService(home = "~/.memmy") {
     }
 }
 /** Repair only this installation's legacy login task, leaving startup to Desktop. */
-export async function repairInstalledWindowsMemoryService(home = "~/.memmy") {
+export async function repairInstalledWindowsMemoryService(home = defaultLitsanHome()) {
     const resolvedHome = resolveHome(home);
     if (process.platform !== "win32" || !(await currentInstalledRuntime(resolvedHome))) {
         return { ok: true, repaired: false };
@@ -203,7 +204,7 @@ export function userServiceRestartCommand(platform = process.platform, uid = pro
     if (platform === "linux") {
         return {
             command: "systemctl",
-            args: ["--user", "restart", "memmy-memory.service"]
+            args: ["--user", "restart", "litsan-memory.service"]
         };
     }
     if (platform === "win32") {
@@ -215,7 +216,7 @@ export function userServiceRestartCommand(platform = process.platform, uid = pro
                 "-WindowStyle",
                 "Hidden",
                 "-Command",
-                "Start-Sleep -Milliseconds 250; schtasks.exe /End /TN 'Memmy Memory Service' | Out-Null; Start-Sleep -Seconds 1; schtasks.exe /Run /TN 'Memmy Memory Service' | Out-Null"
+                "Start-Sleep -Milliseconds 250; schtasks.exe /End /TN 'LITSAN Memory Service' | Out-Null; Start-Sleep -Seconds 1; schtasks.exe /Run /TN 'LITSAN Memory Service' | Out-Null"
             ]
         };
     }
@@ -236,7 +237,7 @@ export function restartInstalledMemoryService() {
         });
     });
 }
-export async function stopInstalledMemoryService(home = "~/.memmy", dependencies = {}) {
+export async function stopInstalledMemoryService(home = defaultLitsanHome(), dependencies = {}) {
     const resolvedHome = resolveHome(home);
     const runtimeState = await readJsonFile(join(resolvedHome, "memory-service", "runtime.json"));
     (dependencies.stopUserService ?? stopUserService)();
@@ -245,7 +246,7 @@ export async function stopInstalledMemoryService(home = "~/.memmy", dependencies
     }
     const endpoint = loopbackEndpoint(runtimeState.endpoint);
     const configPath = runtimeState.configPath ?? join(resolvedHome, "config.yaml");
-    const token = loadMemmyConfig(configPath).config.storage.token ?? "";
+    const token = loadLitsanConfig(configPath).config.storage.token ?? "";
     const request = dependencies.fetch ?? fetch;
     const headers = token ? { authorization: `Bearer ${token}` } : {};
     const probe = await probeMemoryRuntime(endpoint, headers, request);
@@ -344,7 +345,7 @@ async function resolveReleaseManifest(options, target) {
             protocolVersion: MEMORY_PROTOCOL_VERSION,
             assets: {
                 [target]: {
-                    name: `memmy-memory-runtime-${version}-${target}.tar.gz`,
+                    name: `litsan-memory-runtime-${version}-${target}.tar.gz`,
                     sha256: "0".repeat(64)
                 }
             }
@@ -435,7 +436,7 @@ async function downloadSource(source, destination) {
         await copyFile(fileURLToPath(source), destination);
         return;
     }
-    const response = await fetch(source, { redirect: "follow", headers: { "user-agent": `memmy-memory/${MEMORY_SERVICE_VERSION}` } });
+    const response = await fetch(source, { redirect: "follow", headers: { "user-agent": `litsan-memory/${MEMORY_SERVICE_VERSION}` } });
     if (!response.ok || !response.body)
         throw new Error(`failed to download ${source}: HTTP ${response.status}`);
     const bytes = new Uint8Array(await response.arrayBuffer());
@@ -444,7 +445,7 @@ async function downloadSource(source, destination) {
 async function readSourceText(source) {
     if (source.startsWith("file:"))
         return readFile(fileURLToPath(source), "utf8");
-    const response = await fetch(source, { redirect: "follow", headers: { "user-agent": `memmy-memory/${MEMORY_SERVICE_VERSION}` } });
+    const response = await fetch(source, { redirect: "follow", headers: { "user-agent": `litsan-memory/${MEMORY_SERVICE_VERSION}` } });
     if (!response.ok)
         throw new Error(`failed to download ${source}: HTTP ${response.status}`);
     return response.text();
@@ -482,8 +483,8 @@ async function sha256File(path) {
 function launcherPaths(home) {
     const bin = join(home, "bin");
     return process.platform === "win32"
-        ? { command: join(bin, "memmy-memory-service.cmd"), script: join(bin, "memmy-memory-service.cjs"), hidden: join(bin, "memmy-memory-service.js") }
-        : { command: join(bin, "memmy-memory-service"), script: join(bin, "memmy-memory-service.cjs") };
+        ? { command: join(bin, "litsan-memory-service.cmd"), script: join(bin, "litsan-memory-service.cjs"), hidden: join(bin, "litsan-memory-service.js") }
+        : { command: join(bin, "litsan-memory-service"), script: join(bin, "litsan-memory-service.cjs") };
 }
 async function writeStableLauncher(home, serviceHome, nodeExecutable) {
     const paths = launcherPaths(home);
@@ -511,7 +512,7 @@ async function writeStableLauncher(home, serviceHome, nodeExecutable) {
         "try {",
         "if (windows) mkdirSync(logs, { recursive: true });",
         `const pointer = JSON.parse(readFileSync(${JSON.stringify(join(serviceHome, "current.json"))}, "utf8"));`,
-        `const env = { ...process.env, MEMMY_HOME: ${JSON.stringify(home)}, MEMMY_CONFIG: ${JSON.stringify(join(home, "config.yaml"))}, MEMMY_EMBEDDING_MODEL_ROOT: path.join(pointer.runtimeDir, "embedding-models") };`,
+        `const env = { ...process.env, LITSAN_HOME: ${JSON.stringify(home)}, LITSAN_CONFIG: ${JSON.stringify(join(home, "config.yaml"))}, LITSAN_EMBEDDING_MODEL_ROOT: path.join(pointer.runtimeDir, "embedding-models") };`,
         "const handles = [];",
         "let child;",
         "try {",
@@ -571,7 +572,7 @@ function isLegacyWindowsTask(home) {
         "$ErrorActionPreference = 'Stop'",
         "$scheduler = New-Object -ComObject Schedule.Service",
         "$scheduler.Connect()",
-        "$actions = $scheduler.GetFolder('\\').GetTask('Memmy Memory Service').Definition.Actions",
+        "$actions = $scheduler.GetFolder('\\').GetTask('LITSAN Memory Service').Definition.Actions",
         "if ($actions.Count -ne 1) { exit 2 }",
         "$action = $actions.Item(1)",
         "if ($action.Type -ne 0) { exit 2 }",
@@ -624,11 +625,11 @@ function registerAndStartUserService(home, serviceHome, start = true) {
         return;
     }
     if (process.platform === "linux") {
-        const unitPath = join(homedir(), ".config", "systemd", "user", "memmy-memory.service");
+        const unitPath = join(homedir(), ".config", "systemd", "user", "litsan-memory.service");
         mkdirSyncForLifecycle(dirname(unitPath));
-        writeFileSyncForLifecycle(unitPath, `[Unit]\nDescription=Memmy Memory Service\nAfter=network.target\n\n[Service]\nType=simple\nExecStart=${systemdEscape(launcher)}\nRestart=on-failure\nRestartSec=2\nStandardOutput=append:${join(logs, "service.log")}\nStandardError=append:${join(logs, "service-error.log")}\n\n[Install]\nWantedBy=default.target\n`);
+        writeFileSyncForLifecycle(unitPath, `[Unit]\nDescription=LITSAN Memory Service\nAfter=network.target\n\n[Service]\nType=simple\nExecStart=${systemdEscape(launcher)}\nRestart=on-failure\nRestartSec=2\nStandardOutput=append:${join(logs, "service.log")}\nStandardError=append:${join(logs, "service-error.log")}\n\n[Install]\nWantedBy=default.target\n`);
         runLifecycle("systemctl", ["--user", "daemon-reload"]);
-        runLifecycle("systemctl", ["--user", "enable", "--now", "memmy-memory.service"]);
+        runLifecycle("systemctl", ["--user", "enable", "--now", "litsan-memory.service"]);
         return;
     }
     if (process.platform === "win32") {
@@ -644,9 +645,9 @@ function registerAndStartUserService(home, serviceHome, start = true) {
 <Settings><MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy><DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries><StopIfGoingOnBatteries>false</StopIfGoingOnBatteries><ExecutionTimeLimit>PT0S</ExecutionTimeLimit></Settings>
 <Actions Context="User"><Exec><Command>${xmlEscape(host)}</Command><Arguments>${xmlEscape(args)}</Arguments></Exec></Actions>
 </Task>\n`, "utf16le");
-        runLifecycle("schtasks", ["/Create", "/TN", "Memmy Memory Service", "/XML", taskPath, "/F"]);
+        runLifecycle("schtasks", ["/Create", "/TN", "LITSAN Memory Service", "/XML", taskPath, "/F"]);
         if (start)
-            runLifecycle("schtasks", ["/Run", "/TN", "Memmy Memory Service"]);
+            runLifecycle("schtasks", ["/Run", "/TN", "LITSAN Memory Service"]);
         return;
     }
     throw new Error(`unsupported platform: ${process.platform}`);
@@ -656,10 +657,10 @@ function stopUserService() {
         runLifecycle("launchctl", ["bootout", `gui/${process.getuid?.() ?? 0}/com.memtensor.memmy-memory`], true);
     }
     else if (process.platform === "linux") {
-        runLifecycle("systemctl", ["--user", "stop", "memmy-memory.service"], true);
+        runLifecycle("systemctl", ["--user", "stop", "litsan-memory.service"], true);
     }
     else if (process.platform === "win32") {
-        runLifecycle("schtasks", ["/End", "/TN", "Memmy Memory Service"], true);
+        runLifecycle("schtasks", ["/End", "/TN", "LITSAN Memory Service"], true);
     }
 }
 function runLifecycle(command, args, allowFailure = false) {
@@ -729,14 +730,14 @@ async function removeUserServiceRegistration() {
         return;
     }
     if (process.platform === "linux") {
-        runLifecycle("systemctl", ["--user", "disable", "--now", "memmy-memory.service"], true);
-        await rm(join(homedir(), ".config", "systemd", "user", "memmy-memory.service"), { force: true }).catch(() => undefined);
+        runLifecycle("systemctl", ["--user", "disable", "--now", "litsan-memory.service"], true);
+        await rm(join(homedir(), ".config", "systemd", "user", "litsan-memory.service"), { force: true }).catch(() => undefined);
         runLifecycle("systemctl", ["--user", "daemon-reload"], true);
         return;
     }
     if (process.platform === "win32") {
-        runLifecycle("schtasks", ["/End", "/TN", "Memmy Memory Service"], true);
-        runLifecycle("schtasks", ["/Delete", "/TN", "Memmy Memory Service", "/F"], true);
+        runLifecycle("schtasks", ["/End", "/TN", "LITSAN Memory Service"], true);
+        runLifecycle("schtasks", ["/Delete", "/TN", "LITSAN Memory Service", "/F"], true);
     }
 }
 function resolveHealthCheckTimeoutMs(value) {

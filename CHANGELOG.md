@@ -1,5 +1,10 @@
 # Changelog
 
+## Renamed to LITSAN (formerly Memhub)
+
+- Renamed our code, user-facing text, documentation and entry files to LITSAN; legacy aliases and stored formats remain compatible.
+- 已更名为 LITSAN（原 Memhub）：同步更新自有代码、用户界面、文档与入口文件，保留旧别名及存储格式兼容。
+
 ## Unreleased
 
 - Preserve cumulative canonical L2 chronology: routine L2 replacement now fails closed when a candidate drops existing timeline states, and strengthen project labels in the L2 feed for clearer visual grouping.

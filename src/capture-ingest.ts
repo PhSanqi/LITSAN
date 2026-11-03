@@ -1,7 +1,15 @@
+import type { AccountId, UserId } from "./contracts/identity.js";
+import type { TurnSessionWriter } from "./core/ports/memory.js";
 import { createHash } from "node:crypto";
 import type { CaptureActor, StoredCaptureEvent } from "./capture.js";
-import type { MemhubRuntime } from "./runtime.js";
+
 import { redactSecrets } from "./secret-redaction.js";
+
+export interface CaptureIngestDeps {
+  accountId: AccountId;
+  userId: UserId;
+  memoryClient: TurnSessionWriter;
+}
 
 export interface CaptureIngestResult {
   ingested: boolean;
@@ -14,14 +22,14 @@ export interface CaptureIngestResult {
 /**
  * Promote a completed capture event into Memory Core.
  *
- * Partial L1 events remain in Memhub raw turn storage until the same event_id
+ * Partial L1 events remain in LITSAN raw turn storage until the same event_id
  * is completed. Ingestion never triggers recall: this is a write path, not a
  * context-request path.
  */
 export async function ingestCaptureIntoMemory(input: {
   event: StoredCaptureEvent;
   actor: CaptureActor;
-  runtime: MemhubRuntime;
+  runtime: CaptureIngestDeps;
   projectId: string | null;
 }): Promise<CaptureIngestResult> {
   const { event, actor, runtime, projectId } = input;
@@ -40,7 +48,7 @@ export async function ingestCaptureIntoMemory(input: {
     };
   }
 
-  // Memory Core requires a session envelope, but Memhub does not use host
+  // Memory Core requires a session envelope, but LITSAN does not use host
   // conversation/session identity as durable routing state. Give each L1
   // event its own deterministic Core session so replay remains idempotent.
   const sessionId = captureSessionId(runtime.accountId, event.event_id);
@@ -144,7 +152,7 @@ export function captureTurnId(accountId: string, host: string, eventId: string):
  * The raw-turn id Memory Core derives for an ingested capture. Core does not
  * store the request turn id as `rawTurnId`; it uses
  * `raw_${stableHash(`${sessionId}:${turnId}`).slice(0, 20)}`, with the session
- * id Memhub passes in openSession and the turn id passed in completeTurn
+ * id LITSAN passes in openSession and the turn id passed in completeTurn
  * (`vendor/memory-core/src/service/turn/turn-normalization.js:30`,
  * `session-turn-service.js:924`).
  *

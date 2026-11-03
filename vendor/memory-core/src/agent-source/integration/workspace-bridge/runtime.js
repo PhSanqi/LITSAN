@@ -1,3 +1,5 @@
+import { integrationReadUrl } from "../../../utils/litsan-compat.js";
+import { defaultLitsanHome } from "../../../utils/litsan-compat.js";
 import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
@@ -7,9 +9,9 @@ import { assertMemoryNetworkTarget } from "../../../privacy/network-policy.js";
 const DEFAULT_ENDPOINT = "http://127.0.0.1:18960";
 export async function readRuntimeConfig(configUrl, pinnedOwner = false) {
     const snapshot = objectValue(await readJson(configUrl));
-    const configPath = text(snapshot.memmy_config_path) || resolve(homedir(), ".memmy", "config.yaml");
+    const configPath = text((snapshot.litsan_config_path ?? snapshot.memmy_config_path)) || resolve(defaultLitsanHome(), "config.yaml");
     const yaml = objectValue(YAML.parse(await readFile(configPath, "utf8").catch(() => "{}")));
-    const memory = objectValue(yaml.memmyMemory);
+    const memory = objectValue((yaml.litsanMemory ?? yaml.memmyMemory));
     const storage = objectValue(memory.storage);
     const legacyStorage = objectValue(yaml.storage);
     const app = objectValue(yaml.app);
@@ -132,7 +134,7 @@ function hashText(value) {
     return createHash("sha256").update(value).digest("hex").slice(0, 24);
 }
 async function readJson(url) {
-    const content = await readFile(url, "utf8").catch(() => "{}");
+    const content = await readFile(integrationReadUrl(url), "utf8").catch(() => "{}");
     try {
         return JSON.parse(content);
     }

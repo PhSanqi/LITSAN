@@ -2,7 +2,7 @@
 
 **公开展示与个人工作区是两种不同边界。** 产品首页与 GitHub Pages 仅包含静态文档、产品图和明确标注的虚构示例；它们不会嵌入真实的个人记忆、账号、设备、token 或生产截图。每位用户的数据由其自托管 Local/Server 实例保存；/user 与 /admin 必须在相应实例中经过身份验证。GitHub Pages 不运行 Memory Core、MCP 或账户 API。
 
-Memhub 处理的是高敏感数据：原始对话、长期用户记忆、项目决策、项目架构、从私有内容生成的 embedding，以及账号/项目标识。理解隐私不能只问“数据是否在本地”，还要区分存储、网络、模型、身份、项目和设备六类边界。本页把每一层的默认行为、可变配置和验证方式拆开说明。
+LITSAN 处理的是高敏感数据：原始对话、长期用户记忆、项目决策、项目架构、从私有内容生成的 embedding，以及账号/项目标识。理解隐私不能只问“数据是否在本地”，还要区分存储、网络、模型、身份、项目和设备六类边界。本页把每一层的默认行为、可变配置和验证方式拆开说明。
 
 ## 默认原则：Memory Core local-only
 
@@ -18,25 +18,25 @@ Memory Core 是长期数据平面，默认只允许 loopback。仅仅配置一�
 
 ## Local Edition 的边界
 
-Local Edition 把 Memory Core 和 Memhub MCP runtime 放在同一机器，默认 loopback。MCP 客户端直接连接 `127.0.0.1:3001/mcp`，客户端直接使用 MCP endpoint。客户端仍然不会直接接触 Memory Core token，公网也没有必要参与。
+Local Edition 把 Memory Core 和 LITSAN MCP runtime 放在同一机器，默认 loopback。MCP 客户端直接连接 `127.0.0.1:3001/mcp`，客户端直接使用 MCP endpoint。客户端仍然不会直接接触 Memory Core token，公网也没有必要参与。
 
-如果本机安装了全局代理，Memhub 不应该修改用户代理设置。loopback 是否被代理软件特殊处理由用户环境决定；排错时确认本机端口与 Host/Origin，而不是关闭全局代理来“验证”。
+如果本机安装了全局代理，LITSAN 不应该修改用户代理设置。loopback 是否被代理软件特殊处理由用户环境决定；排错时确认本机端口与 Host/Origin，而不是关闭全局代理来“验证”。
 
-Local 并不意味着所有数据永远不会离开机器。如果你连接的 AI Harness 使用云模型，Harness 可能把它召回的上下文发送给模型提供商。Memhub 能控制 recall scope 和 evidence boundary，但不能替你改变外部 Harness 的模型隐私政策。因此本地存储边界与模型处理边界必须分别理解。
+Local 并不意味着所有数据永远不会离开机器。如果你连接的 AI Harness 使用云模型，Harness 可能把它召回的上下文发送给模型提供商。LITSAN 能控制 recall scope 和 evidence boundary，但不能替你改变外部 Harness 的模型隐私政策。因此本地存储边界与模型处理边界必须分别理解。
 
 ## Server Edition 的边界
 
-Server Edition 把 Memory Core 与同一个 MCP runtime 放在服务器 loopback。建议的拓扑是：Internet AI host → authenticated HTTPS/MCP → Cloudflare Access/Tunnel → loopback Memhub MCP runtime → Memory Core。公网 `/mcp` 与服务器本机 `/mcp` 进入同一个 runtime；Memory Core 不直接发布。
+Server Edition 把 Memory Core 与同一个 MCP runtime 放在服务器 loopback。建议的拓扑是：Internet AI host → authenticated HTTPS/MCP → Cloudflare Access/Tunnel → loopback LITSAN MCP runtime → Memory Core。公网 `/mcp` 与服务器本机 `/mcp` 进入同一个 runtime；Memory Core 不直接发布。
 
-Cloudflare 接收认证和传输流量，但不是 Memory Core 的存储后端，也不是语义蒸馏模型。你仍需要根据自己的 Cloudflare 配置、日志策略和所在地区评估元数据处理；产品边界只说明 Memhub 不把 Cloudflare 当长期记忆数据库。
+Cloudflare 接收认证和传输流量，但不是 Memory Core 的存储后端，也不是语义蒸馏模型。你仍需要根据自己的 Cloudflare 配置、日志策略和所在地区评估元数据处理；产品边界只说明 LITSAN 不把 Cloudflare 当长期记忆数据库。
 
 Server 多设备共享记忆依赖稳定 account_id。远程客户端身份由 Access/OAuth 边界映射到账号；设备、模型和 Harness 只是 provenance，不应该成为永久用户 ID。不同 `account_id` 是严格 tenant 边界：普通 User 只能读写自己的 Project、Todo、L1–L4、Skill、Branch、Architecture 与蒸馏状态，只有 Admin 才能枚举或管理其他账号。
 
 ## 人类身份与机器身份
 
-公开浏览器或 Hosted MCP 请求属于人类身份路径。Cloudflare Access 验证用户后，Memhub 验证 JWT issuer/audience/signature/sub/verified email，再解析到稳定账号。内部 role 存储在 Memhub，不信任客户端伪造 role。
+公开浏览器或 Hosted MCP 请求属于人类身份路径。Cloudflare Access 验证用户后，LITSAN 验证 JWT issuer/audience/signature/sub/verified email，再解析到稳定账号。内部 role 存储在 LITSAN，不信任客户端伪造 role。
 
-机器客户端不是一个“人”。远程 MCP 客户端通过 Cloudflare/OAuth 等认证边界进入 Memhub，再解析到稳定账号；本地 loopback 客户端进入同一 MCP runtime。认证 token 只属于控制/传输平面，应按提供方能力轮换与撤销。
+机器客户端不是一个“人”。远程 MCP 客户端通过 Cloudflare/OAuth 等认证边界进入 LITSAN，再解析到稳定账号；本地 loopback 客户端进入同一 MCP runtime。认证 token 只属于控制/传输平面，应按提供方能力轮换与撤销。
 
 不要把 OAuth/Access token、local-admin token 等凭据放进项目描述、TODO、L1 对话或 prompt。凭据属于控制平面，不属于长期记忆内容。
 
@@ -50,7 +50,7 @@ Skill 是独立 capability channel。Skill 可以跨项目复用方法，但不�
 
 ## 模型处理边界
 
-语义蒸馏由连接的 ChatGPT/Codex/Claude/其他 Harness 模型执行。Memhub 负责 evidence bounds、target layer/scope validation、canonical artifact identity、provenance、job lease/completion/retry 和 durable commit。模型负责理解、抽象和综合。
+语义蒸馏由连接的 ChatGPT/Codex/Claude/其他 Harness 模型执行。LITSAN 负责 evidence bounds、target layer/scope validation、canonical artifact identity、provenance、job lease/completion/retry 和 durable commit。模型负责理解、抽象和综合。
 
 这意味着“是否调用云模型”不是由 Memory Core 自动决定，而取决于你连接的 Harness 和模型配置。想要严格本地处理，就必须同时选择本地存储和本地/可信模型执行路径。
 
@@ -64,9 +64,9 @@ Embedding 来自私有内容，仍属于私有数据。默认 Memory Core networ
 
 ## Capture 与索引边界
 
-L1 的 authoritative source 是 Memhub state root 下的 per-turn capture JSON；`capture-index.sqlite` 主要存可重建元数据，用于项目/会话过滤、计数、阈值调度和 idle scheduling。dirty ledger 在 raw/index 状态转换前写入，异常中断时可以根据原始 capture 重建受影响索引。
+L1 的 authoritative source 是 LITSAN state root 下的 per-turn capture JSON；`capture-index.sqlite` 主要存可重建元数据，用于项目/会话过滤、计数、阈值调度和 idle scheduling。dirty ledger 在 raw/index 状态转换前写入，异常中断时可以根据原始 capture 重建受影响索引。
 
-当一段内容明确不应进入长期记忆时，可以在 Capture 边缘使用 `<private>…</private>` 或 `<no-memory>…</no-memory>`。Memhub 会在 durable capture 写入之前移除标记区间，只保留“发生过排除”的计数型 provenance，不保留被排除正文；如果整个 turn 都被排除，则该事件会被标记为已处理但不会进入 Memory Core。未闭合的 marker 采用 fail-closed：从 marker 开始到文本末尾都视为不进入记忆。这个机制用于“不要记住这一段”，不能替代账号 ACL、项目隔离或模型 provider 的隐私配置。
+当一段内容明确不应进入长期记忆时，可以在 Capture 边缘使用 `<private>…</private>` 或 `<no-memory>…</no-memory>`。LITSAN 会在 durable capture 写入之前移除标记区间，只保留“发生过排除”的计数型 provenance，不保留被排除正文；如果整个 turn 都被排除，则该事件会被标记为已处理但不会进入 Memory Core。未闭合的 marker 采用 fail-closed：从 marker 开始到文本末尾都视为不进入记忆。这个机制用于“不要记住这一段”，不能替代账号 ACL、项目隔离或模型 provider 的隐私配置。
 
 Capture adapter 还遵循 graceful-degradation 边界：如果 durable Capture 已经成功落盘，而 Memory Core 暂时发生 timeout、429 或 5xx，HTTP Capture 可以返回 `202 accepted` 并保留待恢复状态，而不是阻塞上游 Agent。409、scope 冲突和 schema 错误仍 fail-closed，不能用“高可用”掩盖数据一致性错误。
 
@@ -82,7 +82,7 @@ Admin 可以进行项目 merge/delete、账号 role、distillation policy 等高
 
 排错日志可能包含 project ID、job ID、错误消息和路径。把日志发给第三方前先检查是否包含 raw turn、token、email、内部 host 或项目正文。故障诊断不应成为新的数据泄漏路径。
 
-Server 的 Cloudflare/Tunnel 日志与 Memhub 自己的运行日志属于不同系统。确认谁能访问、保留多久、是否包含 URL/query 等元数据。
+Server 的 Cloudflare/Tunnel 日志与 LITSAN 自己的运行日志属于不同系统。确认谁能访问、保留多久、是否包含 URL/query 等元数据。
 
 ## 备份与迁移
 
@@ -112,24 +112,24 @@ Local：检查 3001/18960 都只在预期 loopback，并确认 MCP 客户端连�
 
 “摘要比原文安全，所以 L3/L4 可以随便外发”也是错误的；摘要往往集中包含更有价值的长期信息。
 
-“同一账号的项目天然可以互相读取”不符合 Memhub 边界。账号统一身份，但业务记忆仍按项目隔离。
+“同一账号的项目天然可以互相读取”不符合 LITSAN 边界。账号统一身份，但业务记忆仍按项目隔离。
 
 ## 平台差异
 
 Linux/Windows 的数据分类与隐私语义相同。差别主要是服务管理、文件路径与 token 保存方式。Server/Local 的核心差异是公网入口和认证，不是是否使用 L1–L4。
 
-在企业或受监管环境中，还需要叠加你自己的磁盘加密、服务器访问控制、备份合规、模型 provider 协议和数据驻留要求；Memhub 的默认边界不能替代组织安全政策。
+在企业或受监管环境中，还需要叠加你自己的磁盘加密、服务器访问控制、备份合规、模型 provider 协议和数据驻留要求；LITSAN 的默认边界不能替代组织安全政策。
 
 ## FAQ
 
-### Memhub 会把记忆卖给广告商吗？
-Memhub 自托管架构的长期记忆存储由你控制。真正需要审计的是你部署的服务器、反向代理和连接的模型提供商，而不是假设所有组件共享同一隐私政策。
+### LITSAN 会把记忆卖给广告商吗？
+LITSAN 自托管架构的长期记忆存储由你控制。真正需要审计的是你部署的服务器、反向代理和连接的模型提供商，而不是假设所有组件共享同一隐私政策。
 
 ### 我能把 Memory Core 放到另一台机器吗？
 默认产品路径不建议。远程 storage/model 是显式架构变化，需要经过 network policy 与风险审计。Server Edition 的推荐方式是把 Gateway 与 Memory Core 放在同一服务器私有边界。
 
-### Cloudflare Service Token 是否决定 Memhub 账号身份？
-不能。Cloudflare 负责边缘认证/传输；Memhub 根据已验证的人类身份解析稳定 `account_id`。客户端不得通过自报账号标识绕过这个映射。
+### Cloudflare Service Token 是否决定 LITSAN 账号身份？
+不能。Cloudflare 负责边缘认证/传输；LITSAN 根据已验证的人类身份解析稳定 `account_id`。客户端不得通过自报账号标识绕过这个映射。
 
 ### 项目逻辑删除会清掉所有历史吗？
 不会。它主要改变 active routing。需要彻底数据删除时应采用专门 purge 方案，并评估 provenance、备份和合规影响。

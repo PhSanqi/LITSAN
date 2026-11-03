@@ -236,7 +236,7 @@ function recallTextSimilarity(left, right) {
     return overlap / Math.max(a.size, b.size);
 }
 function isOnboardingFirstReportContinuationQuery(query) {
-    return /memmy/i.test(query) &&
+    return /litsan/i.test(query) &&
         /(?:初见报告|首次登录报告|first\s+(?:encounter\s+)?report|onboarding\s+report)/i.test(query) &&
         /(?:接着|继续|接续|刚才|continue|resume|pick\s+up)/i.test(query);
 }
@@ -573,8 +573,8 @@ function renderInjectedOnboardingFirstReportBody(hit, trace, timeZone) {
         "",
         language === "zh" ? "完整记忆：" : "Full memory:",
         language === "zh"
-            ? `如需更多细节，使用 \`memmy_memory_get(id)\` 查询 id \`${hit.id}\`。`
-            : `If more detail is needed, use \`memmy_memory_get(id)\` with id \`${hit.id}\`.`
+            ? `如需更多细节，使用 \`litsan_memory_get(id)\` 查询 id \`${hit.id}\`。`
+            : `If more detail is needed, use \`litsan_memory_get(id)\` with id \`${hit.id}\`.`
     ].join("\n");
     const reportBudget = ONBOARDING_FIRST_REPORT_MAX_SNIPPET_BODY_CHARS - prefix.length - suffix.length - 2;
     const renderedReport = report.length <= reportBudget
@@ -604,7 +604,7 @@ function onboardingFirstReportLanguage(trace) {
     return /\p{Script=Han}/u.test(`${trace.userText}\n${trace.agentText}`) ? "zh" : "en";
 }
 function localizedFirstReportTitle(trace) {
-    return onboardingFirstReportLanguage(trace) === "zh" ? "Memmy 初见报告" : "Memmy First Encounter Report";
+    return onboardingFirstReportLanguage(trace) === "zh" ? "LITSAN 初见报告" : "LITSAN First Encounter Report";
 }
 function localizedFirstReportBlock(label, value, language) {
     const body = value.trim();

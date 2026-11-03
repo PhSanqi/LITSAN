@@ -7,6 +7,10 @@ import { fileURLToPath } from "node:url";
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const manifest = JSON.parse(await readFile(join(root, "vendor", "manifest.json"), "utf8"));
 assert.equal(manifest.format, "memhub-vendor-manifest-v1");
+assert.equal(manifest.upstream.repo, "https://github.com/MemTensor/memmy-agent");
+assert.equal(manifest.upstream.renameMap.prefixes.MEMMY_, "LITSAN_");
+assert.equal(manifest.upstream.renameMap.identifiers.loadMemmyConfig, "loadLitsanConfig");
+assert.equal(manifest.upstream.renameMap.paths["vendor/memory-core/src/utils/memmy-context-tags.js"], "vendor/memory-core/src/utils/litsan-context-tags.js");
 async function walk(dir) {
   const result = [];
   for (const entry of (await readdir(dir, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name))) {

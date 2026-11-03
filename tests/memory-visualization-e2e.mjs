@@ -5,6 +5,15 @@ const revision1 = "# Alpha timeline\n\n## 2026-10-01：Capture v1 candidate\nBri
 const revision2 = revision1 + "\n\n## 2026-10-02：Capture v2 deployed\nCapture v2 passed local regression and deployed to the candidate runtime.";
 const revision3 = revision2 + "\n\n## 2026-10-03：Dashboard v2 pending\nDashboard v2 is waiting for final browser acceptance.";
 
+const bilingual = buildMemoryVisualization({
+  projectId: "alpha",
+  l2: [{ id: "bilingual", body: "# Timeline\n\n## 2026-10-03: Keep Top-K / 保留 Top-K\n\nEN: " + "Relevant results. ".repeat(50) + "\n\nZH: 保留得分最高的 Top-K 结果。" }]
+});
+assert.match(bilingual.state.events[0].summary, /EN: Relevant results/);
+assert.match(bilingual.state.events[0].summary, /ZH: 保留得分最高的 Top-K 结果/);
+assert.ok(bilingual.state.events[0].summary.length <= 1050);
+assert.ok(bilingual.state.events[0].detail.length > bilingual.state.events[0].summary.length);
+
 const result = buildMemoryVisualization({
   projectId: "alpha",
   l2: [{
@@ -45,6 +54,25 @@ const result = buildMemoryVisualization({
       evidence_refs: ["l1:turn-1", "l1:turn-2", "l1:turn-3"]
     }
   ],
+  architectureMap: {
+    schema_version: 1,
+    contract: "memhub-architecture-cognitive-map-v1",
+    project_id: "alpha",
+    authority: "derived",
+    abstraction_cutoff: "method",
+    generated_at: "2026-10-03T09:05:00.000Z",
+    source_evidence_refs: ["l1:turn-3"],
+    nodes: [
+      { id: "alpha", kind: "project", label: "Alpha", summary: "Alpha project", parent_id: null, order: 0, evidence_refs: ["l1:turn-3"], confidence: 0.99 },
+      { id: "dashboard", kind: "domain", label: "Dashboard", summary: "Project dashboard", parent_id: "alpha", order: 1, evidence_refs: ["l1:turn-3"], confidence: 0.95 },
+      { id: "dashboard-state", kind: "capability", label: "Project State", summary: "Project state view", parent_id: "dashboard", order: 1, evidence_refs: ["l1:turn-3"], confidence: 0.95 },
+      { id: "dashboard-flow", kind: "process", label: "Progress Flow", summary: "Chronological flow", parent_id: "dashboard-state", order: 1, evidence_refs: ["l1:turn-3"], confidence: 0.93 },
+      { id: "dashboard-browser", kind: "method", label: "Browser Acceptance", summary: "Browser acceptance method", parent_id: "dashboard-flow", order: 1, evidence_refs: ["l1:turn-3"], confidence: 0.92 }
+    ],
+    edges: [],
+    timeline_links: [{ event_date: "2026-10-03", event_title: "Dashboard v2 pending", architecture_refs: ["dashboard-flow", "dashboard-browser"], architecture_level: "process", change_kind: "refine", evidence_refs: ["l1:turn-3"], confidence: 0.94 }]
+  },
+  architectureFingerprint: "map-fingerprint",
   todos: [{
     id: "todo-alpha",
     text: "Finish Project State browser acceptance",
@@ -54,7 +82,8 @@ const result = buildMemoryVisualization({
   }]
 });
 
-assert.equal(result.visualization_contract, "memhub-project-state-ir-v1");
+assert.equal(result.schema_version, 3);
+assert.equal(result.visualization_contract, "memhub-project-map-ir-v1");
 assert.equal(result.source_of_truth, "canonical-l2");
 assert.equal(result.revision_source, "exact-l2-revision-ledger");
 assert.equal(result.projection_only, true);
@@ -69,6 +98,10 @@ assert.equal(result.stats.l2_revisions, 3);
 assert.equal(result.drilldown.revisions.length, 3);
 assert.equal(result.drilldown.todos.length, 1);
 assert.equal(result.stats.pending_todos, 1);
+assert.equal(result.stats.architecture_nodes, 5);
+assert.equal(result.stats.architecture_links, 1);
+assert.equal(result.architecture.authority, "derived");
+assert.equal(result.architecture.abstraction_cutoff, "method");
 
 const captureEvents = result.state.events.filter((event) => /Capture/.test(event.title));
 const dashboardEvents = result.state.events.filter((event) => /Dashboard/.test(event.title));
@@ -94,11 +127,15 @@ assert.equal(current.revision_count, 1);
 assert.equal(current.latest_revision_ref, "l2:timeline-alpha:revision-3");
 assert.ok(result.drilldown.revisions.find((revision) => revision.ref === current.latest_revision_ref)?.evidence_refs.includes("l1:turn-3"));
 assert.equal(result.drilldown.revisions.at(-1).current, true);
+assert.deepEqual(current.architecture_refs, ["dashboard-flow", "dashboard-browser"]);
+assert.equal(current.architecture_level, "process");
+assert.equal(current.architecture_change_kind, "refine");
+assert.deepEqual(result.architecture.nodes.find((node) => node.id === "dashboard-flow")?.event_ids, [current.id]);
 
 // Archify is a disposable projection of the same L2 state, not another memory graph.
 assert.equal(result.archify.role, "optional_export_and_design_reference");
 assert.equal(result.archify.exportable, true);
-assert.deepEqual(result.archify.compatible_diagram_types, ["lifecycle"]);
+assert.deepEqual(result.archify.compatible_diagram_types, ["lifecycle", "architecture"]);
 assert.equal(result.archify.lifecycle_ir.schema_version, 2);
 assert.equal(result.archify.lifecycle_ir.diagram_type, "lifecycle");
 assert.equal(result.archify.lifecycle_ir.meta.output, "memhub-project-state-alpha.html");
@@ -109,8 +146,10 @@ assert.ok(result.archify.lifecycle_ir.states.every((state) => /^[A-Za-z][A-Za-z0
 assert.ok(result.archify.lifecycle_ir.lanes.every((lane) => /^[A-Za-z][A-Za-z0-9_-]*$/.test(lane.id)));
 assert.equal(result.archify.lifecycle_ir.transitions.length, result.archify.lifecycle_ir.states.length - 1);
 assert.match(result.archify.lifecycle_ir.meta.subtitle, /L2 progress flow/);
-assert.match(result.archify.invariant, /transition lines encode chronology/i);
+assert.match(result.archify.invariant, /Timeline remains.*canonical project L2/i);
 assert.equal(result.archify.lifecycle_ir.cards.length, 0);
+assert.equal(result.archify.architecture_ir.diagram_type, "architecture");
+assert.equal(result.archify.architecture_ir.nodes.at(-1).kind, "method");
 assert.ok(result.state.events.every((event) => !Object.hasOwn(event, "evidence_refs")));
 assert.ok(result.archify.lifecycle_ir.states.every((state) => !Object.hasOwn(state, "evidence_refs")));
 

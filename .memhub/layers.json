@@ -1,0 +1,55 @@
+{
+  "layers": [
+    {
+      "name": "contracts",
+      "paths": [
+        "src/contracts/**"
+      ]
+    },
+    {
+      "name": "core",
+      "paths": [
+        "src/core/**"
+      ]
+    },
+    {
+      "name": "archify",
+      "paths": [
+        "src/archify/**"
+      ]
+    },
+    {
+      "name": "shell",
+      "paths": [
+        "src/**"
+      ],
+      "exclude": [
+        "src/contracts/**",
+        "src/core/**",
+        "src/archify/**"
+      ]
+    },
+    {
+      "name": "engine",
+      "paths": [
+        "vendor/memory-core/**"
+      ]
+    }
+  ],
+  "allowed": {
+    "contracts": [],
+    "core": [
+      "contracts"
+    ],
+    "archify": [
+      "contracts",
+      "core"
+    ],
+    "shell": [
+      "contracts",
+      "core",
+      "archify"
+    ],
+    "engine": []
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "name": "Memhub P0 representative real-pipeline retrieval suite",
+  "snapshot_id": "real-core-pipeline-v1",
+  "description": "Sanitized representative memories executed through an isolated real EmbeddedMemoryCore add/index/search path. Contents are fixtures; observations are not hand-authored.",
+  "default_account": "benchmark-account-a",
+  "memory_fixtures": [
+    {
+      "key": "global-profile",
+      "kind": "l4",
+      "project": null,
+      "artifact_id": "benchmark:user-profile",
+      "title": "Cross-project verification profile",
+      "revisions": [
+        {
+          "evidence_key": "fixture:global-profile@current",
+          "state": "current",
+          "content": "Stable cross-project rule: evidence_first_marker requires verifiable direct evidence before durable conclusions."
+        }
+      ]
+    },
+    {
+      "key": "memhub-timeline",
+      "kind": "l2",
+      "project": "memhub",
+      "artifact_id": "benchmark:timeline:memhub",
+      "title": "Memhub benchmark timeline",
+      "revisions": [
+        {
+          "evidence_key": "fixture:memhub-timeline@current",
+          "state": "current",
+          "content": "Historical record: legacy_fixed_topk_marker was used earlier and later retired when retrieval admission became dynamic."
+        }
+      ]
+    },
+    {
+      "key": "memhub-profile",
+      "kind": "l3",
+      "project": "memhub",
+      "artifact_id": "benchmark:profile:memhub",
+      "title": "Memhub benchmark current truth",
+      "revisions": [
+        {
+          "evidence_key": "fixture:memhub-profile@superseded",
+          "state": "superseded",
+          "content": "Superseded rule: legacy_fixed_topk_marker is the current retrieval policy and should always stay fixed."
+        },
+        {
+          "evidence_key": "fixture:memhub-profile@current",
+          "state": "current",
+          "content": "Current rule: current_admission_marker uses Conditional Admission with one RetrievalScopeEnvelope before ranking and context packing."
+        }
+      ]
+    },
+    {
+      "key": "other-profile",
+      "kind": "l3",
+      "project": "other-project",
+      "artifact_id": "benchmark:profile:other-project",
+      "title": "Other project current truth",
+      "revisions": [
+        {
+          "evidence_key": "fixture:other-profile@current",
+          "state": "current",
+          "content": "Other-project-only rule: other_project_secret_marker must never enter Memhub ordinary project recall."
+        }
+      ]
+    },
+    {
+      "key": "other-skill",
+      "kind": "skill",
+      "project": "other-project",
+      "artifact_id": "benchmark:skill:retrieval-audit",
+      "title": "Retrieval Audit Procedure",
+      "version": "1.0.0",
+      "revisions": [
+        {
+          "evidence_key": "fixture:other-skill@current",
+          "state": "current",
+          "content": "# Retrieval Audit Procedure\n\nSummary: retrieval_audit_marker verifies candidate scope, selected evidence, omission reason, and context budget.\n\n## When to use\nUse when retrieval behavior needs an explicit audit.\n\n## Procedure\n1. Inspect scope.\n2. Inspect candidates.\n3. Verify selected evidence."
+        }
+      ]
+    },
+    {
+      "key": "second-account-profile",
+      "account": "benchmark-account-b",
+      "kind": "l3",
+      "project": "memhub",
+      "artifact_id": "benchmark:profile:memhub:account-b",
+      "title": "Same project name, second account",
+      "revisions": [
+        {
+          "evidence_key": "fixture:second-account-profile@current",
+          "state": "current",
+          "content": "Second-account-only current truth: second_account_secret_marker must remain tenant-isolated."
+        }
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "id": "current-truth-after-replacement",
+      "query": "current_admission_marker Conditional Admission RetrievalScopeEnvelope current retrieval policy",
+      "project": "memhub",
+      "required_evidence": ["fixture:memhub-profile@current"],
+      "critical_evidence": ["fixture:memhub-profile@current"],
+      "optional_evidence": ["fixture:memhub-timeline@current", "fixture:global-profile@current"],
+      "forbidden_evidence": ["fixture:memhub-profile@superseded", "fixture:other-profile@current", "fixture:other-skill@current"]
+    },
+    {
+      "id": "historical-fact-without-stale-current-truth",
+      "query": "legacy_fixed_topk_marker retired historical record",
+      "project": "memhub",
+      "required_evidence": ["fixture:memhub-timeline@current"],
+      "critical_evidence": ["fixture:memhub-timeline@current"],
+      "optional_evidence": ["fixture:memhub-profile@current"],
+      "forbidden_evidence": ["fixture:memhub-profile@superseded", "fixture:other-profile@current"]
+    },
+    {
+      "id": "global-only",
+      "query": "evidence_first_marker verifiable direct evidence",
+      "project": null,
+      "required_evidence": ["fixture:global-profile@current"],
+      "critical_evidence": ["fixture:global-profile@current"],
+      "forbidden_evidence": ["fixture:memhub-profile@current", "fixture:memhub-timeline@current", "fixture:other-profile@current"]
+    },
+    {
+      "id": "explicit-cross-project-skill-reuse",
+      "query": "retrieval_audit_marker retrieval audit procedure candidate scope omission reason",
+      "project": "memhub",
+      "capability_projects": ["other-project"],
+      "required_evidence": ["fixture:other-skill@current"],
+      "critical_evidence": ["fixture:other-skill@current"],
+      "optional_evidence": ["fixture:memhub-profile@current", "fixture:global-profile@current"],
+      "forbidden_evidence": ["fixture:other-profile@current"]
+    },
+    {
+      "id": "project-isolation-negative",
+      "query": "other_project_secret_marker",
+      "project": "memhub",
+      "required_evidence": [],
+      "critical_evidence": [],
+      "forbidden_evidence": ["fixture:other-profile@current"]
+    },
+    {
+      "id": "account-isolation-negative",
+      "query": "second_account_secret_marker",
+      "project": "memhub",
+      "required_evidence": [],
+      "critical_evidence": [],
+      "forbidden_evidence": ["fixture:second-account-profile@current"]
+    }
+  ]
+}

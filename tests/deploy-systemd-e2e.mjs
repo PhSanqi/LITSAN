@@ -68,7 +68,7 @@ try {
   // never silently replaced by a repeat install.
   const refused = invoke(home, "/different-route");
   assert.equal(refused.status, 2);
-  assert.match(refused.stderr, /Existing Memhub systemd unit/);
+  assert.match(refused.stderr, /Existing LITSAN systemd unit/);
   assert.equal(await readFile(join(unitDir, "memhub.service"), "utf8"), gateway);
   assert.equal(await readFile(join(unitDir, "memhub-core.service"), "utf8"), core);
   assert.equal(await readFile(systemctlLog, "utf8"), calls);

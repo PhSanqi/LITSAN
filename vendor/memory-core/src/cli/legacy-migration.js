@@ -1,3 +1,4 @@
+import { memoryConfigKey } from "../utils/litsan-compat.js";
 import { createHash } from "node:crypto";
 import { existsSync } from "node:fs";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
@@ -23,7 +24,7 @@ export async function migrateLegacyLocalPlugins(options) {
         database: existsSync(source.dbPath)
     }));
     const configCandidates = sources.filter((source) => existsSync(source.configPath));
-    const configSource = options.memmyConfigExisted
+    const configSource = (options.litsanConfigExisted ?? options.memmyConfigExisted)
         ? undefined
         : await selectConfigSource(configCandidates, options);
     const dataSources = sources.filter((source) => existsSync(source.dbPath));
@@ -131,7 +132,7 @@ async function importLegacyConfig(source, targetPath) {
     const summary = mapLlm(llm);
     const evolution = mapLlm(Object.keys(skillEvolver).length ? skillEvolver : llm);
     await mutateMemoryConfig(targetPath, (root) => {
-        const memory = record(root.memmyMemory);
+        const memory = record((root.litsanMemory ?? root.memmyMemory));
         const hub = record(legacy.hub);
         const telemetry = record(legacy.telemetry);
         const nextMemory = {
@@ -149,7 +150,7 @@ async function importLegacyConfig(source, targetPath) {
             ...(Object.keys(hub).length ? { hub: { ...hub, migratedFrom: source.agent } } : {}),
             migratedFrom: source.agent
         };
-        root.memmyMemory = nextMemory;
+        root[memoryConfigKey(root)] = nextMemory;
         syncMemoryModelCatalog(root, nextMemory, {
             roleRouting: nextMemory.roleRouting,
             summary,

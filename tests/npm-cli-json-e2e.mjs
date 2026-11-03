@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
-const cli = join(root, "bin", "memhub.mjs");
+const cli = join(root, "bin", "litsan.mjs");
 const home = await mkdtemp(join(tmpdir(), "memhub-cli-json-"));
 
 try {

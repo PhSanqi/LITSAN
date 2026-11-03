@@ -1,11 +1,23 @@
+import type { AccountId, UserId, SourceContext } from "./contracts/identity.js";
+import type { MemoryViewerReader, MemoryViewerWriter, MemoryDistiller } from "./core/ports/memory.js";
+import type { ProjectReader } from "./core/ports/projects.js";
 import { createHash, randomUUID } from "node:crypto";
 import {
   DISTILLATION_CONTRACT_VERSION,
   validateDistillationCandidate
 } from "./distillation-contract.js";
 import { retireDistillationMemory } from "./distillation-jobs.js";
-import type { MemhubRuntime } from "./runtime.js";
+
 import { assertNextSkillVersion } from "./skill-version.js";
+
+export interface SkillGovernanceDeps {
+  accountId: AccountId;
+  memoryClient: MemoryViewerReader & Pick<MemoryViewerWriter, "viewerPost">;
+  projects: Pick<ProjectReader, "resolve">;
+  memory: MemoryDistiller;
+  userId: UserId;
+  source: SourceContext;
+}
 
 /**
  * Skill governance: plan -> explicit user authorization -> execute, plus the
@@ -26,7 +38,7 @@ const skillMutationAuthorizations = new Map<string, {
 }>();
 
 export async function planSkillMutation(input: {
-  runtime: MemhubRuntime;
+  runtime: SkillGovernanceDeps;
   args: Record<string, unknown>;
   skillId: string;
   skill: Awaited<ReturnType<typeof loadSkillForAccount>>;
@@ -87,7 +99,7 @@ export async function planSkillMutation(input: {
 
 export async function executeSkillMutation(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: SkillGovernanceDeps;
   args: Record<string, unknown>;
   skillId: string;
   skill: Awaited<ReturnType<typeof loadSkillForAccount>>;
@@ -144,7 +156,7 @@ export async function executeSkillMutation(input: {
   };
 }
 
-export async function loadSkillForAccount(runtime: MemhubRuntime, skillId: string): Promise<{
+export async function loadSkillForAccount(runtime: SkillGovernanceDeps, skillId: string): Promise<{
   body: string;
   tags: string[];
   projectId?: string;
@@ -160,7 +172,7 @@ export async function loadSkillForAccount(runtime: MemhubRuntime, skillId: strin
   const memoryLayer = optionalString(item.memoryLayer) ?? optionalString(payload.memoryLayer);
   const tags = stringArray(item.tags) ?? stringArray(payload.tags) ?? [];
   if (memoryLayer !== "Skill" || !tags.includes("artifact:skill")) {
-    throw new Error("requested memory is not a Memhub reusable Skill");
+    throw new Error("requested memory is not a LITSAN reusable Skill");
   }
   const body = optionalString(item.body) ?? optionalString(payload.body);
   if (!body?.trim()) throw new Error("Skill body is unavailable");

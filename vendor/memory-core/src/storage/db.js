@@ -1,3 +1,4 @@
+import { defaultLitsanHome, litsanEnv } from "../utils/litsan-compat.js";
 import Database from "better-sqlite3";
 import { createHash, randomUUID } from "node:crypto";
 import { closeSync, existsSync, fsyncSync, mkdirSync, openSync, readFileSync, readdirSync, renameSync, rmSync, statSync, statfsSync, writeFileSync } from "node:fs";
@@ -244,7 +245,7 @@ function packagedNativeAssetPath(source) {
     const contents = readFileSync(source);
     const digest = createHash("sha256").update(contents).digest("hex");
     // Keep upgrades separate from native libraries already loaded by older processes.
-    const targetDirectory = join(tmpdir(), "memmy-memory-native", digest);
+    const targetDirectory = join(tmpdir(), "litsan-memory-native", digest);
     const target = join(targetDirectory, basename(source));
     const isComplete = () => existsSync(target) && readFileSync(target).equals(contents);
     if (isComplete())
@@ -266,8 +267,8 @@ function packagedNativeAssetPath(source) {
     return target;
 }
 export function defaultDatabasePath() {
-    const baseDir = process.env.MEMMY_MEMORY_HOME ??
+    const baseDir = litsanEnv("LITSAN_MEMORY_HOME", process.env) ??
         process.env.MEMORY_SERVICE_HOME ??
-        join(homedir(), ".memmy", "memory-service");
+        join(defaultLitsanHome(), "memory-service");
     return join(baseDir, "memory.sqlite");
 }

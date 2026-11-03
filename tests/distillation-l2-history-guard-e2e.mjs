@@ -76,7 +76,7 @@ async function submit(job, content) {
 
 try {
   const first = await lease("first");
-  await submit(first, `# Memhub 项目时间线
+  await submit(first, `# LITSAN 项目时间线
 
 ## 2026-10-09：第一阶段
 第一阶段已经完成。`);
@@ -84,7 +84,7 @@ try {
 
   const second = await lease("second");
   await assert.rejects(
-    submit(second, `# Memhub 项目时间线
+    submit(second, `# LITSAN 项目时间线
 
 ## 2026-10-10：第二阶段
 第二阶段已经完成。`),
@@ -92,7 +92,7 @@ try {
   );
   assert.equal(coreWrites, 1, "delta-only L2 must fail before Memory Core is called");
 
-  await submit(second, `# Memhub 项目时间线
+  await submit(second, `# LITSAN 项目时间线
 
 ## 2026-10-09：第一阶段
 第一阶段已经完成。

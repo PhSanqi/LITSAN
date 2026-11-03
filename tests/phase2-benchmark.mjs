@@ -11,8 +11,8 @@ import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 const moduleRoot = resolve(process.argv[3] ?? 'dist');
 assertTestPaths({ moduleRoot });
 const modules = pathToFileURL(moduleRoot + '/');
-const { createMemhubRuntime } = await import(new URL('runtime.js', modules));
-const { createMemhubMcpServerForRuntime } = await import(new URL('mcp.js', modules));
+const { createLitsanRuntime } = await import(new URL('runtime.js', modules));
+const { createLitsanMcpServerForRuntime } = await import(new URL('mcp.js', modules));
 const { storeCaptureEvent, markCaptureIngested } = await import(new URL('capture.js', modules));
 const { enqueueDerivedDistillationJob } = await import(new URL('distillation-jobs.js', modules));
 
@@ -45,7 +45,7 @@ if (!process.argv[4]) {
   const template = JSON.parse(await readFile(jobsPath, 'utf8')).jobs[0];
   await writeFile(jobsPath, JSON.stringify({ version: 2, jobs: Array.from({ length: 1000 }, (_, i) => ({ ...template, job_id: `job-${i}`, project_id: projects[i % 40].projectId })) }));
 } else registryText = await readFile(join(root, 'project-registry.json'), 'utf8');
-const runtime = createMemhubRuntime({ controlRoot: root, accountId, architectureRoot: join(root, 'architecture') });
+const runtime = createLitsanRuntime({ controlRoot: root, accountId, architectureRoot: join(root, 'architecture') });
 const skills = projects.slice(0, 30).map((p, i) => ({ id: `skill-${i}`, kind: 'skill', memoryLayer: 'Skill', status: 'activated',
   title: `Diagnostic ${i}`, snippet: `# Diagnostic ${i}\n## When to use\nUse for engineering diagnostics ${i}.\n## Procedure\nRead evidence.`,
   tags: ['artifact:skill', `project:${p.projectId}`], score: 0.8 - i / 1000, source: 'search', retrievalRoutes: ['agent_memory'] }));
@@ -54,7 +54,7 @@ runtime.memoryClient.search = async (request) => {
   searches++;
   return { debug: { hits: request.layers?.includes('Skill') ? skills.filter(h => !request.namespace?.projectId || h.tags.includes(`project:${request.namespace.projectId}`)).slice(0, request.limit) : [] } };
 };
-const server = createMemhubMcpServerForRuntime(runtime, root);
+const server = createLitsanMcpServerForRuntime(runtime, root);
 const client = new Client({ name: 'phase2-benchmark', version: '1' });
 const [ct, st] = InMemoryTransport.createLinkedPair();
 await server.connect(st); await client.connect(ct);
@@ -66,7 +66,7 @@ async function call(name, args) {
   if (data.result_transport) {
     let text = data.result_chunk, offset = data.result_transport.next_offset;
     while (offset !== null) {
-      const next = await client.callTool({ name: 'memhub_result', arguments: { result_id: data.result_transport.result_id, offset } });
+      const next = await client.callTool({ name: 'litsan_result', arguments: { result_id: data.result_transport.result_id, offset } });
       wireBytes += Buffer.byteLength(JSON.stringify(next));
       const part = JSON.parse(next.content[0].text); text += part.result_chunk; offset = part.result_transport.next_offset;
     }
@@ -76,10 +76,10 @@ async function call(name, args) {
 }
 try {
   const results = {};
-  for (const [name, args] of [['memmy_context', { query: 'engineering diagnostics', project: projects[0].projectId }], ['memmy_project_list', {}], ['memmy_project_list:detail', { detail: true }]]) {
+  for (const [name, args] of [['litsan_context', { query: 'engineering diagnostics', project: projects[0].projectId }], ['litsan_project_list', {}], ['litsan_project_list:detail', { detail: true }]]) {
     // The baseline has no detail parameter; its default is already the full shape.
     const tools = await client.listTools();
-    const hasDetail = !!tools.tools.find(t => t.name === 'memmy_project_list').inputSchema.properties.detail;
+    const hasDetail = !!tools.tools.find(t => t.name === 'litsan_project_list').inputSchema.properties.detail;
     const actualArgs = name.endsWith(':detail') && !hasDetail ? {} : args;
     const toolName = name.split(':')[0];
     await call(toolName, actualArgs); await call(toolName, actualArgs);

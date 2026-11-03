@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { runAssetHygiene } from "../scripts/asset-hygiene.mjs";
 
 const sandbox = await mkdtemp(join(tmpdir(), "memhub-asset-hygiene-e2e-"));
-const root = join(sandbox, "Memhub");
+const root = join(sandbox, "LITSAN");
 
 async function exists(path) { try { await access(path); return true; } catch { return false; } }
 async function fixtureDir(path, body = "fixture\n") {

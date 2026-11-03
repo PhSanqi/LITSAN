@@ -18,7 +18,7 @@ await mkdir(join(stage, "scripts"), { recursive: true });
 for (const directory of ["dist", "vendor", "web-assets"]) {
   await cp(join(root, directory), join(stage, directory), { recursive: true });
 }
-await cp(join(root, "bin", "memhub.mjs"), join(stage, "bin", "memhub.mjs"));
+await cp(join(root, "bin", "litsan.mjs"), join(stage, "bin", "litsan.mjs"));
 await cp(join(root, "scripts", "run-stack.mjs"), join(stage, "scripts", "run-stack.mjs"));
 await cp(join(root, "distribution", "npm", "README.md"), join(stage, "README.md"));
 await cp(join(root, "LICENSE"), join(stage, "LICENSE"));
@@ -28,15 +28,15 @@ await cp(join(root, "LICENSE"), join(stage, "LICENSE"));
 // are stripped from the generated distribution artifact.
 const stagedWebUi = join(stage, "dist", "web-ui.js");
 const webUi = await readFile(stagedWebUi, "utf8");
-await writeFile(stagedWebUi, webUi.replaceAll('<a href="https://github.com/PhSanqi/Memhub">GitHub</a>', ""));
+await writeFile(stagedWebUi, webUi.replaceAll('<a href="https://github.com/PhSanqi/LITSAN">GitHub</a>', ""));
 
 const manifest = {
-  name: "@phsanqi/memhub",
+  name: "@phsanqi/litsan",
   version: sourcePackage.version,
   description: "Self-hosted, project-aware AI memory with provenance, temporal continuity and MCP integration.",
   license: "MIT",
   type: "module",
-  bin: { memhub: "bin/memhub.mjs" },
+  bin: { litsan: "bin/litsan.mjs", "litsan-mcp": "dist/mcp.js", memhub: "bin/litsan.mjs", "memhub-mcp": "dist/mcp.js" },
   engines: { node: ">=20.9.0" },
   publishConfig: { access: "public" },
   dependencies: sourcePackage.dependencies

@@ -1,3 +1,4 @@
+import { litsanHeader } from "../utils/litsan-compat.js";
 import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 import { canonicalJson, sha256Hex } from "../contracts/index.js";
@@ -528,7 +529,7 @@ async function routeRequest(service, autoWorker, method, url, body, principal, c
             projectIds: Array.isArray(request.projectIds) ? request.projectIds.filter((p) => typeof p === "string") : undefined,
             verbose: request.verbose === true
         };
-        return publicSearchResponse(await trackExternalToolCall(pluginRuntimeAnalytics, { ...request, toolName: "memmy_memory_search" }, () => service.idempotent("memory.search", publicRequest, { path, request: publicRequest }, () => service.search(publicRequest)), (result) => ({ hit_count: hitCountFromSearchResponse(result) })));
+        return publicSearchResponse(await trackExternalToolCall(pluginRuntimeAnalytics, { ...request, toolName: "litsan_memory_search" }, () => service.idempotent("memory.search", publicRequest, { path, request: publicRequest }, () => service.search(publicRequest)), (result) => ({ hit_count: hitCountFromSearchResponse(result) })));
     }
     const recallEvidence = match(path, /^\/api\/v1\/memory\/recalls\/([^/]+)$/);
     if (method === "GET" && recallEvidence) {
@@ -563,7 +564,7 @@ async function routeRequest(service, autoWorker, method, url, body, principal, c
             sourceArtifactId: typeof request.sourceArtifactId === "string" ? request.sourceArtifactId : undefined
         };
         if (path.endsWith("/reconcile")) return reconcileMemoryAdd(service, publicRequest);
-        const result = await trackExternalToolCall(pluginRuntimeAnalytics, { ...request, toolName: "memmy_memory_add" }, () => commitMemoryAdd(service, publicRequest), (addResult) => ({
+        const result = await trackExternalToolCall(pluginRuntimeAnalytics, { ...request, toolName: "litsan_memory_add" }, () => commitMemoryAdd(service, publicRequest), (addResult) => ({
             stored_count: storedCountFromAddResponse(addResult),
             ...(publicRequest.layer ? { layer: publicRequest.layer } : {}),
         }));
@@ -671,7 +672,7 @@ async function routeRequest(service, autoWorker, method, url, body, principal, c
             source: url.searchParams.get("source") ?? undefined,
             adapterId: url.searchParams.get("adapterId") ?? undefined,
             namespace: principal.namespace,
-            toolName: "memmy_memory_get",
+            toolName: "litsan_memory_get",
         }, () => service.getMemory(decodeMatchSegment(memoryGet, 1), { namespace: principal.namespace, timeZone: principal.timeZone }), (result) => ({ hit_count: hitCountFromGetResponse(result) }));
     }
     const panelTaskDelete = match(path, /^\/api\/v1\/panel\/tasks\/([^/]+)$/);
@@ -967,7 +968,7 @@ function writeNdjsonHead(response) {
     response.writeHead(200, {
         "content-type": NDJSON_CONTENT_TYPE,
         "cache-control": "no-store",
-        "content-disposition": `attachment; filename="memmy-memory-${new Date().toISOString().slice(0, 10)}.ndjson"`,
+        "content-disposition": `attachment; filename="litsan-memory-${new Date().toISOString().slice(0, 10)}.ndjson"`,
         "x-content-type-options": "nosniff"
     });
 }
@@ -1118,15 +1119,15 @@ function tokenFromRequest(request, url) {
     return bearer ?? apiKey ?? url.searchParams.get("token") ?? url.searchParams.get("access_token") ?? undefined;
 }
 function namespaceFromRequest(request, url) {
-    const userId = headerString(request, "x-memmy-user-id");
-    const tenantId = headerString(request, "x-memmy-tenant-id");
-    const projectId = headerString(request, "x-memmy-project-id");
-    const workspaceId = headerString(request, "x-memmy-workspace-id");
-    const workspacePath = headerString(request, "x-memmy-workspace-path");
+    const userId = headerString(request, "x-litsan-user-id");
+    const tenantId = headerString(request, "x-litsan-tenant-id");
+    const projectId = headerString(request, "x-litsan-project-id");
+    const workspaceId = headerString(request, "x-litsan-workspace-id");
+    const workspacePath = headerString(request, "x-litsan-workspace-path");
     const source = sourceString(url.searchParams.get("source"));
-    const profileId = headerString(request, "x-memmy-profile-id");
-    const profileLabel = headerString(request, "x-memmy-profile-label");
-    const sessionKey = headerString(request, "x-memmy-session-key");
+    const profileId = headerString(request, "x-litsan-profile-id");
+    const profileLabel = headerString(request, "x-litsan-profile-label");
+    const sessionKey = headerString(request, "x-litsan-session-key");
     const any = userId || tenantId || projectId || workspaceId || workspacePath || source ||
         profileId || profileLabel || sessionKey;
     if (!any)
@@ -1147,7 +1148,7 @@ function sourceString(value) {
     return value && value.trim() ? value.trim() : undefined;
 }
 function headerString(request, key) {
-    const value = request.headers[key];
+    const value = litsanHeader(request.headers, key);
     const out = Array.isArray(value) ? value[0] : value;
     return out && out.trim() ? out.trim() : undefined;
 }
@@ -1243,7 +1244,7 @@ function strictEnvelopeWithPrincipal(body, principal) {
 }
 function requestTimeZone(request, configuredTimeZone) {
     try {
-        return resolveTimeZone(configuredTimeZone ?? headerString(request, "x-memmy-time-zone"));
+        return resolveTimeZone(configuredTimeZone ?? headerString(request, "x-litsan-time-zone"));
     }
     catch (error) {
         throw new MemoryServiceError("invalid_argument", error instanceof Error ? error.message : "invalid timezone");

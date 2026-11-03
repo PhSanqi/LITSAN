@@ -1,10 +1,12 @@
-# Memhub documentation
+# LITSAN documentation
 
-This directory is the documentation source of truth for the current Memhub runtime.
+LITSAN (formerly Memhub). Legacy `MEMHUB_*` / `MEMMY_*` environment variables still work.
+
+This directory is the documentation source of truth for the current LITSAN runtime.
 
 Start with the task you are trying to complete. Superseded repair plans and migration-era design records are intentionally removed from the current documentation tree and remain available through Git history, so old guidance cannot be mistaken for Current Truth.
 
-## Use Memhub
+## Use LITSAN
 
 | Goal | Document |
 | --- | --- |
@@ -20,7 +22,7 @@ Edition-specific packaging notes live under [../editions/](../editions/).
 
 - [Architecture overview](architecture/overview.md) — L1/L2/L3/L4, Project Registry, Branch, Retrieval, Skill, Result Transport and Memory Core.
 - [Control Plane and distillation](architecture/control-plane-and-distillation.md) — capture, evidence jobs, canonical artifacts and MCP ownership.
-- [System boundaries](architecture/boundaries.md) — what Memhub owns versus what the connected model/Harness owns.
+- [System boundaries](architecture/boundaries.md) — what LITSAN owns versus what the connected model/Harness owns.
 - [Identity and devices](architecture/identity-and-devices.md) — stable account identity, device binding and provenance.
 - [Privacy boundary](architecture/privacy-boundary.md) — data-flow and isolation rules.
 - [Adapter portability](architecture/adapter-portability.md) — host/plugin integration boundary.

@@ -1,3 +1,4 @@
+import { env } from "./brand.mjs";
 import { copyFile, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -25,12 +26,12 @@ export async function verifyCloudflareAccessJwt(
   const issuer = await resolveIssuer(publicHost, pin);
   let jwks = jwksByIssuer.get(issuer);
   if (!jwks) {
-    jwks = createRemoteJWKSet(new URL(`${issuer}/cdn-cgi/access/certs`));
+    jwks = createRemoteJWKSet(new URL(`${issuer}/cdn-cgi/access/certs`), { timeoutDuration: 8_000 });
     jwksByIssuer.set(issuer, jwks);
   }
-  const configuredAudience = process.env.MEMHUB_CF_AUD?.trim();
+  const configuredAudience = env("CF_AUD")?.trim();
   if (pin && configuredAudience && configuredAudience !== pin.audience) {
-    throw new Error("MEMHUB_CF_AUD 与已固定 audience 不一致");
+    throw new Error("LITSAN_CF_AUD/MEMHUB_CF_AUD 与已固定 audience 不一致");
   }
   const expectedAudience = pin?.audience ?? (configuredAudience || undefined);
   const { payload } = await jwtVerify(token, jwks, {
@@ -40,7 +41,7 @@ export async function verifyCloudflareAccessJwt(
   if (!pin) {
     const audience = expectedAudience ?? audienceOf(payload.aud);
     await savePin(stateRoot, { version: 1, issuer, audience });
-    console.error("[memhub] pinned Cloudflare Access issuer/audience");
+    console.error("[litsan] pinned Cloudflare Access issuer/audience");
   }
   if (typeof payload.sub !== "string" || !payload.sub.trim()) throw new Error("Cloudflare JWT 缺少 sub");
   if (typeof payload.email !== "string" || !payload.email.trim()) throw new Error("Cloudflare JWT 缺少 email");
@@ -52,7 +53,7 @@ export async function resolveCloudflareAccessIssuer(stateRoot: string, publicHos
 }
 
 async function resolveIssuer(publicHost: string, pin: CloudflarePin | null): Promise<string> {
-  const configuredIssuer = process.env.MEMHUB_CF_TEAM_DOMAIN?.trim();
+  const configuredIssuer = env("CF_TEAM_DOMAIN")?.trim();
   const issuer = normalizeIssuer(configuredIssuer || pin?.issuer || await discoverIssuer(publicHost));
   if (pin && pin.issuer !== issuer) throw new Error("Cloudflare issuer 与已固定配置不一致");
   return issuer;

@@ -2,7 +2,8 @@ import {
   captureIngestedAt,
   captureIsFullyExcludedFromMemory,
   readCaptureIngestIntentStatus,
-  readCaptureAuditSnapshot
+  readCaptureAuditSnapshot,
+  withReadonlyCaptureIndex
 } from "./capture.js";
 import {
   distillationResultTimestamp,
@@ -13,6 +14,9 @@ import {
 } from "./distillation-jobs.js";
 import { inspectDerivedL3Claims } from "./distillation-derived-provenance.js";
 import { resolveCaptureProject } from "./capture-project-resolution.js";
+import { captureAssignmentSnapshot } from "./capture-project-assignments.js";
+import { distillationExclusion } from "./core/lifecycle/distillation-eligibility.js";
+import { globalStateAdmission } from "./global-state.js";
 
 export interface DistillationPipelineAudit {
   source: "read_only_durable_state";
@@ -30,7 +34,11 @@ export interface DistillationPipelineAudit {
     before_cutover: number;
     unresolved_project: number;
     privacy_excluded: number;
+    skipped_relation: number;
     workspace_resolved: number;
+    explicit_global_waiting: number;
+    explicit_global_represented: number;
+    explicit_global_skipped_noise: number;
     eligible_unqueued: number;
     ready_to_enqueue: number;
     waiting_for_idle_or_threshold: number;
@@ -107,6 +115,8 @@ export async function auditDistillationPipeline(input: {
   resolveProject: (projectHint: string) => Promise<string | null>;
   now?: Date;
 }): Promise<DistillationPipelineAudit> {
+  const now = input.now ?? new Date();
+  const nowMs = now.getTime();
   const config = await getDistillationConfig(input.stateRoot);
   const [captureSnapshot, jobs] = await Promise.all([
     readCaptureAuditSnapshot(input.stateRoot, input.accountId),
@@ -204,14 +214,27 @@ export async function auditDistillationPipeline(input: {
   const used = new Set(jobs.filter((job) => job.target === "l2").flatMap((job) =>
     job.evidence_refs.map((ref) => `${job.project_id ?? ""}\0${ref}`)
   ));
+  const usedEvidenceRefs = new Set(jobs.filter((job) => job.target === "l2").flatMap((job) => job.evidence_refs));
   const resolved = new Map<string, string | null>();
   let beforeCutover = 0;
   let unresolvedProject = 0;
   let privacyExcluded = 0;
+  let skippedRelation = 0;
   let workspaceResolved = 0;
+  let explicitGlobalWaiting = 0;
+  let explicitGlobalRepresented = 0;
+  let explicitGlobalSkippedNoise = 0;
   let eligibleUnqueued = 0;
   let alreadyQueued = 0;
   const unqueuedGroups = new Map<string, Array<{ timestamp: string; eventId: string; ingestedAt: string }>>();
+  const completedGlobalEvidenceRefs = new Set(jobs.filter((job) =>
+    job.target === "global_state" && job.status === "completed" && job.result_kind === "global_state"
+  ).flatMap((job) =>
+    job.evidence_refs.filter((ref) => ref.startsWith("l1:"))
+  ));
+  const claimedGlobalEvidenceRefs = new Set(jobs.filter((job) =>
+    job.target === "global_state" && !(job.status === "completed" && job.result_kind === "global_state")
+  ).flatMap((job) => job.evidence_refs.filter((ref) => ref.startsWith("l1:"))));
   for (const event of captures) {
     const ingestedAt = await captureIngestedAt(input.stateRoot, input.accountId, event.event_id);
     if (config.auto_since && ingestedAt && ingestedAt < config.auto_since) {
@@ -220,6 +243,10 @@ export async function auditDistillationPipeline(input: {
     }
     if (captureIsFullyExcludedFromMemory(event)) {
       privacyExcluded += 1;
+      continue;
+    }
+    if (distillationExclusion(event)) {
+      skippedRelation += 1;
       continue;
     }
     if (!event.user_text?.trim() || !event.assistant_text?.trim()) {
@@ -231,12 +258,32 @@ export async function auditDistillationPipeline(input: {
       });
       continue;
     }
+    const assignmentSnapshot = await withReadonlyCaptureIndex(
+      input.stateRoot,
+      input.accountId,
+      (reader) => captureAssignmentSnapshot(reader, event)
+    );
     const resolution = await resolveCaptureProject(event, async (hint) => {
       if (!resolved.has(hint)) resolved.set(hint, await input.resolveProject(hint));
       return resolved.get(hint) ?? null;
-    });
+    }, input.stateRoot, undefined, assignmentSnapshot ?? null);
     const projectId = resolution.projectId;
     if (!projectId) {
+      if (usedEvidenceRefs.has(`l1:${event.event_id}`)) {
+        alreadyQueued += 1;
+        continue;
+      }
+      // keep_global is an explicit routing decision, not missing project
+      // evidence. It is intentionally outside project-scoped L2 distillation
+      // and is audited separately as account-level Global State evidence.
+      if (resolution.source === "keep_global") {
+        const ref = `l1:${event.event_id}`;
+        if (completedGlobalEvidenceRefs.has(ref)) explicitGlobalRepresented += 1;
+        else if (claimedGlobalEvidenceRefs.has(ref)) explicitGlobalWaiting += 1;
+        else if (globalStateAdmission(event) === "skip_noise") explicitGlobalSkippedNoise += 1;
+        else explicitGlobalWaiting += 1;
+        continue;
+      }
       unresolvedProject += 1;
       if (unresolvedProjectSamples.length < 20) unresolvedProjectSamples.push({
         event_id: event.event_id,
@@ -259,7 +306,7 @@ export async function auditDistillationPipeline(input: {
   // Mirror discover's grouping, batch boundary and idle cut-off. An ingested
   // but unqueued event may legitimately be waiting; it is not necessarily an
   // overdue reconciliation. This remains a read-only snapshot, not a claim.
-  const cutoff = new Date((input.now ?? new Date()).getTime() - config.idle_minutes * 60_000).toISOString();
+  const cutoff = new Date(nowMs - config.idle_minutes * 60_000).toISOString();
   let readyToEnqueue = 0;
   let waitingForIdleOrThreshold = 0;
   if (config.auto_enabled && config.auto_since) {
@@ -371,15 +418,21 @@ export async function auditDistillationPipeline(input: {
       before_cutover: beforeCutover,
       unresolved_project: unresolvedProject,
       privacy_excluded: privacyExcluded,
+      skipped_relation: skippedRelation,
       workspace_resolved: workspaceResolved,
+      explicit_global_waiting: explicitGlobalWaiting,
+      explicit_global_represented: explicitGlobalRepresented,
+      explicit_global_skipped_noise: explicitGlobalSkippedNoise,
       eligible_unqueued: eligibleUnqueued,
       ready_to_enqueue: readyToEnqueue,
       waiting_for_idle_or_threshold: waitingForIdleOrThreshold,
       already_queued: alreadyQueued
     },
     jobs: {
-      pending: jobs.filter((job) => job.status === "pending").length,
-      leased: jobs.filter((job) => job.status === "leased").length,
+      pending: jobs.filter((job) => job.status === "pending" ||
+        (job.status === "leased" && Boolean(job.leased_until) && Date.parse(job.leased_until!) <= nowMs)).length,
+      leased: jobs.filter((job) => job.status === "leased" &&
+        (!job.leased_until || !Number.isFinite(Date.parse(job.leased_until)) || Date.parse(job.leased_until) > nowMs)).length,
       completed: jobs.filter((job) => job.status === "completed").length,
       failed: jobs.filter((job) => job.status === "failed").length,
       actionable_failed: jobs.filter((job) =>

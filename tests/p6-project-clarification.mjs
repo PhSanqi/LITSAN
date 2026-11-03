@@ -12,8 +12,8 @@ import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 import { createTestRoot, isolateTestEnvironment, testEnvironment } from './test-isolation.mjs';
 import { addAccount, setAccountRole, ensureLocalAdminToken } from '../dist/auth.js';
 import { webPath } from '../dist/gateway-http.js';
-import { createMemhubRuntime } from '../dist/runtime.js';
-import { createMemhubMcpServerForRuntime } from '../dist/mcp.js';
+import { createLitsanRuntime } from '../dist/runtime.js';
+import { createLitsanMcpServerForRuntime } from '../dist/mcp.js';
 import { resolveCaptureProject } from '../dist/capture-project-resolution.js';
 import { assignCaptureProjects, countUnassignedCaptures, projectClarification, listUnassignedCaptures } from '../dist/capture-project-assignments.js';
 import { storeCaptureEvent, closeCaptureIndexDb, listFreshCaptureEvidence, markCaptureIngested, scheduleCaptureProjectBackfill, withCaptureIndexDb } from '../dist/capture.js';
@@ -38,7 +38,7 @@ async function waitForIndex(root, check) {
 async function fixture(run) {
   const root = await createTestRoot('p6-project-');
   isolateTestEnvironment(root, root);
-  const runtime = createMemhubRuntime({ controlRoot: root, accountId: 'acct', disableArchitecture: true });
+  const runtime = createLitsanRuntime({ controlRoot: root, accountId: 'acct', disableArchitecture: true });
   runtime.memoryClient.openSession = async () => ({});
   runtime.memoryClient.completeTurn = async () => ({});
   runtime.memoryClient.search = async () => ({ hits: [] });
@@ -52,7 +52,7 @@ async function fixture(run) {
   })).event;
   const assign = extra => assignCaptureProjects({ stateRoot: root, accountId: 'acct', projects: runtime.projects, assignedBy: 'host', ...extra });
   const resolve = event => resolveCaptureProject(event, ref => runtime.projects.resolve('acct', ref), root);
-  const server = createMemhubMcpServerForRuntime(runtime, root);
+  const server = createLitsanMcpServerForRuntime(runtime, root);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'bug2-test', version: '1' });
   await server.server.connect(serverTransport); await client.connect(clientTransport);
@@ -117,12 +117,12 @@ test('unknown hint is captured, offered for governed creation and remains assign
     event_id: 'raw-hint', host: runtime.source.platform, conversation_id: 'raw', continuity_id: 'raw',
     project_hint: '灵巧手', user_text: 'Please investigate the project routing of this substantive request.', capture_status: 'open'
   } });
-  const commit = await call('memmy_turn', { action: 'commit', event_id: 'raw-hint', assistant_text: 'Review completed.' });
+  const commit = await call('litsan_turn', { action: 'commit', event_id: 'raw-hint', assistant_text: 'Review completed.' });
   assert.equal(commit.project_resolution.candidate, '灵巧手');
-  assert.match(commit.project_resolution.ask.en, /Create via memmy_project_manage with user approval/);
+  assert.match(commit.project_resolution.ask.en, /Create via litsan_project_manage with user approval/);
   assert.ok(Buffer.byteLength(JSON.stringify(commit.project_resolution, null, 2).replace(/\n/g, '\n  ')) <= 600);
   assert.equal((await runtime.projects.list('acct')).length, 2, 'unknown hint never creates a project automatically');
-  await call('memmy_turn', { action: 'assign', project: 'demo', event_ids: ['raw-hint'] });
+  await call('litsan_turn', { action: 'assign', project: 'demo', event_ids: ['raw-hint'] });
   const evidence = await listFreshCaptureEvidence(root, 'acct', { projectIds: ['demo'], limit: 4 });
   assert.deepEqual(evidence.map(event => event.event_id), ['raw-hint']);
 }));
@@ -299,7 +299,7 @@ test('backfill skips bad rows with ID-only warnings and resumes from a durable c
     const done = new Database(join(root, 'capture-index.sqlite'), { readonly: true });
     assert.equal(done.prepare("SELECT resolved_project_id FROM capture_index WHERE event_id='zz-good'").get().resolved_project_id, 'demo');
     assert.equal(done.prepare("SELECT cursor FROM capture_project_backfill WHERE account_id='acct'").get().cursor, 'zz-good'); done.close();
-    assert.deepEqual(warnings.sort(), ['060-bad','070-mismatch','080-missing'].map(id => `memhub: skipping capture project backfill ${id}`));
+    assert.deepEqual(warnings.sort(), ['060-bad','070-mismatch','080-missing'].map(id => `litsan: skipping capture project backfill ${id}`));
     closeCaptureIndexDb(root); scheduleCaptureProjectBackfill(root, 'acct');
     await new Promise(done => setTimeout(done, 40));
     assert.equal(warnings.length, 3, 'completed durable cursor does not replay old failures');
@@ -368,14 +368,14 @@ test('NULL continuity candidates are resolved before file reads and cannot displ
 
 test('context and turn clarification share the persisted 30-minute continuity throttle', () => fixture(async ({ root, call }) => {
   const query = 'Please investigate this unresolved project routing without assuming a project.';
-  assert.ok((await call('memmy_context', { query, continuity_id: 'throttled' })).clarification);
-  assert.equal((await call('memmy_context', { query, continuity_id: 'throttled' })).clarification, undefined);
-  assert.equal((await call('memmy_turn', { action: 'open', user_text: query, continuity_id: 'throttled' })).project_resolution, undefined);
-  assert.ok((await call('memmy_context', { query, continuity_id: 'separate' })).clarification);
+  assert.ok((await call('litsan_context', { query, continuity_id: 'throttled' })).clarification);
+  assert.equal((await call('litsan_context', { query, continuity_id: 'throttled' })).clarification, undefined);
+  assert.equal((await call('litsan_turn', { action: 'open', user_text: query, continuity_id: 'throttled' })).project_resolution, undefined);
+  assert.ok((await call('litsan_context', { query, continuity_id: 'separate' })).clarification);
   closeCaptureIndexDb(root);
   const db = new Database(join(root, 'capture-index.sqlite'));
   db.prepare("UPDATE capture_project_questions SET asked_at=? WHERE account_id='acct' AND continuity_id='throttled'").run(Date.now() - 30 * 60_000 - 1); db.close();
-  assert.ok((await call('memmy_context', { query, continuity_id: 'throttled' })).clarification);
+  assert.ok((await call('litsan_context', { query, continuity_id: 'throttled' })).clarification);
 }));
 
 test('clarification is substantive/privacy gated, compact, top-three and rate-limited per account/continuity', () => fixture(async ({ root, runtime }) => {
@@ -387,37 +387,148 @@ test('clarification is substantive/privacy gated, compact, top-three and rate-li
   assert.ok(first); assert.ok(Buffer.byteLength(JSON.stringify(first)) <= 600); assert.ok(first.candidates.length <= 3);
   assert.ok(Buffer.byteLength(JSON.stringify(first, null, 2).replace(/\n/g, '\n  ')) <= 600);
   assert.match(first.ask.en, /user approval/);
+  assert.match(first.ask.en, /Which existing project/);
   assert.equal(await projectClarification({ ...base, text, now: 1001 }), undefined);
   assert.ok(await projectClarification({ ...base, text, now: 1_801_000 }));
   assert.ok(await projectClarification({ ...base, text: '/workspaces/demo/src', continuityId: 'path' }));
   assert.ok(await projectClarification({ ...base, text: '```ts\nx\n```', continuityId: 'code' }));
 }));
 
+test('long prose offers literal project names and aliases without assigning or substring matches', () => fixture(async ({ root, runtime, call }) => {
+  await runtime.projects.create('acct', { projectId: 'memhub', name: 'LITSAN', aliases: ['记忆中心', 'Memory Hub'], description: 'Memory project' });
+  await runtime.projects.create('foreign', { projectId: 'secret', description: 'Private project' });
+  for (const text of [
+    'Please investigate LITSAN and explain the distributed distillation problem in detail.',
+    '继续检查LITSAN里面的分布式蒸馏和地图更新，这一段是待澄清项目的完整问题描述，请保留原始证据。',
+    'Please investigate Memory Hub and explain the distributed distillation problem in detail.',
+    '请检查记忆中心的维护队列和项目地图，这是待澄清项目的问题描述，需要先确认归属再继续。'
+  ]) {
+    const result = await projectClarification({ stateRoot: root, accountId: 'acct', projects: runtime.projects, text });
+    assert.equal(result.candidates[0]?.project, 'memhub');
+    assert.ok(Buffer.byteLength(JSON.stringify(result, null, 2).replace(/\n/g, '\n  ')) <= 600);
+  }
+  const negative = await runtime.projects.suggest('acct', 'Please investigate memhubruntime and secret without assuming either is a known project here.', 3);
+  assert.ok(!negative.some(p => p.projectId === 'memhub' || p.projectId === 'secret'));
+  const opened = await call('litsan_turn', { action: 'open', user_text: 'Please investigate LITSAN and explain its distributed distillation behavior in detail.' });
+  assert.equal(opened.project_id, null);
+  assert.equal(opened.project_resolution.candidates[0]?.project, 'memhub');
+}));
+
+test('merged project snapshots expose no actionable Todos; canonical alias completion and reopen remain consistent', () => fixture(async ({ runtime, call }) => {
+  const added = await call('litsan_todo', { action: 'add', project: 'demo', text: 'Preserve this task through a merge' });
+  const merged = await runtime.projects.merge('acct', 'demo', 'other');
+  assert.deepEqual(merged.source.todos, []);
+  assert.ok(merged.target.todos.some(t => t.id === added.todo.id));
+  await call('litsan_todo', { action: 'complete', project: 'demo', todo_id: added.todo.id });
+  let listing = await call('litsan_project_list', { include_inactive: true, detail: true });
+  assert.equal(listing.projects.find(p => p.project === 'demo').pendingTodoCount, 0);
+  assert.deepEqual(listing.projects.find(p => p.project === 'demo').todos, []);
+  assert.equal(listing.projects.find(p => p.project === 'other').todos.find(t => t.id === added.todo.id).status, 'done');
+  await call('litsan_todo', { action: 'reopen', project: 'demo', todo_id: added.todo.id });
+  const todos = await call('litsan_todo', { action: 'list', status: 'pending' });
+  assert.equal(todos.total, 1);
+  assert.equal(todos.projects[0].project, 'other');
+}));
+
+test('MCP todo add retries preserve the original item and its completed state', () => fixture(async ({ call }) => {
+  const id = 'b5e3e6d6-7b92-4fe6-b0c3-7bbf56db04f9';
+  const args = { action: 'add', project: 'demo', text: 'Retry an uncertain add', todo_id: id };
+  const first = await call('litsan_todo', { ...args, todo_id: id.toUpperCase() });
+  await call('litsan_todo', { action: 'add', project: 'demo', text: 'Another item' });
+  const retry = await call('litsan_todo', { ...args, project: 'Demo Alias' });
+  assert.deepEqual(retry.todo, first.todo);
+  assert.equal(retry.pending_count, 2);
+  const completed = await call('litsan_todo', { action: 'complete', project: 'demo', todo_id: id.toUpperCase() });
+  assert.deepEqual((await call('litsan_todo', args)).todo, completed.todo);
+  await assert.rejects(call('litsan_todo', { ...args, text: 'Different text' }), /todo_id already in use/);
+  await assert.rejects(call('litsan_todo', { ...args, todo_id: 'invalid' }), /UUID/);
+  await assert.rejects(call('litsan_todo', { ...args, todo_id: '' }), /todo_id/);
+  const listing = await call('litsan_todo', { action: 'list', project: 'demo', status: 'all' });
+  assert.equal(listing.todos.length, 2);
+  assert.equal(listing.todos.filter(todo => todo.id === id).length, 1);
+  const unkeyed = { action: 'add', project: 'demo', text: 'Legacy unkeyed add' };
+  const a = await call('litsan_todo', unkeyed);
+  const b = await call('litsan_todo', unkeyed);
+  assert.notEqual(a.todo.id, b.todo.id);
+}));
+
+test('concurrent keyed adds serialize and reject conflicting text', () => fixture(async ({ call }) => {
+  const args = { action: 'add', project: 'demo', text: 'Concurrent retry', todo_id: '41d11992-0e21-468c-8e5f-3d90dc1be272' };
+  const results = await Promise.all(Array.from({ length: 6 }, () => call('litsan_todo', args)));
+  for (const result of results) assert.deepEqual(result.todo, results[0].todo);
+  const other = { ...args, todo_id: 'cfc15419-c372-4b5e-86c6-c54f30de2bd1' };
+  const race = await Promise.allSettled([call('litsan_todo', other), call('litsan_todo', { ...other, text: 'Conflict' })]);
+  assert.equal(race.filter(result => result.status === 'fulfilled').length, 1);
+  assert.equal(race.filter(result => result.status === 'rejected').length, 1);
+  const listing = await call('litsan_todo', { action: 'list', project: 'demo', status: 'all' });
+  assert.equal(listing.todos.length, 2);
+}));
+
+test('keyed todo IDs remain isolated by account and safe through project merge', () => fixture(async ({ runtime, call }) => {
+  const id = '2fe7c6ce-4f2a-4d6e-a8a3-2a1cad0d8bd5';
+  const args = { action: 'add', project: 'demo', text: 'Keep this through merge', todo_id: id };
+  const first = await call('litsan_todo', args);
+  await assert.rejects(call('litsan_todo', { ...args, project: 'other' }), /todo_id already in use/);
+  const other = await call('litsan_todo', { action: 'add', project: 'other', text: 'Keep target item' });
+  await runtime.projects.create('foreign', { projectId: 'demo', description: 'Another account' });
+  const foreign = await runtime.projects.addTodo('foreign', 'demo', 'Private task', id);
+  assert.equal(foreign.todos[0].id, id);
+  await runtime.projects.merge('acct', 'demo', 'other');
+  const retry = await call('litsan_todo', args);
+  assert.equal(retry.project, 'other');
+  assert.deepEqual(retry.todo, first.todo);
+  const listing = await call('litsan_todo', { action: 'list', project: 'other', status: 'all' });
+  assert.deepEqual(new Set(listing.todos.map(todo => todo.id)), new Set([id, other.todo.id]));
+}));
+
+test('MCP todo status retries after a lost acknowledgement are idempotent', () => fixture(async ({ call }) => {
+  const added = await call('litsan_todo', { action: 'add', project: 'demo', text: 'Retry the status update safely' });
+  for (const action of ['complete', 'reopen']) {
+    const args = { action, project: 'demo', todo_id: added.todo.id };
+    const first = await call('litsan_todo', args);
+    const retry = await call('litsan_todo', args);
+    assert.deepEqual(retry.todo, first.todo);
+    assert.equal(retry.pending_count, first.pending_count);
+  }
+}));
+
 test('MCP open/commit clarify once, assign binds new ingests; explicit and keep-global suppress questions', () => fixture(async ({ call }) => {
-  const opened = await call('memmy_turn', { action: 'open', continuity_id: 'mcp-thread', user_text: 'Please investigate project routing and repair the unresolved captures.' });
+  const opened = await call('litsan_turn', { action: 'open', continuity_id: 'mcp-thread', user_text: 'Please investigate project routing and repair the unresolved captures.' });
   assert.ok(opened.project_resolution); assert.equal(opened.project_id, null);
-  const committed = await call('memmy_turn', { action: 'commit', event_id: opened.event_id, assistant_text: 'Completed audit.' });
+  const committed = await call('litsan_turn', { action: 'commit', event_id: opened.event_id, assistant_text: 'Completed audit.' });
   assert.equal(committed.continuity_id, 'mcp-thread'); assert.equal(committed.project_resolution, undefined);
-  await call('memmy_turn', { action: 'assign', project: 'Demo Alias', continuity_id: 'mcp-thread' });
-  const later = await call('memmy_turn', { action: 'open', continuity_id: 'mcp-thread', user_text: 'Continue investigating the same project routing and capture assignment.' });
+  await call('litsan_turn', { action: 'assign', project: 'Demo Alias', continuity_id: 'mcp-thread' });
+  const later = await call('litsan_turn', { action: 'open', continuity_id: 'mcp-thread', user_text: 'Continue investigating the same project routing and capture assignment.' });
   assert.equal(later.project_id, 'demo'); assert.equal(later.project_resolution, undefined);
-  const context = await call('memmy_context', { query: 'Continue investigating the same project routing and capture assignment.', continuity_id: 'mcp-thread' });
+  const context = await call('litsan_context', { query: 'Continue investigating the same project routing and capture assignment.', continuity_id: 'mcp-thread' });
   assert.equal(context.resolvedProjectId, 'demo'); assert.equal(context.clarification, undefined);
-  const explicit = await call('memmy_turn', { action: 'open', project: 'demo', user_text: 'This substantive request is explicitly scoped to the demo project.' });
+  const explicit = await call('litsan_turn', { action: 'open', project: 'demo', user_text: 'This substantive request is explicitly scoped to the demo project.' });
   assert.equal(explicit.project_resolution, undefined);
-  await call('memmy_turn', { action: 'assign', keep_global: true, continuity_id: 'mcp-thread' });
-  const global = await call('memmy_turn', { action: 'open', continuity_id: 'mcp-thread', user_text: 'This substantive follow-up should intentionally remain globally scoped.' });
+  await call('litsan_turn', { action: 'assign', keep_global: true, continuity_id: 'mcp-thread' });
+  const global = await call('litsan_turn', { action: 'open', continuity_id: 'mcp-thread', user_text: 'This substantive follow-up should intentionally remain globally scoped.' });
   assert.equal(global.project_id, null); assert.equal(global.project_resolution, undefined);
 }));
 
+test('MCP event-only commit preserves original conversation provenance and rejects another conversation', () => fixture(async ({ call }) => {
+  const opened = await call('litsan_turn', { action: 'open', project: 'demo', conversation_id: 'chat-a',
+    continuity_id: 'thread-a', user_text: 'Check the durable turn.', inline_maintenance: false });
+  await assert.rejects(call('litsan_turn', { action: 'commit', event_id: opened.event_id, conversation_id: 'chat-b',
+    assistant_text: 'Wrong conversation.' }), /conversation_id does not match/);
+  const result = await call('litsan_turn', { action: 'commit', event_id: opened.event_id, assistant_text: 'Completed safely.' });
+  assert.equal(result.status, 'complete'); assert.equal(result.ingested, true);
+  const resumed = await call('litsan_turn', { action: 'resume', event_id: opened.event_id });
+  const saved = resumed.turns.find(turn => turn.event_id === opened.event_id);
+  assert.equal(saved.conversation_id, 'chat-a'); assert.equal(saved.assistant_text, 'Completed safely.');
+}));
+
 test('MCP context clarifies unresolved substantive queries only, within 600 bytes; private turn is safe', () => fixture(async ({ call }) => {
-  const result = await call('memmy_context', { query: 'Please investigate unresolved routing without assuming a particular project.' });
+  const result = await call('litsan_context', { query: 'Please investigate unresolved routing without assuming a particular project.' });
   assert.ok(result.clarification); assert.ok(Buffer.byteLength(JSON.stringify(result.clarification)) <= 600);
-  assert.equal((await call('memmy_context', { query: 'hello' })).clarification, undefined);
-  assert.equal((await call('memmy_context', { query: 'Please investigate this explicitly scoped project request.', project: 'demo' })).clarification, undefined);
-  const hidden = await call('memmy_turn', { action: 'open', user_text: '<private>' + 'secret '.repeat(20) + '</private>' });
+  assert.equal((await call('litsan_context', { query: 'hello' })).clarification, undefined);
+  assert.equal((await call('litsan_context', { query: 'Please investigate this explicitly scoped project request.', project: 'demo' })).clarification, undefined);
+  const hidden = await call('litsan_turn', { action: 'open', user_text: '<private>' + 'secret '.repeat(20) + '</private>' });
   assert.equal(hidden.project_resolution, undefined);
-  await assert.rejects(call('memmy_turn', { action: 'assign', project: 'unknown', event_ids: [hidden.event_id] }), /unknown project/);
+  await assert.rejects(call('litsan_turn', { action: 'assign', project: 'unknown', event_ids: [hidden.event_id] }), /unknown project/);
 }));
 
 test('admin queue is grouped/newest first/paginated, excludes incomplete/private/foreign/keep-global', () => fixture(async ({ root, runtime, add, assign }) => {
@@ -477,7 +588,7 @@ test('HTTP gateway owner can list/assign/keep-global/count; auth, CSRF and cross
       const foreign = await addAccount(root, 'foreign');
       await setAccountRole(root, owner.account_id, 'admin');
       const token = await ensureLocalAdminToken(root);
-      const runtime = createMemhubRuntime({ controlRoot: root, accountId: owner.account_id, disableArchitecture: true });
+      const runtime = createLitsanRuntime({ controlRoot: root, accountId: owner.account_id, disableArchitecture: true });
       let child;
       try {
         await runtime.projects.create(owner.account_id, { projectId: 'demo', aliases: ['Demo Alias'], description: 'HTTP fixture' });

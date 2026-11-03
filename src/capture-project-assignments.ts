@@ -5,7 +5,7 @@ import {
   withCaptureIndexDb, withCaptureIndexMutation, withReadonlyCaptureIndex, type StoredCaptureEvent
 } from "./capture.js";
 import { canonicalWorkspaceProjectCandidate, resolveCaptureProjectSnapshot } from "./capture-project-resolution.js";
-import type { JsonProjectRegistry } from "./project-registry.js";
+import type { ProjectReader } from "./core/ports/projects.js";
 import { utf8Prefix } from "./context-capsule.js";
 
 interface Assignment {
@@ -43,7 +43,7 @@ export function captureAssignmentSnapshot(db: Database.Database | null, event: P
 
 /** Append routing decisions only; frozen capture bytes and existing Core copies are never retagged. */
 export async function assignCaptureProjects(input: {
-  stateRoot: string; accountId: string; projects: JsonProjectRegistry; assignedBy: "host" | "admin";
+  stateRoot: string; accountId: string; projects: Pick<ProjectReader, "resolve">; assignedBy: "host" | "admin";
   project?: unknown; keepGlobal?: unknown; continuityId?: unknown; eventIds?: unknown;
 }): Promise<{ assigned: number; unchanged: number; continuity_bound: boolean }> {
   const account = input.accountId.trim();
@@ -122,7 +122,7 @@ export function isSubstantiveProjectQuery(text: string): boolean {
 }
 
 export async function projectClarification(input: {
-  stateRoot: string; accountId: string; projects: JsonProjectRegistry;
+  stateRoot: string; accountId: string; projects: Pick<ProjectReader, "suggest">;
   text: string; candidate?: string | null; continuityId?: string; rateLimit?: boolean; now?: number;
 }) {
   if (!input.text.trim()) return undefined;
@@ -138,13 +138,13 @@ export async function projectClarification(input: {
     candidates,
     ask: candidates.length
       ? { zh: "属于哪个项目，还是保持全局？", en: "Which project, or keep global?" }
-      : { zh: "保持全局？新建项目需用户批准 memmy_project_manage。", en: "Keep global? Create via memmy_project_manage with user approval." },
-    how_to_answer: `memmy_turn action=assign project=<slug> continuity_id=${input.continuityId ?? "<id>"} (or keep_global=true)`
+      : { zh: "属于哪个已有项目，还是保持全局？新建项目需用户批准。", en: "Which existing project, or keep global? Create via litsan_project_manage with user approval." },
+    how_to_answer: `litsan_turn action=assign project=<slug> continuity_id=${input.continuityId ?? "<id>"} (or keep_global=true)`
   };
   const bytes = () => Buffer.byteLength(JSON.stringify(result, null, 2).replace(/\n/g, "\n  "), "utf8");
   while (bytes() > 600 && candidates.length) candidates.pop();
   if (bytes() > 600) {
-    result.how_to_answer = "memmy_turn action=assign project=<slug> continuity_id=<id> (or keep_global=true)";
+    result.how_to_answer = "litsan_turn action=assign project=<slug> continuity_id=<id> (or keep_global=true)";
   }
   if (input.rateLimit && input.continuityId) {
     const asked = await withCaptureIndexMutation(input.stateRoot, () => withCaptureIndexDb(input.stateRoot, db => {
@@ -181,7 +181,7 @@ export async function countUnassignedCaptures(stateRoot: string, accountId: stri
 }
 
 export async function listUnassignedCaptures(input: {
-  stateRoot: string; accountId: string; projects: JsonProjectRegistry; offset?: number; limit?: number;
+  stateRoot: string; accountId: string; projects: Pick<ProjectReader, "suggest">; offset?: number; limit?: number;
 }) {
   const offset = Number.isFinite(input.offset) ? Math.max(0, Math.trunc(input.offset!)) : 0;
   const limit = Number.isFinite(input.limit) ? Math.max(1, Math.min(50, Math.trunc(input.limit!))) : 20;

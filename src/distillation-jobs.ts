@@ -1,70 +1,23 @@
+import { distillationResultTimestamp } from "./core/lifecycle/evidence-refs.js";
+export { distillationResultTimestamp } from "./core/lifecycle/evidence-refs.js";
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
+import { AsyncLocalStorage } from "node:async_hooks";
+import { mkdir, readFile, rename, stat, unlink, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { TRUSTED_TURN_SOURCE_KINDS, type CaptureSectionSourceKinds, type StoredCaptureEvent } from "./capture.js";
+import { TRUSTED_TURN_SOURCE_KINDS, type CaptureSourceKind, type StoredCaptureEvent } from "./capture.js";
 import { withFileMutationLock } from "./file-mutation-lock.js";
 import { MemoryCoreHttpError } from "./local-memory-client.js";
+import { globalStateEvidenceItem, latestCompletedGlobalState } from "./global-state.js";
 
-export type DistillationTarget = "l2" | "l3" | "l4" | "skill";
-export type DistillationFailureKind =
-  | "core_error"
-  | "ambiguous_core_commit"
-  | "invalid_legacy_evidence";
+import type { DistillationTarget, DistillationFailureKind, DistillationEvidenceItem, DistillationJob, DistilledFactMetadataSet } from "./contracts/distillation.js";
+export type { DistillationTarget, DistillationFailureKind, DistillationEvidenceItem, DistillationJob } from "./contracts/distillation.js";
 
 export interface DistillationConfig {
   auto_enabled: boolean;
   turn_threshold: number;
   idle_minutes: number;
   auto_since?: string;
-}
-
-export interface DistillationEvidenceItem {
-  ref: string;
-  kind: "turn" | "memory" | "artifact";
-  timestamp: string;
-  project_id?: string;
-  conversation_id?: string;
-  layer?: "L1" | "L2" | "L3" | "L4" | "Skill";
-  title?: string;
-  content?: string;
-  user_text?: string;
-  assistant_text?: string;
-  reasoning_summary?: string;
-  tool_summary?: string;
-  source_kinds?: CaptureSectionSourceKinds;
-}
-
-export interface DistillationJob {
-  job_id: string;
-  account_id: string;
-  target: DistillationTarget;
-  scope: "account" | "project";
-  project_id: string | null;
-  conversation_id?: string;
-  status: "pending" | "leased" | "completed" | "failed";
-  reason: "manual" | "turn_threshold" | "idle" | "upstream" | "migration";
-  created_at: string;
-  updated_at: string;
-  leased_until?: string;
-  leased_by?: string;
-  lease_token?: string;
-  completed_at?: string;
-  failure?: string;
-  failure_kind?: DistillationFailureKind;
-  failed_at?: string;
-  attempts?: number;
-  result_kind?: DistillationTarget | "noop";
-  result_id?: string;
-  result_retirement?: "pending" | "archived" | "deleted";
-  result_retirement_generation?: string;
-  result_retirement_operation?: "archived" | "deleted";
-  result_content?: string;
-  result_committed_at?: string;
-  result_operation_id?: string;
-  result_core_content_hash?: string;
-  evidence_refs: string[];
-  evidence_hash: string;
-  evidence: DistillationEvidenceItem[];
+  promotion_review_accounts?: string[];
 }
 
 interface JobStore {
@@ -123,12 +76,33 @@ function withFailureClassification(job: DistillationJob): DistillationJob {
     : job;
 }
 
+/** Read-only cached ledger view. Mutation callers use listDistillationJobs (isolated clones). */
+export async function readDistillationJobsSnapshot(stateRoot: string, accountId?: string, includeRetired = false): Promise<import("./contracts/maintenance.js").MaintenanceReadonly<DistillationJob[]>> {
+  const path = storePath(stateRoot), signature = await distillationJobsSignature(stateRoot);
+  const batch = currentBatch(stateRoot);
+  let cached = batch?.store ? batch.snapshot : jobSnapshots.get(path);
+  if (!cached || cached.signature !== signature) {
+    const store = batch?.store ? structuredClone(batch.store) : await loadStore(stateRoot);
+    // Freeze recursively: a snapshot consumer cannot poison another account or a later read.
+    const freeze = (value: unknown): void => { if (value && typeof value === "object") { Object.values(value).forEach(freeze); Object.freeze(value); } };
+    store.jobs = store.jobs.map(withFailureClassification).sort((a, b) => b.created_at.localeCompare(a.created_at));
+    freeze(store.jobs);
+    cached = { signature, jobs: store.jobs };
+    if (batch?.store) batch.snapshot = cached;
+    else jobSnapshots.set(path, cached);
+  }
+  return cached.jobs.filter(job => (!accountId || job.account_id === accountId) && (includeRetired || !job.result_retirement));
+}
+const jobSnapshots = new Map<string, { signature: string; jobs: DistillationJob[] }>();
+let jobStoreHooks: { parse?: (path: string) => void; write?: (path: string) => void } | undefined;
+/** Test instrumentation; observes actual jobs.json parses, including locked mutations. */
+export function setDistillationJobsHooks(hooks?: typeof jobStoreHooks): void { jobStoreHooks = hooks; }
+export async function distillationJobsSignature(root: string): Promise<string> {
+  try { const info = await stat(storePath(root)); return `${info.mtimeMs}:${info.size}:${info.ino}${currentBatch(root)?.dirty ? ":pending" : ""}`; }
+  catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return currentBatch(root)?.dirty ? "missing:pending" : "missing"; throw error; }
+}
 export async function listDistillationJobs(stateRoot: string, accountId?: string, includeRetired = false): Promise<DistillationJob[]> {
-  const store = await loadStore(stateRoot);
-  return store.jobs
-    .filter((job) => (!accountId || job.account_id === accountId) && (includeRetired || !job.result_retirement))
-    .map(withFailureClassification)
-    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  return structuredClone(await readDistillationJobsSnapshot(stateRoot, accountId, includeRetired)) as DistillationJob[];
 }
 
 /** Retire active revisions before the remote mutation, preserving exact historical evidence.
@@ -141,7 +115,7 @@ export async function retireDistillationMemory(input: {
   const quarantine = await withMutation(input.stateRoot, async () => {
     const store = await loadStore(input.stateRoot);
     const revisions = store.jobs.filter((job) => job.account_id === input.accountId &&
-      job.status === "completed" && job.result_id === input.memoryId);
+      job.status === "completed" && job.result_kind !== "branch_draft" && job.result_id === input.memoryId);
     if (input.operation === "archived" && revisions.some((job) => job.result_retirement === "deleted")) {
       throw new Error("retirement conflict: memory already retired with a different operation");
     }
@@ -228,22 +202,38 @@ function compareCompletedRevision(a: DistillationJob, b: DistillationJob): numbe
     a.job_id.localeCompare(b.job_id);
 }
 
-export function distillationResultTimestamp(job: DistillationJob): string | undefined {
-  if (job.result_committed_at && Number.isFinite(Date.parse(job.result_committed_at))) {
-    return job.result_committed_at;
-  }
-  return job.completed_at && Number.isFinite(Date.parse(job.completed_at))
-    ? job.completed_at
-    : undefined;
+function captureSourceKind(event: StoredCaptureEvent, field: "user_text" | "assistant_text" | "reasoning_summary" | "tool_summary"): CaptureSourceKind | undefined {
+  const kinds = event.provenance?.source_kinds;
+  const value = kinds && typeof kinds === "object" ? (kinds as Record<string, unknown>)[field] : undefined;
+  return value === "user_said" || value === "agent_inferred" || value === "tool_output" || value === "imported"
+    ? value : TRUSTED_TURN_SOURCE_KINDS[field];
+}
+
+function captureOrigin(event: StoredCaptureEvent): DistillationEvidenceItem["origin"] {
+  const value = event.provenance?.origin;
+  return value === "user" || value === "agent" || value === "automation" ? value : undefined;
+}
+
+function captureTrigger(event: StoredCaptureEvent): DistillationEvidenceItem["trigger"] {
+  const value = event.provenance?.trigger;
+  return typeof value === "string" && [
+    "user_prompt", "hook", "task_notification", "side_session_note", "session_message",
+    "scheduled_wakeup", "ci_event", "delegate", "cli_run", "other"
+  ].includes(value) ? value as DistillationEvidenceItem["trigger"] : undefined;
 }
 
 export async function enqueueDistillationJob(input: {
   stateRoot: string;
   accountId: string;
   projectId: string | null;
+  branchId?: string;
   captures: StoredCaptureEvent[];
+  l2_restructure?: unknown;
   reason: "manual" | "turn_threshold" | "idle";
 }): Promise<{ created: boolean; job: DistillationJob }> {
+  if (input.branchId && input.l2_restructure) throw new Error("restructure_job_not_branch");
+  if (input.branchId === "main") throw new Error("main is not a stored branch id");
+  const branchId = input.branchId; // Preserve the branch selected by discovery even if the flag changes.
   if (!input.projectId) throw new Error("L2 project timeline requires a resolved project");
   const evidence: DistillationEvidenceItem[] = input.captures
     .filter((item) =>
@@ -265,11 +255,13 @@ export async function enqueueDistillationJob(input: {
       ...(item.reasoning_summary?.trim() ? { reasoning_summary: item.reasoning_summary.trim() } : {}),
       ...(item.tool_summary?.trim() ? { tool_summary: item.tool_summary.trim() } : {}),
       source_kinds: {
-        user_text: TRUSTED_TURN_SOURCE_KINDS.user_text,
-        assistant_text: TRUSTED_TURN_SOURCE_KINDS.assistant_text,
-        ...(item.reasoning_summary?.trim() ? { reasoning_summary: TRUSTED_TURN_SOURCE_KINDS.reasoning_summary } : {}),
-        ...(item.tool_summary?.trim() ? { tool_summary: TRUSTED_TURN_SOURCE_KINDS.tool_summary } : {})
-      }
+        user_text: captureSourceKind(item, "user_text"),
+        assistant_text: captureSourceKind(item, "assistant_text"),
+        ...(item.reasoning_summary?.trim() ? { reasoning_summary: captureSourceKind(item, "reasoning_summary") } : {}),
+        ...(item.tool_summary?.trim() ? { tool_summary: captureSourceKind(item, "tool_summary") } : {})
+      },
+      ...(captureOrigin(item) ? { origin: captureOrigin(item) } : {}),
+      ...(captureTrigger(item) ? { trigger: captureTrigger(item) } : {})
     }));
   if (evidence.length === 0) throw new Error("L2 distillation requires complete L1 turns");
   return enqueueJob({
@@ -278,20 +270,78 @@ export async function enqueueDistillationJob(input: {
     target: "l2",
     projectId: input.projectId,
     evidence,
-    reason: input.reason
+    reason: input.reason,
+    ...(branchId ? { branchId } : {})
+  });
+}
+
+/**
+ * Queue explicit account-global L1 evidence into one canonical Global State
+ * revision. The previous canonical revision is carried as an exact artifact
+ * base so the Harness updates state instead of producing a disconnected delta.
+ */
+export async function enqueueGlobalStateDistillationJob(input: {
+  stateRoot: string;
+  accountId: string;
+  captures: StoredCaptureEvent[];
+  reason: "manual" | "turn_threshold" | "idle" | "migration";
+}): Promise<{ created: boolean; job: DistillationJob }> {
+  const turns: DistillationEvidenceItem[] = input.captures
+    .filter((item) => item.account_id === input.accountId && item.capture_status === "complete" &&
+      item.user_text?.trim() && item.assistant_text?.trim())
+    .sort((a, b) => a.timestamp.localeCompare(b.timestamp) || a.event_id.localeCompare(b.event_id))
+    .map((item) => ({
+      ref: `l1:${item.event_id}`,
+      kind: "turn",
+      layer: "L1",
+      timestamp: item.timestamp,
+      conversation_id: item.conversation_id,
+      user_text: item.user_text!.trim(),
+      assistant_text: item.assistant_text!.trim(),
+      ...(item.reasoning_summary?.trim() ? { reasoning_summary: item.reasoning_summary.trim() } : {}),
+      ...(item.tool_summary?.trim() ? { tool_summary: item.tool_summary.trim() } : {}),
+      source_kinds: {
+        user_text: captureSourceKind(item, "user_text"),
+        assistant_text: captureSourceKind(item, "assistant_text"),
+        ...(item.reasoning_summary?.trim() ? { reasoning_summary: captureSourceKind(item, "reasoning_summary") } : {}),
+        ...(item.tool_summary?.trim() ? { tool_summary: captureSourceKind(item, "tool_summary") } : {})
+      },
+      ...(captureOrigin(item) ? { origin: captureOrigin(item) } : {}),
+      ...(captureTrigger(item) ? { trigger: captureTrigger(item) } : {})
+    }));
+  if (turns.length === 0) throw new Error("Global State distillation requires complete explicit-global L1 turns");
+  // Admission and base selection share the ledger lock so disjoint discovery scans cannot fork account state.
+  return withMutation(input.stateRoot, async () => {
+    const jobs = await listDistillationJobs(input.stateRoot, input.accountId);
+    const active = jobs.find((job) => job.target === "global_state" &&
+      (job.status === "pending" || job.status === "leased"));
+    if (active) return { created: false, job: active };
+    const previous = latestCompletedGlobalState(jobs);
+    return enqueueJob({
+      stateRoot: input.stateRoot,
+      accountId: input.accountId,
+      target: "global_state",
+      projectId: null,
+      evidence: [...(previous ? [globalStateEvidenceItem(previous)] : []), ...turns],
+      reason: input.reason
+    });
   });
 }
 
 export async function enqueueDerivedDistillationJob(input: {
   stateRoot: string;
   accountId: string;
-  target: "l3" | "l4" | "skill";
+  target: "l2" | "l3" | "l4" | "global_state" | "skill";
+  dedupHash?: string;
+  mergeContent?: string;
+  l2Append?: NonNullable<DistillationJob["l2_append"]>;
   projectId: string | null;
   evidence: DistillationEvidenceItem[];
   reason?: "manual" | "upstream";
 }): Promise<{ created: boolean; job: DistillationJob }> {
   if (input.target === "l3" && !input.projectId) throw new Error("L3 project profile requires projectId");
   if (input.target === "l4" && input.projectId) throw new Error("L4 user profile is account-scoped");
+  if (input.target === "global_state" && input.projectId) throw new Error("Global State is account-scoped");
   if (input.evidence.length === 0) throw new Error(`${input.target.toUpperCase()} distillation requires evidence`);
   return enqueueJob({
     stateRoot: input.stateRoot,
@@ -299,8 +349,20 @@ export async function enqueueDerivedDistillationJob(input: {
     target: input.target,
     projectId: input.projectId,
     evidence: input.evidence,
+    ...(input.dedupHash ? { dedupHash: input.dedupHash } : {}),
+    ...(input.mergeContent !== undefined ? { mergeContent: input.mergeContent } : {}),
+    ...(input.l2Append ? { l2Append: input.l2Append } : {}),
     reason: input.reason ?? "upstream"
   });
+}
+
+export async function enqueueL2RestructureJob(input: {
+  stateRoot: string; accountId: string; projectId: string;
+  evidence: DistillationEvidenceItem[];
+  restructure: NonNullable<DistillationJob["l2_restructure"]>;
+  dryRun: boolean;
+}): Promise<{ created: boolean; job: DistillationJob }> {
+  return enqueueJob({ ...input, target: "l2", reason: "manual", l2Restructure: input.restructure });
 }
 
 
@@ -325,6 +387,7 @@ export async function recordCompletedDistillationRevision(input: {
   committedAt: string;
   operationId?: string;
   coreBody?: string;
+  factMetadata?: DistilledFactMetadataSet;
 }): Promise<DistillationJob> {
   const resultId = input.resultId.trim();
   const content = input.content.trim();
@@ -378,6 +441,7 @@ export async function recordCompletedDistillationRevision(input: {
       result_kind: input.target,
       result_id: resultId,
       result_content: content,
+      ...(input.factMetadata ? { result_fact_metadata: structuredClone(input.factMetadata) } : {}),
       result_committed_at: committedAt,
       ...(input.coreBody !== undefined ? { result_core_content_hash: createHash("sha256").update(input.coreBody).digest("hex") } : {}),
       ...(input.operationId ? { result_operation_id: input.operationId } : {}),
@@ -430,6 +494,7 @@ export async function leaseDistillationJob(
   input: {
     projectId?: string | null;
     target?: DistillationTarget;
+    jobId?: string;
     harness: string;
     leaseSeconds?: number;
     useLeaseToken?: boolean;
@@ -440,6 +505,8 @@ export async function leaseDistillationJob(
     const now = Date.now();
     const job = store.jobs.find((item) =>
       item.account_id === accountId &&
+      (input.jobId === undefined || item.job_id === input.jobId) &&
+      item.maintenance_split_locked !== true &&
       (
         item.status === "pending" ||
         (item.status === "leased" && Boolean(item.leased_until) && Date.parse(item.leased_until!) <= now)
@@ -493,6 +560,38 @@ export async function completeDistillationJob(
   return completed;
 }
 
+export async function completeDistillationLocalArtifact(
+  stateRoot: string,
+  accountId: string,
+  jobId: string,
+  result: { kind: "global_state"; resultId: string; content: string; committedAt?: string },
+  leaseOwner: string,
+  leaseToken?: string
+): Promise<DistillationJob> {
+  let completed!: DistillationJob;
+  await mutateJob(stateRoot, accountId, jobId, (job) => {
+    assertActiveDistillationLease(job, leaseOwner, leaseToken);
+    if (job.target !== "global_state" || job.scope !== "account" || job.project_id !== null) {
+      throw new Error("local Global State completion requires an account-scoped global_state job");
+    }
+    const committedAt = result.committedAt ?? new Date().toISOString();
+    job.status = "completed";
+    job.completed_at = committedAt;
+    job.updated_at = committedAt;
+    job.result_kind = result.kind;
+    job.result_id = result.resultId;
+    job.result_content = result.content;
+    job.result_committed_at = committedAt;
+    delete job.leased_until;
+    delete job.leased_by;
+    delete job.lease_token;
+    delete job.failure;
+    delete job.failed_at;
+    completed = structuredClone(job);
+  });
+  return completed;
+}
+
 /**
  * Record a Memory Core result that has already committed. With an opaque
  * lease token, expiry alone must not erase a successful write: the token
@@ -504,7 +603,7 @@ export async function completeDistillationJobAfterCoreCommit(
   stateRoot: string,
   accountId: string,
   jobId: string,
-  result: { kind: DistillationTarget; resultId: string; content: string; committedAt: string; coreBody?: string },
+  result: { kind: DistillationTarget; resultId: string; content: string; committedAt: string; coreBody?: string; factMetadata?: DistilledFactMetadataSet },
   leaseOwner: string,
   leaseToken?: string
 ): Promise<DistillationJob> {
@@ -517,6 +616,8 @@ export async function completeDistillationJobAfterCoreCommit(
     job.result_kind = result.kind;
     job.result_id = result.resultId;
     job.result_content = result.content;
+    if (result.factMetadata) job.result_fact_metadata = structuredClone(result.factMetadata);
+    else delete job.result_fact_metadata;
     job.result_committed_at = result.committedAt;
     if (result.coreBody !== undefined) job.result_core_content_hash = createHash("sha256").update(result.coreBody).digest("hex");
     delete job.leased_until;
@@ -726,10 +827,24 @@ async function enqueueJob(input: {
   conversationId?: string;
   evidence: DistillationEvidenceItem[];
   reason: DistillationJob["reason"];
+  l2Restructure?: NonNullable<DistillationJob["l2_restructure"]>;
+  dryRun?: boolean;
+  branchId?: string;
+  dedupHash?: string;
+  mergeContent?: string;
+  l2Append?: NonNullable<DistillationJob["l2_append"]>;
 }): Promise<{ created: boolean; job: DistillationJob }> {
-  const evidence = uniqueEvidence(input.evidence);
-  const evidenceHash = createHash("sha256")
-    .update(JSON.stringify({ target: input.target, project: input.projectId, evidence }), "utf8")
+  // Agreed with the maintenance queue: an L2 restructure job never belongs to a branch.
+  if (input.l2Restructure && input.branchId) throw new Error("restructure_job_not_branch");
+  // Global State deliberately keeps its exact base revision first, followed by
+  // chronological L1 turns. Sorting all evidence by timestamp can move a newly
+  // committed base behind older-but-newly-routed captures and obscures the
+  // full-replacement contract for the semantic executor.
+  const evidence = input.l2Restructure || input.l2Append || input.target === "global_state"
+    ? structuredClone(input.evidence)
+    : uniqueEvidence(input.evidence);
+  const evidenceHash = input.dedupHash ?? createHash("sha256")
+    .update(JSON.stringify({ target: input.target, project: input.projectId, evidence, ...(input.branchId ? { branch_id: input.branchId } : {}) }), "utf8")
     .digest("hex");
   return withMutation(input.stateRoot, async () => {
     const store = await loadStore(input.stateRoot);
@@ -737,20 +852,22 @@ async function enqueueJob(input: {
       job.account_id === input.accountId &&
       job.target === input.target &&
       job.project_id === input.projectId &&
-      job.evidence_hash === evidenceHash
+      (input.l2Restructure
+        ? Boolean(job.l2_restructure) && (job.status === "pending" || job.status === "leased")
+        : job.evidence_hash === evidenceHash)
     );
     if (existing) return { created: false, job: structuredClone(existing) };
     // Discovery scans and threshold updates can race. An exact batch hash is
     // insufficient: [A,B] and [B,C] have different hashes but must not create
     // two L2 jobs containing the same durable turn. Check within the locked
     // mutation; a later discovery pass can enqueue the remaining turn.
-    if (input.target === "l2") {
+    if ((input.target === "l2" || input.target === "global_state") && !input.l2Restructure && !input.dedupHash) {
       const refs = new Set(evidence.map((item) => item.ref));
       const overlap = store.jobs.find((job) =>
         job.account_id === input.accountId &&
-        job.target === "l2" &&
+        job.target === input.target &&
         job.project_id === input.projectId &&
-        job.evidence_refs.some((ref) => refs.has(ref))
+        job.evidence_refs.some((ref) => ref.startsWith("l1:") && refs.has(ref))
       );
       if (overlap) return { created: false, job: structuredClone(overlap) };
     }
@@ -762,16 +879,22 @@ async function enqueueJob(input: {
       scope: input.projectId ? "project" : "account",
       project_id: input.projectId,
       ...(input.conversationId ? { conversation_id: input.conversationId } : {}),
+      ...(input.branchId ? { branch_id: input.branchId } : {}),
+      ...(input.mergeContent !== undefined ? { maintenance_merge_content: input.mergeContent, maintenance_background_only: true } : {}),
       status: "pending",
       reason: input.reason,
+      ...(input.l2Append ? { l2_append: structuredClone(input.l2Append) } : {}),
+      ...(input.l2Restructure ? { l2_restructure: structuredClone(input.l2Restructure), maintenance_background_only: true } : {}),
       created_at: now,
       updated_at: now,
-      evidence_refs: evidence.map((item) => item.ref),
+      evidence_refs: [...new Set([...evidence.map((item) => item.ref), ...(input.l2Restructure?.base_evidence_refs ?? [])])],
       evidence_hash: evidenceHash,
       evidence
     };
-    store.jobs.push(job);
-    await saveStore(input.stateRoot, store);
+    if (!input.dryRun) {
+      store.jobs.push(job);
+      await saveStore(input.stateRoot, store);
+    }
     return { created: true, job: structuredClone(job) };
   });
 }
@@ -790,6 +913,7 @@ function normalizeConfig(value: Partial<DistillationConfig>): DistillationConfig
   const idleMinutes = Number.isFinite(value.idle_minutes) ? Math.trunc(value.idle_minutes!) : 30;
   return {
     auto_enabled: value.auto_enabled === true,
+    ...(Array.isArray(value.promotion_review_accounts) ? { promotion_review_accounts: [...new Set(value.promotion_review_accounts.filter(x => typeof x === "string" && x.trim()))] } : {}),
     turn_threshold: Math.max(2, Math.min(100, threshold)),
     idle_minutes: Math.max(5, Math.min(1440, idleMinutes)),
     ...(typeof value.auto_since === "string" && Number.isFinite(Date.parse(value.auto_since))
@@ -806,9 +930,11 @@ async function mutateJob(
 ): Promise<void> {
   await withMutation(stateRoot, async () => {
     const store = await loadStore(stateRoot);
-    const job = store.jobs.find((item) => item.job_id === jobId && item.account_id === accountId);
-    if (!job) throw new Error("distillation job not found for account");
+    const index = store.jobs.findIndex((item) => item.job_id === jobId && item.account_id === accountId);
+    if (index < 0) throw new Error("distillation job not found for account");
+    const job = structuredClone(store.jobs[index]!);
     fn(job);
+    store.jobs[index] = job;
     await saveStore(stateRoot, store);
   });
 }
@@ -818,11 +944,31 @@ function storePath(root: string): string {
 }
 
 async function loadStore(root: string): Promise<JobStore> {
-  try {
-    return parseStore(JSON.parse(await readFile(storePath(root), "utf8")));
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException)?.code === "ENOENT") return { version: 2, jobs: [] };
-    throw error;
+  return currentBatch(root)?.store ?? structuredClone((await cachedStore(root)).store);
+}
+
+interface CachedStore { signature: string; store: JobStore; legacy?: string }
+const jobStores = new Map<string, CachedStore>();
+async function cachedStore(root: string): Promise<CachedStore> {
+  const path = storePath(root);
+  for (;;) {
+    const signature = await distillationJobsSignature(root);
+    const cached = jobStores.get(path);
+    if (cached?.signature === signature) return cached;
+    let contents: string;
+    try { contents = await readFile(path, "utf8"); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+      if (signature !== "missing") continue;
+      return { signature, store: { version: 2, jobs: [] } };
+    }
+    // Do not label a pre-rename read with the replacement file's signature.
+    if (signature !== await distillationJobsSignature(root)) continue;
+    jobStoreHooks?.parse?.(path);
+    const raw = JSON.parse(contents), store = parseStore(raw);
+    const next = { signature, store, ...(raw.version === 1 ? { legacy: contents } : {}) };
+    jobStores.set(path, next);
+    return next;
   }
 }
 
@@ -853,7 +999,7 @@ function parseStore(raw: unknown): JobStore {
           typeof item.timestamp === "string")) throw invalid();
       return migrateV1Job(job);
     }
-    if (!["l2", "l3", "l4", "skill"].includes(job.target as string) ||
+    if (!["l2", "l3", "l4", "global_state", "skill"].includes(job.target as string) ||
         !["account", "project"].includes(job.scope as string) ||
         typeof job.evidence_hash !== "string" ||
         !Array.isArray(job.evidence_refs) || !job.evidence_refs.every((ref) => typeof ref === "string") ||
@@ -920,32 +1066,113 @@ function migrateV1Job(item: Record<string, unknown>): DistillationJob {
 }
 
 async function saveStore(root: string, store: JobStore): Promise<void> {
-  await atomicJson(storePath(root), store);
+  const batch = currentBatch(root);
+  if (!batch) throw new Error("job store mutation requires its ledger lock");
+  batch.store = store; batch.dirty = true; batch.snapshot = undefined;
 }
 
 async function atomicJson(path: string, value: unknown): Promise<void> {
   await mkdir(dirname(path), { recursive: true, mode: 0o700 });
   const temporary = `${path}.tmp-${process.pid}-${randomUUID()}`;
-  await writeFile(temporary, JSON.stringify(value, null, 2) + "\n", { mode: 0o600 });
-  await rename(temporary, path);
+  try {
+    await writeFile(temporary, JSON.stringify(value, null, 2) + "\n", { mode: 0o600, flush: true });
+    await rename(temporary, path);
+  } catch (error) {
+    await unlink(temporary).catch(() => {});
+    throw error;
+  }
 }
 
 async function withMutation<T>(stateRoot: string, run: () => Promise<T>): Promise<T> {
-  return withFileMutationLock(storePath(stateRoot), async () => {
-    let contents: string | undefined;
-    try {
-      contents = await readFile(storePath(stateRoot), "utf8");
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException)?.code !== "ENOENT") throw error;
-    }
-    if (contents !== undefined) {
-      const raw = JSON.parse(contents) as unknown;
-      const store = parseStore(raw);
-      if ((raw as { version: number }).version === 1) {
-        await writeFile(`${storePath(stateRoot)}.v1-backup-${Date.now()}`, contents, { flag: "wx", mode: 0o600 });
-        await saveStore(stateRoot, store);
+  return withDistillationJobsBatch(stateRoot, async () => {
+    const batch = currentBatch(stateRoot)!;
+    if (!batch.store) {
+      const cached = await cachedStore(stateRoot);
+      batch.store = structuredClone(cached.store);
+      if (cached.legacy !== undefined) {
+        await writeFile(`${storePath(stateRoot)}.v1-backup-${Date.now()}`, cached.legacy, { flag: "wx", mode: 0o600, flush: true });
+        batch.dirty = true;
       }
     }
     return run();
+  });
+}
+
+interface JobBatch {
+  path: string;
+  store?: JobStore;
+  snapshot?: { signature: string; jobs: DistillationJob[] };
+  dirty: boolean;
+  release?: () => Promise<void>;
+}
+const jobBatch = new AsyncLocalStorage<JobBatch | undefined>();
+function currentBatch(root: string): JobBatch | undefined {
+  const batch = jobBatch.getStore();
+  return batch?.path === storePath(root) && batch.release ? batch : undefined;
+}
+async function acquireBatch(batch: JobBatch): Promise<void> {
+  let acquired!: () => void, failed!: (error: unknown) => void, release!: () => void;
+  const ready = new Promise<void>((resolve, reject) => { acquired = resolve; failed = reject; });
+  const held = new Promise<void>(resolve => { release = resolve; });
+  const lock = withFileMutationLock(batch.path, async () => { acquired(); await held; });
+  void lock.catch(failed);
+  await ready;
+  batch.release = async () => { batch.release = undefined; release(); await lock; };
+}
+/** One ledger write for local mutations; callers acquire offer/card locks first. */
+export async function withDistillationJobsBatch<T>(root: string, run: () => Promise<T>): Promise<T> {
+  if (currentBatch(root)) return run();
+  const batch: JobBatch = { path: storePath(root), dirty: false };
+  await acquireBatch(batch);
+  return jobBatch.run(batch, async () => {
+    try { return await run(); }
+    finally {
+      try { await flushDistillationJobs(root); }
+      finally { await batch.release?.(); }
+    }
+  });
+}
+export async function flushDistillationJobs(root: string): Promise<void> {
+  const batch = currentBatch(root);
+  if (!batch?.dirty || !batch.store) return;
+  await atomicJson(batch.path, batch.store);
+  batch.dirty = false; batch.snapshot = undefined;
+  jobStoreHooks?.write?.(batch.path);
+  jobStores.set(batch.path, { signature: await distillationJobsSignature(root), store: structuredClone(batch.store) });
+  jobSnapshots.delete(batch.path);
+}
+/** Core/branch merges retain their durable fences and must not hold the ledger lock across I/O. */
+export async function outsideDistillationJobsBatch<T>(root: string, run: () => Promise<T>): Promise<T> {
+  const batch = currentBatch(root);
+  if (!batch) return run();
+  await flushDistillationJobs(root);
+  await batch.release!();
+  try { return await jobBatch.run(undefined, run); }
+  finally {
+    batch.store = undefined; batch.snapshot = undefined;
+    await acquireBatch(batch);
+  }
+}
+
+/** Maintenance claims and internal merge leases use the same ledger lock as legacy workers. */
+export async function mutateMaintenanceJob<T>(stateRoot: string, accountId: string, jobId: string,
+  change: (job: DistillationJob) => T): Promise<T> {
+  let result!: T;
+  await mutateJob(stateRoot, accountId, jobId, job => { result = change(job); });
+  return result;
+}
+
+/** Atomically fence/claim all coalesced parents; callbacks must validate every parent before mutation. */
+export async function mutateMaintenanceJobs<T>(stateRoot: string, accountId: string, jobIds: string[], change: (jobs: DistillationJob[]) => T): Promise<T> {
+  return withMutation(stateRoot, async () => {
+    const store = await loadStore(stateRoot);
+    const jobs = jobIds.map(id => store.jobs.find(j => j.account_id === accountId && j.job_id === id));
+    if (jobs.some(j => !j)) throw new Error("distillation job not found for account");
+    const changed = structuredClone(jobs) as DistillationJob[];
+    const result = change(changed);
+    const replacements = new Map(changed.map(job => [job.job_id, job]));
+    store.jobs = store.jobs.map(job => job.account_id === accountId ? replacements.get(job.job_id) ?? job : job);
+    await saveStore(stateRoot, store);
+    return result;
   });
 }

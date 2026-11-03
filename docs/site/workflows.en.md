@@ -1,8 +1,8 @@
 # Everyday workflows
 
-The workflows below assume you have installed your own Memhub instance. Public examples are fictional; only your authenticated workspace or connector can access and continue your own projects.
+The workflows below assume you have installed your own LITSAN instance. Public examples are fictional; only your authenticated workspace or connector can access and continue your own projects.
 
-Memhub should reduce the amount of background you need to repeat. The normal flow is: confirm scope, see next work and recent continuity, continue the project, and trace deeper only when needed.
+LITSAN should reduce the amount of background you need to repeat. The normal flow is: confirm scope, see next work and recent continuity, continue the project, and trace deeper only when needed.
 
 ## Confirm scope before work
 
@@ -23,6 +23,8 @@ A project registry entry should have a stable slug and a description useful for 
 ## Manage TODOs
 
 Keep TODO text executable: “rerun Windows installer smoke and record the result,” not “continue optimization.” Mark completed or abandoned work so Overview remains actionable. If a TODO becomes a stable rule, let it enter chronology/profile through evidence rather than keeping it forever as a pending action.
+
+For `litsan_todo` add, generate a unique UUID first and pass it as `todo_id`. If the reply is lost, retry with the same project, UUID, and text: the original TODO is returned without changing its status. Reusing that UUID for different text or another project in the same account is rejected. Without `todo_id`, each add creates a new TODO; read the list before retrying.
 
 ## Use the four memory layers
 
@@ -50,23 +52,21 @@ Use All Projects to decide where attention belongs: pending work first, then rec
 
 ## Progressive disclosure
 
-Long-memory retrieval follows `discover → contextualize/hydrate` instead of eagerly injecting every matched body. `memmy_context` discovers compact L2/L3/L4 candidates and, when the current revision can be proven, returns an exact `evidenceRef`. Load only the selected full revision with `memhub_memory action=load`; load Skill bodies separately with `memhub_skill action=load`.
+Long-memory retrieval follows `discover → contextualize/hydrate` instead of eagerly injecting every matched body. `litsan_context` discovers compact L2/L3/L4 candidates and, when the current revision can be proven, returns an exact `evidenceRef`. Load only the selected full revision with `litsan_memory action=load`; load Skill bodies separately with `litsan_skill action=load`.
 
-`memhub_memory` accepts the exact immutable revision ref returned by context, such as `l2:<memory-id>:<revision-id>`. Do not reconstruct “latest” from a stable Memory ID. Hydration records estimated token cost and reuse count so usefulness can be measured by actual reuse rather than stored volume.
+`litsan_memory` accepts the exact immutable revision ref returned by context, such as `l2:<memory-id>:<revision-id>`. Do not reconstruct “latest” from a stable Memory ID. Hydration records estimated token cost and reuse count so usefulness can be measured by actual reuse rather than stored volume.
 
-## Visual chronology, revision history, and evidence
+## Project map, timeline, and evidence
 
-The User/Admin **Visual map** is a read-only projection of Memory Core plus the distillation revision ledger, not another memory database. It places current L2/L3/L4, historical revisions, L2 timeline events, Skills, and evidence references in one map. Historical revisions are visually distinct; revision edges show supersession and evidence edges preserve exact provenance. Selecting a node exposes its project, time, exact revision ref, and evidence before routing management back to the canonical source layer.
+Choose a project and open **Project map** in the User or Admin console. The architecture map shows its domains, capabilities, processes, methods, mechanisms and their relationships; double-click a node for its description and available evidence. This is a derived architecture view, not a new memory layer or separate Current Truth.
 
-The console ships a lightweight SVG renderer and can export either a standalone HTML snapshot or an Archify-compatible lifecycle IR. The IR is intended for Archify's richer viewer/rendering workflow; exported diagrams remain disposable communication artifacts and never become Current Truth.
+The timeline below uses time as its horizontal axis and shows a mainline with topic-grouped branches. Processed milestones come from the timeline digest; unprocessed history is labeled as a preview. Topic links do not claim actual Git forks or merges. Double-click an event for its details and sources. Language selection uses existing bilingual text; missing translations fall back to the original, and the architecture map shows a notice.
 
-When an all-project or otherwise broad scope matches many nodes, the in-browser graph is intentionally bounded rather than laying out hundreds of nodes and relations at once. Once the display budget is exceeded, the UI samples across L2/L3/L4, Skill, Event, and Evidence lanes while prioritizing current memory/current revisions before timeline events, historical revisions, and evidence nodes; relation edges are balanced across evidence, revision, and chronology. The console must show matching and displayed counts for both nodes and relations; truncation must never be silent. Select a concrete project or narrow the search when a complete in-browser graph is required. This sampling affects only the projection UI and does not modify the API payload, Memory Core, revision ledger, or any canonical artifact.
-
-The two export actions therefore have different semantics. The Archify IR export serializes the complete lifecycle IR from the current API payload. The standalone HTML export serializes only the graph actually rendered in the browser and records its coverage. If the browser view is bounded, the HTML must state the displayed-versus-matching counts for both nodes and relations rather than implying that a partial snapshot is complete.
+**Export current flow** saves a snapshot of the rendered project map for communication and inspection. It does not write back to architecture or memory. To verify a claim, inspect the original evidence and exact revision linked from its node or event.
 
 ## Consolidation / reflection
 
-When a project accumulates multiple L2 or L3 revisions, `memhub_distill action=consolidate` can produce a read-only consolidation plan. The workflow borrows the useful part of EverOS Reflection without adding another layer: select historical revisions, recover their canonical upstream evidence, let the connected harness merge/re-extract a compact replacement, then submit it through the existing governed writer to the same canonical project timeline/profile artifact.
+When a project accumulates multiple L2 or L3 revisions, `litsan_distill action=consolidate` can produce a read-only consolidation plan. The workflow borrows the useful part of EverOS Reflection without adding another layer: select historical revisions, recover their canonical upstream evidence, let the connected harness merge/re-extract a compact replacement, then submit it through the existing governed writer to the same canonical project timeline/profile artifact.
 
 Old revisions remain traceable history. The plan does not invent the replacement content and does not bypass scope/evidence validation. With insufficient evidence or only one revision, it remains ineligible.
 
@@ -83,7 +83,7 @@ Clean up stale TODOs, preserve final chronology and stable rules, and avoid logi
 - Skills reuse process, not business facts.
 - Failed processing is visible and actionable.
 - Full bodies are hydrated only for selected exact revisions rather than every recall hit.
-- Visual map distinguishes current from historical revisions and traces evidence back to source.
+- Project map and timeline expose their available source evidence for inspection.
 
 ## FAQ
 

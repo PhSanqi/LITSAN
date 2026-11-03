@@ -1,5 +1,5 @@
 [Unit]
-Description=Memhub Stack (Memory Core, Gateway, optional Bridge)
+Description=LITSAN Stack (Memory Core, Gateway, optional Bridge)
 Requires=memhub-core.service memhub.service
 After=memhub-core.service memhub.service
 

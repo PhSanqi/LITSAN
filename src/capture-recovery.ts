@@ -1,3 +1,6 @@
+import type { AccountId, UserId } from "./contracts/identity.js";
+import type { ProjectReader } from "./core/ports/projects.js";
+import type { TurnSessionWriter } from "./core/ports/memory.js";
 import {
   isCaptureIngested,
   recoverCaptureIndex,
@@ -8,7 +11,13 @@ import {
 import { ingestCaptureIntoMemory } from "./capture-ingest.js";
 import { discoverDistillationJobs } from "./distillation-discovery.js";
 import { MemoryCoreHttpError } from "./local-memory-client.js";
-import type { MemhubRuntime } from "./runtime.js";
+
+export interface CaptureRecoveryDeps {
+  accountId: AccountId;
+  projects: Pick<ProjectReader, "resolve">;
+  userId: UserId;
+  memoryClient: TurnSessionWriter;
+}
 
 type CaptureRecoveryErrorKind = "core_http_error" | "invalid_capture" | "ingest_error" | "ingest_not_completed";
 
@@ -19,7 +28,7 @@ type CaptureRecoveryErrorKind = "core_http_error" | "invalid_capture" | "ingest_
  */
 export async function recoverCaptureIngest(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: CaptureRecoveryDeps;
   eventId: string;
   projectId: string;
   dryRun: boolean;
@@ -80,7 +89,7 @@ export async function recoverCaptureIngest(input: {
  */
 export async function reconcileFrozenCaptureIngests(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: CaptureRecoveryDeps;
 }): Promise<{
   scanned: number;
   frozen: number;

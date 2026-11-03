@@ -5,26 +5,26 @@ import { basename, join, normalize } from "node:path";
 const APP_SERVER_REQUEST_TIMEOUT_MS = 10_000;
 const APP_SERVER_CLOSE_TIMEOUT_MS = 1_000;
 const MAX_STDERR_LENGTH = 8_192;
-const MEMMY_HOOK_EVENTS = new Set([
+const LITSAN_HOOK_EVENTS = new Set([
     "userPromptSubmit",
     "stop",
     "sessionStart",
     "postCompact",
     "sessionEnd",
 ]);
-/** Trusts only the five user-level Memmy hooks that Codex discovered from hooks.json. */
-export async function trustMemmyCodexHooks(options) {
+/** Trusts only the five user-level LITSAN hooks that Codex discovered from hooks.json. */
+export async function trustLitsanCodexHooks(options) {
     const client = createCodexAppServerClient(options);
     try {
         await client.request("initialize", {
             clientInfo: {
-                name: "memmy",
-                title: "Memmy",
+                name: "litsan",
+                title: "LITSAN",
                 version: "1"
             }
         });
         client.notify("initialized", {});
-        const hooks = selectMemmyHooks(await listHooks(client, options.codexHomeDirectory), options.hooksFilePath, options.hookCommand);
+        const hooks = selectLitsanHooks(await listHooks(client, options.codexHomeDirectory), options.hooksFilePath, options.hookCommand);
         const trustState = Object.fromEntries(hooks.map((hook) => [
             hook.key,
             { trusted_hash: hook.currentHash, enabled: true }
@@ -41,7 +41,7 @@ export async function trustMemmyCodexHooks(options) {
         for (const hook of hooks) {
             const verified = verifiedHooks.find((candidate) => candidate.key === hook.key);
             if (!verified || verified.currentHash !== hook.currentHash || verified.trustStatus !== "trusted" || !verified.enabled) {
-                throw new Error(`Codex did not persist trust for the Memmy ${hook.eventName} hook`);
+                throw new Error(`Codex did not persist trust for the LITSAN ${hook.eventName} hook`);
             }
         }
     }
@@ -68,17 +68,17 @@ async function listHooks(client, cwd) {
     }
     return hooks;
 }
-function selectMemmyHooks(hooks, hooksFilePath, hookCommand) {
+function selectLitsanHooks(hooks, hooksFilePath, hookCommand) {
     const sourcePath = normalize(hooksFilePath);
     const selected = hooks.filter((hook) => hook.source === "user" &&
         !hook.isManaged &&
         hook.handlerType === "command" &&
         normalize(hook.sourcePath) === sourcePath &&
         hook.command === hookCommand &&
-        MEMMY_HOOK_EVENTS.has(hook.eventName));
+        LITSAN_HOOK_EVENTS.has(hook.eventName));
     const selectedEvents = new Set(selected.map((hook) => hook.eventName));
-    if (selected.length !== MEMMY_HOOK_EVENTS.size || selectedEvents.size !== MEMMY_HOOK_EVENTS.size) {
-        throw new Error("Codex did not discover every installed Memmy hook");
+    if (selected.length !== LITSAN_HOOK_EVENTS.size || selectedEvents.size !== LITSAN_HOOK_EVENTS.size) {
+        throw new Error("Codex did not discover every installed LITSAN hook");
     }
     return selected;
 }

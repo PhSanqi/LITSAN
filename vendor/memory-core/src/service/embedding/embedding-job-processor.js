@@ -10,7 +10,7 @@ import { clip, firstLine } from "../../utils/text.js";
 import { retrievalDocumentSourceHash, traceMetaFromMemory } from "../../algorithm/plugin-algorithms.js";
 import { kindFromMemory } from "../../storage/repositories.js";
 import { stableHash } from "../../utils/id.js";
-import { isMemmyRecallToolName } from "../../utils/memmy-context-tags.js";
+import { isLitsanRecallToolName } from "../../utils/litsan-context-tags.js";
 import { firstRealSummary, importStatusTags, isImportSummaryPlaceholder, memoryHasImportPipeline, memoryNeedsImportSummary, updateImportPipelineStatus, updateTraceImportSummary } from "../import/import-job-processor.js";
 import { IMPORT_DEFAULT_ALPHA, IMPORT_DEFAULT_PRIORITY, IMPORT_DEFAULT_VALUE } from "../import/memory-import-pipeline.js";
 import { namespaceForMemory } from "../namespace/namespace-scope.js";
@@ -449,7 +449,7 @@ function hasVerifiedDurableToolObservation(memory, trace, dynamicCurrent) {
         : {};
     if (captureDecision.original_evidence_status !== "verified")
         return false;
-    return trace.toolCalls.some((call) => !isMemmyRecallToolName(call.name));
+    return trace.toolCalls.some((call) => !isLitsanRecallToolName(call.name));
 }
 function uniq(values) {
     return [...new Set(values)];

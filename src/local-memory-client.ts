@@ -1,3 +1,5 @@
+import { brand } from "./brand.mjs";
+export type { RecallHit } from "./contracts/retrieval.js";
 export interface RuntimeNamespace {
   source: string;
   profileId: string;
@@ -7,21 +9,6 @@ export interface RuntimeNamespace {
   sessionKey?: string;
   userId?: string;
   tenantId?: string;
-}
-
-export interface RecallHit {
-  id: string;
-  kind: string;
-  memoryLayer: string;
-  status: string;
-  title?: string;
-  snippet: string;
-  score: number;
-  tags: string[];
-  createdAt?: string;
-  updatedAt?: string;
-  source: string;
-  retrievalRoutes?: string[];
 }
 
 export interface LocalMemoryRestClientOptions {
@@ -39,7 +26,7 @@ export class MemoryCoreHttpError extends Error {
 }
 
 /**
- * Minimal Memhub client for the loopback Memory Core API.
+ * Minimal LITSAN client for the loopback Memory Core API.
  * Keeping this client local avoids linking the MCP gateway to Memory's
  * internal package graph.
  */
@@ -68,7 +55,7 @@ export class LocalMemoryRestClient {
     if (reconcileMemoryAdd.getStore()) {
       const outcome = await this.request("/api/v1/memory/add/reconcile", request) as { outcome: string; result?: unknown };
       if (outcome.outcome !== "committed") {
-        throw new Error("frozen Core commit outcome is unknown; use memhub_distill reconcile_commit to inspect or explicitly abandon it; no write was resent");
+        throw new Error("frozen Core commit outcome is unknown; use litsan_distill reconcile_commit to inspect or explicitly abandon it; no write was resent");
       }
       return outcome.result;
     }
@@ -121,7 +108,7 @@ export class LocalMemoryRestClient {
           method,
           headers: {
             "content-type": "application/json",
-            ...(viewer ? { "x-memmy-viewer": "1" } : {}),
+            ...(viewer ? { [`${brand.legacyHeaderPrefixes[0]}viewer`]: "1" } : {}), // Keep x-memmy-* for older Core during gateway-first deploys.
             ...(this.token ? { authorization: `Bearer ${this.token}` } : {})
           },
           ...(body ? { body: JSON.stringify(body) } : {}),
@@ -162,7 +149,7 @@ export function assertLoopbackMemoryEndpoint(endpoint: string): void {
     octets.map(Number).every((value) => value >= 0 && value <= 255) &&
     Number(octets[0]) === 127
   ) return;
-  throw new Error(`Memhub refuses non-loopback Memory Core endpoint: ${url.origin}`);
+  throw new Error(`LITSAN refuses non-loopback Memory Core endpoint: ${url.origin}`);
 }
 
 function safeJson(text: string): unknown {

@@ -1,3 +1,4 @@
+import { defaultLitsanHome } from "../utils/litsan-compat.js";
 import { hasOption, isRecord, optionBoolean, optionString, optionValues, parseArgs, parseStringArray, readBodyObject, requireValue } from "./args.js";
 import { sendRequest } from "./http.js";
 import { renderCliOutput } from "./render/index.js";
@@ -5,7 +6,7 @@ import { initMemoryCli, installMemoryCli, upgradeMemoryCli } from "./setup.js";
 import { DEFAULT_MEMORY_URL, loadCliMemoryConfig } from "./config.js";
 import { PROJECT_VERSION } from "./project-version.js";
 import { currentInstalledRuntime, repairInstalledWindowsMemoryService, startInstalledMemoryService, stopInstalledMemoryService } from "./runtime-installer.js";
-const CLI_NAME = "memmy-memory";
+const CLI_NAME = "litsan-memory";
 const COMPACT_GET_TOOL_FIELD_CHARS = 1200;
 export async function runCommand(context) {
     const parsed = parseArgs(context.argv);
@@ -30,11 +31,11 @@ export async function runCommand(context) {
         return upgradeMemoryCli(setupOptions(parsed));
     }
     if (words[0] === "stop") {
-        const home = optionString(options, "home") ?? "~/.memmy";
+        const home = optionString(options, "home") ?? defaultLitsanHome();
         return (context.stopInstalledService ?? stopInstalledMemoryService)(home);
     }
     if (words[0] === "service") {
-        const home = optionString(options, "home") ?? "~/.memmy";
+        const home = optionString(options, "home") ?? defaultLitsanHome();
         if (words[1] === "start")
             return startInstalledMemoryService(home);
         if (words[1] === "stop")
@@ -217,14 +218,14 @@ async function serveMemory(parsed) {
         loadCliMemoryConfig(configPath).config.endpoint ??
         DEFAULT_MEMORY_URL;
     return [
-        "memmy-memory serve is not bundled with this CLI package.",
+        "litsan-memory serve is not bundled with this CLI package.",
         "Run the local Memory service separately, or point this CLI at a cloud Memory endpoint.",
         "",
         `Current target endpoint: ${url}`,
         "",
         "Examples:",
-        "  memmy-memory health --url <memory-service-url>",
-        "  memmy-memory search \"project decisions\" --url <memory-service-url>"
+        "  litsan-memory health --url <memory-service-url>",
+        "  litsan-memory search \"project decisions\" --url <memory-service-url>"
     ].join("\n");
 }
 async function executeRequest(request, options) {
@@ -410,7 +411,7 @@ function requestOptions(parsed, fetchImpl) {
     const userId = userIdOption(parsed) ?? loadCliMemoryConfig(configPath).config.userId;
     const headers = {};
     if (userId)
-        headers["x-memmy-user-id"] = userId;
+        headers["x-litsan-user-id"] = userId;
     return {
         url: optionString(parsed.options, "url"),
         token: optionString(parsed.options, "token"),
@@ -464,7 +465,7 @@ function setupOptions(parsed) {
         legacyRoot: optionString(parsed.options, "legacy-root"),
         nonInteractive: optionBoolean(parsed.options, "non-interactive"),
         skipLegacyMigration: optionBoolean(parsed.options, "skip-legacy-migration"),
-        memmyConfigPreexisting: optionBoolean(parsed.options, "memmy-config-preexisting"),
+        litsanConfigPreexisting: optionBoolean(parsed.options, "litsan-config-preexisting"),
         userHome: optionString(parsed.options, "user-home"),
         dshProfile: optionString(parsed.options, "dsh-profile")
     };
@@ -578,7 +579,7 @@ function helpText() {
         "  --token <token>              Memory HTTP bearer token",
         "  --user-id <id>               Memory namespace user id",
         "  --source <agent>             Calling agent/source id",
-        "  --config <path>              Memmy config path",
+        "  --config <path>              LITSAN config path",
         "  --health-check-timeout-ms <ms> Activation health timeout for Memory install",
         "  --skip-agent-skills          Initialize config without installing agent skills",
         "  --config-source <agent>      Select openclaw or hermes legacy config",

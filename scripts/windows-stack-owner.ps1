@@ -1,6 +1,6 @@
 # Only an exact, live stack owner can receive the cooperative stop request.
 # This is read-only OS verification: no process termination or lock cleanup.
-function Assert-MemhubStackProcessOwner {
+function Assert-LitsanStackProcessOwner {
   param(
     [Parameter(Mandatory)][string]$LockPath,
     [Parameter(Mandatory)][string]$NodePath,

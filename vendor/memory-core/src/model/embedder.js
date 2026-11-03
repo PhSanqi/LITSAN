@@ -1,3 +1,4 @@
+import { defaultLitsanHome, litsanEnv } from "../utils/litsan-compat.js";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
@@ -296,7 +297,7 @@ async function ensureLocalExtractor(model) {
     localExtractorPromise = (async () => {
         const mod = await import("@huggingface/transformers");
         const transformers = mod;
-        transformers.env.cacheDir = join(homedir(), ".memmy", "memory-service", "model-cache");
+        transformers.env.cacheDir = join(defaultLitsanHome(), "memory-service", "model-cache");
         transformers.env.allowLocalModels = true;
         transformers.env.allowRemoteModels = true;
         const pipelineOptions = {
@@ -327,7 +328,7 @@ function resolveEmbeddedEmbeddingModelRoot(model) {
 }
 function candidateEmbeddedEmbeddingModelRoots() {
     const roots = [];
-    const explicitRoot = process.env.MEMMY_EMBEDDING_MODEL_ROOT?.trim();
+    const explicitRoot = litsanEnv("LITSAN_EMBEDDING_MODEL_ROOT", process.env)?.trim();
     if (explicitRoot) {
         roots.push(explicitRoot);
     }

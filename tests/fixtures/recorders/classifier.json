@@ -1,0 +1,13 @@
+[
+  {"name":"task completion","prompt":"<task-notification>\n<task-id>abc</task-id>\n<status>completed</status>\n</task-notification>","origin":"automation","trigger":"task_notification"},
+  {"name":"side session","prompt":"<side-sessions-event>Session finished; event_id=l1_child123</side-sessions-event>","origin":"automation","trigger":"side_session_note"},
+  {"name":"CI monitor","prompt":"<ci-monitor-event>Build passed</ci-monitor-event>","origin":"automation","trigger":"ci_event"},
+  {"name":"autonomous loop","prompt":"<<autonomous-loop iteration=2>>\nContinue checking.","origin":"automation","trigger":"scheduled_wakeup"},
+  {"name":"scheduled wakeup","prompt":"<scheduled-wakeup reason=\"poll\">check status</scheduled-wakeup>","origin":"automation","trigger":"scheduled_wakeup"},
+  {"name":"session message","prompt":"<cross-session-message from=\"local_parent-123\">Please review.</cross-session-message>","origin":"agent","trigger":"session_message","initiator":{"session_id":"local_parent-123"}},
+  {"name":"delegated task","prompt":"Task (from the session that started this one)\nImplement the adapter.","origin":"agent","trigger":"delegate"},
+  {"name":"delegated background","prompt":"Background (from the session that started this one)\nHere is the context.","origin":"agent","trigger":"delegate"},
+  {"name":"empty reminders","prompt":"<system-reminder>context</system-reminder>\n<system-reminder>more context</system-reminder> ","skip":true},
+  {"name":"ordinary user","prompt":"<system-reminder><task-notification>ignored</task-notification></system-reminder>\nPlease fix the parser.","origin":"user","trigger":"user_prompt","userText":"Please fix the parser."},
+  {"name":"quoted notification","prompt":"Explain this example:\n```xml\n<task-notification>finished</task-notification>\n```","origin":"user","trigger":"user_prompt"}
+]

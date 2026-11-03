@@ -1,11 +1,24 @@
+import type { AccountId, UserId } from "./contracts/identity.js";
+import type { ProjectReader } from "./core/ports/projects.js";
+import type { MemoryViewerReader } from "./core/ports/memory.js";
+import type { ArchitectureReader } from "./core/ports/architecture.js";
+import type { ProjectArchitectureSource } from "./architecture-source.js";
 import type { ServerResponse } from "node:http";
 import type { listAccounts } from "./auth.js";
 import {
   readMemoryControlData,
   type MemoryControlKind
 } from "./memory-control-plane.js";
-import type { MemhubRuntime } from "./runtime.js";
+
 import { countUnassignedCaptures, listUnassignedCaptures } from "./capture-project-assignments.js";
+
+export interface MemoryControlHttpDeps {
+  accountId: AccountId;
+  projects: ProjectReader;
+  userId: UserId;
+  memoryClient: MemoryViewerReader;
+  architecture: Pick<ArchitectureReader, "inspectProjectCognitiveMap"> & Partial<Pick<ProjectArchitectureSource, "getProjectCodeEvidence" | "inspectProjectCodeEvidence" | "getProjectCodeCitations">>;
+}
 
 type Account = Awaited<ReturnType<typeof listAccounts>>[number];
 
@@ -15,7 +28,7 @@ export async function handleMemoryControlRead(input: {
   response: ServerResponse;
   url: URL;
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: MemoryControlHttpDeps;
   accounts: Account[];
   selectedAccount: Account;
   adminView: boolean;
@@ -50,10 +63,10 @@ export async function handleMemoryControlRead(input: {
       }));
     return;
   }
-  const allowedKinds = new Set<MemoryControlKind>([
-    "overview", "projects", "l1", "l2", "l3", "l4", "skills", "visualization", "processing"
+  const allowedKinds = new Set<string>([
+    "overview", "projects", "l1", "l2", "l3", "l4", "global_state", "skills", "visualization", "processing", "code_evidence"
   ]);
-  if (!allowedKinds.has(kindRaw as MemoryControlKind)) {
+  if (!allowedKinds.has(kindRaw)) {
     response.writeHead(400, { "content-type": "application/json", "cache-control": "no-store" })
       .end(JSON.stringify({ error: "unsupported_memory_view" }));
     return;
@@ -68,6 +81,48 @@ export async function handleMemoryControlRead(input: {
       .end(JSON.stringify({ error: "project_not_found" }));
     return;
   }
+  if (kindRaw === "code_evidence") {
+    // Project folders are currently discovered by name, not by account ACL.
+    if (selectedAccount.role !== "admin" || input.callerAccountId !== runtime.accountId) {
+      response.writeHead(403, { "content-type": "application/json" }).end(JSON.stringify({ error: "code_scan_admin_only" }));
+      return;
+    }
+    if (!projectId) {
+      response.writeHead(400, { "content-type": "application/json" }).end(JSON.stringify({ error: "project_required" }));
+      return;
+    }
+    const identity = { accountId: runtime.accountId, projectId };
+    const [inspection, document] = await Promise.all([
+      runtime.architecture.inspectProjectCodeEvidence
+        ? runtime.architecture.inspectProjectCodeEvidence(identity)
+        : runtime.architecture.getProjectCodeEvidence?.(identity).then(snapshot => snapshot ? { snapshot, files: null } : null) ?? null,
+      runtime.architecture.inspectProjectCognitiveMap(identity)
+    ]);
+    const snapshot = inspection?.snapshot;
+    if (!snapshot) {
+      response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ project_id: projectId, available: false }));
+      return;
+    }
+    const map = document.map;
+    const refs = [...new Set((map ? [
+      ...map.nodes.flatMap(node => [...node.evidence_refs, ...(node.facets?.layer_evidence_refs ?? []), ...(node.facts ?? []).flatMap(fact => fact.evidence_refs)]),
+      ...map.edges.flatMap(edge => edge.evidence_refs)
+    ] : []).filter(ref => ref.startsWith(`code:${projectId}:`)))];
+    // Bound saved-snapshot reads; absence from a partial scan is never proof of deletion.
+    const checkedRefs = refs.slice(0, 200);
+    const saved = await runtime.architecture.getProjectCodeCitations?.({ ...identity, refs: checkedRefs }) ?? [];
+    const citations = new Map(saved.map(item => [item.ref, item]));
+    const current = new Map(snapshot.items.map(item => [item.ref, item]));
+    const emitted = { module: 0, dependency: 0, constant: 0, layer: 0 };
+    for (const item of snapshot.items) emitted[item.kind]++;
+    response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({
+      project_id: projectId, available: true, revision: snapshot.revision, commit: snapshot.commit ?? null,
+      truncated: snapshot.truncated, files: inspection?.files ?? null, emitted, references_total: refs.length, references_checked: checkedRefs.length,
+      citations: checkedRefs.map(ref => ({ ref, status: current.has(ref) ? "same_snapshot" : "different_or_unscanned",
+        ...(citations.has(ref) || current.has(ref) ? { item: citations.get(ref) ?? current.get(ref) } : {}) }))
+    }));
+    return;
+  }
   const payload = await readMemoryControlData({
     stateRoot,
     runtime,
@@ -75,6 +130,7 @@ export async function handleMemoryControlRead(input: {
     projects,
     includeOverviewItems: !adminView,
     includeIncomplete: url.searchParams.get("include_incomplete") === "1",
+    includeArchitectureDocs: kindRaw === "visualization",
     ...(projectId ? { projectId } : {})
   });
   response.writeHead(200, { "content-type": "application/json", "cache-control": "no-store" })

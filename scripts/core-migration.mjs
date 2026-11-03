@@ -17,7 +17,7 @@ import Database from "better-sqlite3";
 import { resolveCoreState } from "../dist/state-root.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const memhubDir = resolve(here, "..");
+const litsanDir = resolve(here, "..");
 
 const argv = process.argv.slice(2);
 const command = argv.shift() ?? "preflight";
@@ -31,9 +31,9 @@ const cleanConfig = join(core.coreDir, "config.yaml");
 const dbPath = resolve(args.db ?? (existsSync(legacyDb) ? legacyDb : cleanDb));
 const configPath = resolve(args.config ?? (existsSync(legacyConfig) ? legacyConfig : cleanConfig));
 const migrationRoot = resolve(args["state-root"] ?? join(core.stateRoot, "core-migrations"));
-const memoryVendor = resolve(args["memory-vendor"] ?? join(memhubDir, "vendor", "memory-core", "src"));
-const agentSourceVendor = resolve(args["agent-source-vendor"] ?? join(memhubDir, "vendor", "agent-source-core"));
-const vendorManifestPath = resolve(args["vendor-manifest"] ?? join(memhubDir, "vendor", "manifest.json"));
+const memoryVendor = resolve(args["memory-vendor"] ?? join(litsanDir, "vendor", "memory-core", "src"));
+const agentSourceVendor = resolve(args["agent-source-vendor"] ?? join(litsanDir, "vendor", "agent-source-core"));
+const vendorManifestPath = resolve(args["vendor-manifest"] ?? join(litsanDir, "vendor", "manifest.json"));
 
 if (command === "check") {
   await checkRuntime();

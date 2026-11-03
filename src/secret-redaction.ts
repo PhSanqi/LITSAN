@@ -1,9 +1,9 @@
 /**
- * Memhub-owned inline secret redaction for the capture path.
+ * LITSAN-owned inline secret redaction for the capture path.
  *
  * The vendored agent-source redactor is deliberately not reused: its generic
  * base64 rule would also replace 32-hex artifact ids, git SHAs, sha256 evidence
- * refs and event ids that Memhub depends on. Here only keyed rules and very
+ * refs and event ids that LITSAN depends on. Here only keyed rules and very
  * large (>= 4096 char) opaque base64 payloads are removed, and nothing that is
  * pure hexadecimal is ever redacted.
  *

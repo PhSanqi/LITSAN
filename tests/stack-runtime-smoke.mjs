@@ -17,7 +17,7 @@ import {
 import { recoverCaptureIngest } from "../dist/capture-recovery.js";
 import { listDistillationJobs, setDistillationConfig } from "../dist/distillation-jobs.js";
 import { JsonProjectRegistry } from "../dist/project-registry.js";
-import { createMemhubRuntime } from "../dist/runtime.js";
+import { createLitsanRuntime } from "../dist/runtime.js";
 import { waitForService } from "../dist/service-readiness.js";
 
 const repo = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -137,7 +137,7 @@ try {
     `MEMHUB_MEMORY_URL=http://127.0.0.1:${corePort}`,
     `MEMHUB_STATE_ROOT=${controlRoot}`,
     // A public host must not disable the same runtime's loopback MCP entry.
-    "MEMHUB_PUBLIC_HOST=memhub.example.test"
+    "MEMHUB_PUBLIC_HOST=litsan.example.test"
   ].join("\n") + "\n");
 
   await new JsonProjectRegistry(join(controlRoot, "project-registry.json")).create(
@@ -198,7 +198,7 @@ try {
   await client.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${gatewayPort}/mcp`)));
   const directTurn = async (eventId, userText, assistantText) => {
     const opened = JSON.parse((await client.callTool({
-      name: "memmy_turn",
+      name: "litsan_turn",
       arguments: {
         action: "open", event_id: eventId, project: "stack-smoke", workspace_project: "stack-smoke",
         user_text: userText
@@ -206,7 +206,7 @@ try {
     })).content[0].text);
     assert.equal(opened.project_id, "stack-smoke");
     const committed = JSON.parse((await client.callTool({
-      name: "memmy_turn",
+      name: "litsan_turn",
       arguments: {
         action: "commit", event_id: eventId, project: "stack-smoke", workspace_project: "stack-smoke",
         assistant_text: assistantText
@@ -225,7 +225,7 @@ try {
   assert.equal((await listCaptureEvents(controlRoot, accountId, { eventId: "stack-real-core-turn-1" })).length, 1);
   await assertL1ClaimedExactlyOnce(["stack-real-core-turn-1", "stack-real-core-turn-2"]);
 
-  const recoveryRuntime = createMemhubRuntime({
+  const recoveryRuntime = createLitsanRuntime({
     accountId, ownerAccountId: accountId, ownerUserId: "local-user",
     memoryEndpoint: `http://127.0.0.1:${corePort}`, memoryToken: token,
     controlRoot, projectRegistryPath: join(controlRoot, "project-registry.json")

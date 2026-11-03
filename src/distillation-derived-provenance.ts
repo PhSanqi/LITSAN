@@ -51,7 +51,7 @@ export function validL3EvidenceBatch(
 
   const completedL2ByRef = new Map<string, DistillationJob>();
   for (const source of jobs) {
-    if (source.target !== "l2" || source.status !== "completed" ||
+    if (source.target !== "l2" || source.result_kind !== "l2" || source.status !== "completed" ||
         source.project_id !== child.project_id || !source.result_id?.trim() ||
         !source.result_content?.trim() || !distillationResultTimestamp(source)) continue;
     completedL2ByRef.set(completedL2EvidenceRef(source), source);
@@ -90,17 +90,36 @@ export function inspectDerivedL3Claims(
     return { state: "conflict", claims: matches, reason: "evidence_mismatch" };
   }
 
+  const completedNoops = matches.filter((job) =>
+    job.status === "completed" && job.result_kind === "noop"
+  );
+  const artifactClaims = matches.filter((job) => job.result_kind !== "noop");
   if (matches.length > 1) {
-    const completedLineage = matches.every((job) =>
-      job.status === "completed" && job.result_kind === "l3" && Boolean(job.result_id?.trim())
-    );
-    const artifactIds = new Set(matches.map((job) => job.result_id?.trim()).filter(Boolean));
-    if (!completedLineage || artifactIds.size !== 1) {
+    // A completed noop is a terminal semantic disposition for an exact queue
+    // claim, not a second durable L3 artifact. Historical stores can contain
+    // such a skipped upstream claim alongside a later manual canonical L3
+    // claim with the same evidence hash. Treat the noop as neutral only when
+    // it is truly completed; live/failed/unknown duplicate claims remain a
+    // fail-closed provenance conflict.
+    if (completedNoops.length + artifactClaims.length !== matches.length) {
       return { state: "conflict", claims: matches, reason: "multiple_l3_claims" };
+    }
+    if (artifactClaims.length > 0) {
+      const completedLineage = artifactClaims.every((job) =>
+        job.status === "completed" && job.result_kind === "l3" && Boolean(job.result_id?.trim())
+      );
+      const artifactIds = new Set(artifactClaims.map((job) => job.result_id?.trim()).filter(Boolean));
+      if (!completedLineage || artifactIds.size !== 1) {
+        return { state: "conflict", claims: matches, reason: "multiple_l3_claims" };
+      }
     }
   }
 
-  const representative = [...matches].sort((left, right) =>
+  // Prefer a real canonical artifact over a later noop when both are exact
+  // terminal claims for the same source. If there is no artifact, a noop is
+  // still a valid terminal derivation disposition.
+  const representativePool = artifactClaims.length > 0 ? artifactClaims : matches;
+  const representative = [...representativePool].sort((left, right) =>
     (distillationResultTimestamp(right) ?? right.updated_at)
       .localeCompare(distillationResultTimestamp(left) ?? left.updated_at)
   )[0]!;

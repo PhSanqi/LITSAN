@@ -1,11 +1,11 @@
-# Memhub Core migration
+# LITSAN Core migration
 
 This document describes the production-safe migration from the deployed schema-v7 Memory Core to the schema-v8 L1/L2/L3/L4/Skill model.
 
 ## Current production boundary
 
 - `memhub-core.service` runs the vendored Memory Core.
-- `memhub.service` runs the Memhub gateway/control plane.
+- `memhub.service` runs the LITSAN gateway/control plane.
 - The active SQLite path remains `~/.memmy/memory-service/memory.sqlite` for continuity.
 - The old Normify engine is not a runtime dependency. Existing project architecture Markdown is read through the lightweight compatibility reader.
 
@@ -80,12 +80,12 @@ This validates the actual migration function without touching production.
 
 The production cutover must establish one frozen baseline and prevent concurrent writes while exact migration ownership changes occur:
 
-1. stop Memhub/Core writers;
+1. stop LITSAN/Core writers;
 2. stop `memhub-core.service`;
 3. create the final preflight baseline;
 4. start the v8 Memory Core against the existing database path;
 5. verify migration/integrity;
-6. start the Memhub gateway;
+6. start the LITSAN gateway;
 7. run MCP, Control Plane and representative MCP recall/L1 smoke tests;
 8. run preservation verification before declaring the cutover complete.
 

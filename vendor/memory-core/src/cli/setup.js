@@ -1,3 +1,5 @@
+import { memoryConfigKey } from "../utils/litsan-compat.js";
+import { defaultLitsanHome } from "../utils/litsan-compat.js";
 import { mutateMemoryConfig } from "../config/writer.js";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readlinkSync, symlinkSync, unlinkSync } from "node:fs";
 import crypto from "node:crypto";
@@ -7,7 +9,7 @@ import { asRecord, expandHome, optionalString } from "./config.js";
 import { installMemoryRuntime, installedAgents } from "./runtime-installer.js";
 import { migrateLegacyLocalPlugins } from "./legacy-migration.js";
 import { installAgentAdapters } from "./adapter-installer.js";
-import { installMemmyMemorySkillForAgents, SUPPORTED_MEMMY_AGENT_IDS } from "./skill-writer/index.js";
+import { installLitsanMemorySkillForAgents, SUPPORTED_LITSAN_AGENT_IDS } from "./skill-writer/index.js";
 export async function initMemoryCli(options = {}) {
     const { home, configPath, dbPath, endpoint } = setupPaths(options);
     if (!options.dryRun) {
@@ -27,12 +29,12 @@ export async function initMemoryCli(options = {}) {
         ? []
         : options.agents?.length
             ? options.agents
-            : [...SUPPORTED_MEMMY_AGENT_IDS];
+            : [...SUPPORTED_LITSAN_AGENT_IDS];
     if (requestedAgents.length) {
-        agentInstallations = await installMemmyMemorySkillForAgents(requestedAgents, {
+        agentInstallations = await installLitsanMemorySkillForAgents(requestedAgents, {
             agentRoot: options.agents?.length ? options.agentRoot : undefined,
             assetRoot: options.assetRoot,
-            memmyConfigPath: configPath,
+            litsanConfigPath: configPath,
             dryRun: options.dryRun,
             skipUnavailable: !options.agents?.length
         });
@@ -51,7 +53,7 @@ export async function initMemoryCli(options = {}) {
 export async function installMemoryCli(options = {}) {
     const sourceInstall = options.sourcePath !== undefined || options.binPath !== undefined;
     const paths = setupPaths(options);
-    const memmyConfigExisted = options.memmyConfigPreexisting ?? existsSync(paths.configPath);
+    const litsanConfigExisted = (options.litsanConfigPreexisting ?? options.memmyConfigPreexisting) ?? existsSync(paths.configPath);
     const init = await initMemoryCli({
         ...options,
         skipAgentSkills: options.serviceOnly ? true : options.skipAgentSkills
@@ -61,7 +63,7 @@ export async function installMemoryCli(options = {}) {
         : await migrateLegacyLocalPlugins({
             configPath: paths.configPath,
             dbPath: paths.dbPath,
-            memmyConfigExisted,
+            litsanConfigExisted,
             configSource: options.configSource,
             legacyRoot: options.legacyRoot,
             nonInteractive: options.nonInteractive,
@@ -93,10 +95,10 @@ export async function installMemoryCli(options = {}) {
             ...(adapters.length ? { adapters } : {})
         };
     }
-    const home = resolve(expandHome(options.home ?? "~/.memmy"));
-    const binPath = resolve(expandHome(options.binPath ?? join(home, "bin", "memmy-memory")));
+    const home = resolve(expandHome(options.home ?? defaultLitsanHome()));
+    const binPath = resolve(expandHome(options.binPath ?? join(home, "bin", "litsan-memory")));
     const source = resolve(expandHome(options.sourcePath ?? join(process.cwd(), "dist", "src", "cli", "index.js")));
-    if (existsSync(binPath) && !options.force && !isExistingMemmyMemoryLink(binPath, source)) {
+    if (existsSync(binPath) && !options.force && !isExistingLitsanMemoryLink(binPath, source)) {
         throw new Error(`${binPath} already exists`);
     }
     if (!options.dryRun) {
@@ -121,7 +123,7 @@ export async function upgradeMemoryCli(options = {}) {
         : await migrateLegacyLocalPlugins({
             configPath: paths.configPath,
             dbPath: paths.dbPath,
-            memmyConfigExisted: existsSync(paths.configPath),
+            litsanConfigExisted: existsSync(paths.configPath),
             configSource: options.configSource,
             legacyRoot: options.legacyRoot,
             nonInteractive: options.nonInteractive,
@@ -131,7 +133,7 @@ export async function upgradeMemoryCli(options = {}) {
         ? options.agents
         : await installedAgents(options.home);
     const agentInstallations = agents.length
-        ? await installMemmyMemorySkillForAgents(agents, {
+        ? await installLitsanMemorySkillForAgents(agents, {
             agentRoot: options.agentRoot,
             assetRoot: options.assetRoot,
             dryRun: options.dryRun
@@ -171,7 +173,7 @@ function runtimePointer(value) {
         : undefined;
 }
 function setupPaths(options) {
-    const home = resolve(expandHome(options.home ?? "~/.memmy"));
+    const home = resolve(expandHome(options.home ?? defaultLitsanHome()));
     const configPath = resolve(expandHome(options.configPath ?? join(home, "config.yaml")));
     const storage = existingMemoryStorage(configPath);
     return {
@@ -189,7 +191,7 @@ function existingMemoryStorage(configPath) {
     if (!existsSync(configPath))
         return {};
     const parsed = parseYaml(readFileSync(configPath, "utf8"));
-    return asRecord(asRecord(asRecord(parsed).memmyMemory).storage);
+    return asRecord(asRecord((asRecord(parsed).litsanMemory ?? asRecord(parsed).memmyMemory)).storage);
 }
 function installedAgentIds(result) {
     if (!Array.isArray(result.agents))
@@ -201,7 +203,7 @@ function installedAgentIds(result) {
         return typeof agent === "string" ? [agent] : [];
     });
 }
-function isExistingMemmyMemoryLink(binPath, source) {
+function isExistingLitsanMemoryLink(binPath, source) {
     try {
         const stat = lstatSync(binPath);
         if (!stat.isSymbolicLink())
@@ -220,7 +222,7 @@ function isPathReady(binDir) {
 function setupMemoryConfig(config, options) {
     const app = asRecord(config.app);
     const appUserId = optionalString(app.userId);
-    config.memmyMemory = setupMemmyMemoryConfig(asRecord(config.memmyMemory), {
+    config[memoryConfigKey(config)] = setupLitsanMemoryConfig(asRecord((config.litsanMemory ?? config.memmyMemory)), {
         appUserId,
         accountMode: app.userMode === "account",
         dbPath: options.dbPath,
@@ -229,7 +231,7 @@ function setupMemoryConfig(config, options) {
         generateTokenIfMissing: options.generateTokenIfMissing,
     });
 }
-function setupMemmyMemoryConfig(existing, options) {
+function setupLitsanMemoryConfig(existing, options) {
     const roleRouting = asRecord(existing.roleRouting);
     const embedding = asRecord(existing.embedding);
     const storage = asRecord(existing.storage);
@@ -239,7 +241,7 @@ function setupMemmyMemoryConfig(existing, options) {
     const token = options.token
         ?? existingToken
         ?? (options.generateTokenIfMissing ? crypto.randomBytes(32).toString("hex") : undefined);
-    const memmyMemory = {
+    const litsanMemory = {
         ...existing,
         version: 1,
         userId: optionalString(existing.userId) ?? options.appUserId ?? "local-user",
@@ -277,7 +279,7 @@ function setupMemmyMemoryConfig(existing, options) {
                 ...(options.accountMode ? {} : { provider: "local" })
             }
     };
-    return memmyMemory;
+    return litsanMemory;
 }
 function memoryRoleRouting(value) {
     return value === "fixed" ? "fixed" : "follow";

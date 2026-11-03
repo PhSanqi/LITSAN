@@ -1,0 +1,95 @@
+{
+  "schema": "memhub-memory-arena-backends-v1",
+  "backends": [
+    {
+      "id": "memhub",
+      "name": "Memhub",
+      "class": "project-native",
+      "source": "local-workspace",
+      "local": true,
+      "priority": 0
+    },
+    {
+      "id": "memos",
+      "name": "MemOS",
+      "class": "oss",
+      "repo": "https://github.com/MemTensor/MemOS.git",
+      "local": true,
+      "priority": 1
+    },
+    {
+      "id": "everos",
+      "name": "EverOS",
+      "class": "oss",
+      "repo": "https://github.com/EverMind-AI/EverOS.git",
+      "local": true,
+      "priority": 1
+    },
+    {
+      "id": "mem9",
+      "name": "mem9",
+      "class": "oss",
+      "repo": "https://github.com/mem9-ai/mem9.git",
+      "local": true,
+      "priority": 1
+    },
+    {
+      "id": "memmachine",
+      "name": "MemMachine",
+      "class": "oss",
+      "repo": "https://github.com/MemMachine/MemMachine.git",
+      "local": true,
+      "priority": 1
+    },
+    {
+      "id": "graphiti",
+      "name": "Graphiti (Zep OSS core)",
+      "class": "oss",
+      "repo": "https://github.com/getzep/graphiti.git",
+      "local": true,
+      "priority": 2
+    },
+    {
+      "id": "hindsight",
+      "name": "Hindsight",
+      "class": "oss",
+      "repo": "https://github.com/vectorize-io/hindsight.git",
+      "local": true,
+      "priority": 1
+    },
+    {
+      "id": "mem0",
+      "name": "Mem0",
+      "class": "oss",
+      "repo": "https://github.com/mem0ai/mem0.git",
+      "local": true,
+      "priority": 1
+    },
+    {
+      "id": "letta",
+      "name": "Letta",
+      "class": "oss-agent-runtime",
+      "repo": "https://github.com/letta-ai/letta-code.git",
+      "local": true,
+      "priority": 3
+    },
+    {
+      "id": "cognee",
+      "name": "Cognee",
+      "class": "oss",
+      "repo": "https://github.com/topoteretes/cognee.git",
+      "local": true,
+      "priority": 2
+    },
+    {
+      "id": "supermemory",
+      "name": "Supermemory Local",
+      "class": "local-binary-non-oss-server",
+      "repo": "https://github.com/supermemoryai/supermemory.git",
+      "local": true,
+      "priority": 3,
+      "note": "Self-hosted server binary is distributed separately from the public source repository; report separately from pure OSS systems."
+    }
+  ]
+}
+

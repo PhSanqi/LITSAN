@@ -770,6 +770,24 @@ export class MemoryRepository {
             const pattern = `%${escapeLikePattern(term)}%`;
             return termColumns[index].map(() => pattern);
         });
+        if (channel === "pattern") {
+            const matchScore = termColumns
+                .map((columns) => `(CASE WHEN (${columns.join(" OR ")}) THEN 1 ELSE 0 END)`)
+                .join(" + ");
+            const rows = this.db
+                .prepare(`SELECT memories.id AS id, (${matchScore}) AS match_count
+         FROM memories
+         WHERE ${built.where}
+           AND (${clauses.join(" OR ")})
+         ORDER BY match_count DESC, memories.updated_at DESC, memories.id DESC
+         LIMIT ?`)
+                .all(...params, ...built.params, ...params, limit);
+            return rows.map((row) => ({
+                id: row.id,
+                score: Math.max(0, Number(row.match_count ?? 0)) / normalized.length,
+                channel
+            }));
+        }
         const rows = this.db
             .prepare(`SELECT memories.id AS id
          FROM memories

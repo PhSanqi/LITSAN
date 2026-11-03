@@ -24,7 +24,7 @@ $RuntimeDir = Join-Path $StateRoot "runtime"
 $EnvPath = Join-Path $StateRoot "memhub.env"
 
 . (Join-Path $RepoRoot "scripts\windows-task-ownership.ps1")
-$VerifiedStackTasks = @(Assert-MemhubInstallTaskSet -StateRoot $StateRoot)
+$VerifiedStackTasks = @(Assert-LitsanInstallTaskSet -StateRoot $StateRoot)
 New-Item -ItemType Directory -Force -Path $StateRoot,$ControlRoot,$MemoryDir,$RuntimeDir | Out-Null
 
 $MemoryEntry = Join-Path $RepoRoot "vendor\memory-core\src\server\index.js"
@@ -49,38 +49,46 @@ if (-not $SkipBuild -and (!(Test-Path $MemoryEntry) -or !(Test-Path $McpEntry)))
   Push-Location $RepoRoot
   try {
     & $Npm run build
-    if ($LASTEXITCODE -ne 0) { throw "Memhub build failed" }
+    if ($LASTEXITCODE -ne 0) { throw "LITSAN build failed" }
   } finally { Pop-Location }
 }
 if (!(Test-Path $MemoryEntry) -or !(Test-Path $McpEntry)) { throw "Build output is missing" }
 
 . (Join-Path $RepoRoot "scripts\windows-memory-credentials.ps1")
-$MemoryToken = Resolve-MemhubMemoryToken -ConfigPath $ConfigPath -MemoryDir $MemoryDir
-if (-not $PSBoundParameters.ContainsKey("PublicHost") -and (Test-Path $EnvPath)) {
-  $HostLines = @(Get-Content $EnvPath | Where-Object { $_ -match '^MEMHUB_PUBLIC_HOST=' })
-  if ($HostLines.Count -gt 1) { throw "Existing memhub.env contains ambiguous public host" }
-  if ($HostLines.Count -eq 1) { $PublicHost = $HostLines[0].Substring("MEMHUB_PUBLIC_HOST=".Length) }
+$MemoryToken = Resolve-LitsanMemoryToken -ConfigPath $ConfigPath -MemoryDir $MemoryDir
+$LegacyServerEnvPath = Join-Path $StateRoot "server.env"
+if (-not $PSBoundParameters.ContainsKey("PublicHost")) {
+  # Recover public host from the pre-98012dcd server edition.
+  $HostSource = if (Test-Path $EnvPath) { $EnvPath } elseif (Test-Path $LegacyServerEnvPath) { $LegacyServerEnvPath } else { $null }
+  if ($HostSource) {
+    $HostLines = @(Get-Content $HostSource | Where-Object { $_ -match '^MEMHUB_PUBLIC_HOST=' })
+    if ($HostLines.Count -gt 1) {
+      if ($HostSource -eq $LegacyServerEnvPath) { throw "Existing server.env contains ambiguous public host; refusing unsafe reinstall" }
+      throw "Existing memhub.env contains ambiguous public host"
+    }
+    if ($HostLines.Count -eq 1) { $PublicHost = $HostLines[0].Substring("MEMHUB_PUBLIC_HOST=".Length) }
+  }
 }
 
 $StackEntry = Join-Path $RepoRoot "scripts\run-stack.mjs"
 $StackLock = Join-Path $StateRoot ".memhub-stack.lock"
-$CurrentStackTasks = @(Assert-MemhubInstallTaskSet -StateRoot $StateRoot)
+$CurrentStackTasks = @(Assert-LitsanInstallTaskSet -StateRoot $StateRoot)
 if ((@($CurrentStackTasks | Sort-Object) -join '|') -cne (@($VerifiedStackTasks | Sort-Object) -join '|')) {
-  throw "Memhub Task Scheduler ownership changed during preparation; refusing installation"
+  throw "LITSAN Task Scheduler ownership changed during preparation; refusing installation"
 }
 if (Test-Path $StackLock) {
   . (Join-Path $RepoRoot "scripts\windows-stack-owner.ps1")
-  Assert-MemhubStackProcessOwner -LockPath $StackLock -NodePath $Node -StackEntry $StackEntry -StateRoot $StateRoot | Out-Null
+  Assert-LitsanStackProcessOwner -LockPath $StackLock -NodePath $Node -StackEntry $StackEntry -StateRoot $StateRoot | Out-Null
   & $Node $StackEntry --home $StateRoot --action stop | Out-Null
   if ($LASTEXITCODE -ne 0 -or (Test-Path $StackLock)) {
-    throw "Existing Memhub Stack did not stop cleanly; refusing unsafe reinstall"
+    throw "Existing LITSAN Stack did not stop cleanly; refusing unsafe reinstall"
   }
 }
 & $Node $StackEntry --home $StateRoot --action preflight
-if ($LASTEXITCODE -ne 0) { throw "Memhub ports or stack ownership are not clear; refusing unsafe reinstall" }
+if ($LASTEXITCODE -ne 0) { throw "LITSAN ports or stack ownership are not clear; refusing unsafe reinstall" }
 
 if (-not $MemoryToken) {
-  $MemoryToken = New-MemhubMemoryToken
+  $MemoryToken = New-LitsanMemoryToken
   $Config = @{
     memmyMemory = @{
       version = 1; userId = "local-user"; roleRouting = @{ summary = "follow"; evolution = "follow" }
@@ -125,14 +133,14 @@ function Install-LogonTask([string]$Name, [string]$Launcher) {
   & schtasks.exe /Run /TN $Name | Out-Null
 }
 foreach ($Task in $VerifiedStackTasks) {
-  Remove-MemhubVerifiedStackTask -Name $Task -Launcher $StackLauncher
+  Remove-LitsanVerifiedStackTask -Name $Task -Launcher $StackLauncher
 }
 Install-LogonTask "Memhub-Stack" $StackLauncher
 & $Node (Join-Path $RepoRoot "scripts\wait-for-service.mjs") --url http://127.0.0.1:3001/memhub/health --kind gateway --timeout-ms 30000
-if ($LASTEXITCODE -ne 0) { throw "Memhub Stack did not become ready" }
+if ($LASTEXITCODE -ne 0) { throw "LITSAN Stack did not become ready" }
 
-Write-Host "[memhub] installed"
-Write-Host "[memhub] local MCP: http://127.0.0.1:3001/mcp"
-Write-Host "[memhub] account: $Username"
-if ($PublicHost) { Write-Host "[memhub] remote host enabled: $PublicHost" }
-else { Write-Host "[memhub] remote host disabled; loopback MCP only" }
+Write-Host "[litsan] installed"
+Write-Host "[litsan] local MCP: http://127.0.0.1:3001/mcp"
+Write-Host "[litsan] account: $Username"
+if ($PublicHost) { Write-Host "[litsan] remote host enabled: $PublicHost" }
+else { Write-Host "[litsan] remote host disabled; loopback MCP only" }

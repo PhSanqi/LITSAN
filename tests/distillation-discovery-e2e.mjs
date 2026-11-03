@@ -7,9 +7,10 @@ import Database from "better-sqlite3";
 import { closeCaptureIndexDb, captureIngestedAt, isCaptureIngested, markCaptureIngested, readCaptureIngestIntentStatus, storeCaptureEvent, withCaptureIngestAttempt } from "../dist/capture.js";
 import { ingestCaptureIntoMemory } from "../dist/capture-ingest.js";
 import { recoverCaptureIngest } from "../dist/capture-recovery.js";
+import { assignCaptureProjects } from "../dist/capture-project-assignments.js";
 import { auditDistillationPipeline } from "../dist/distillation-audit.js";
 import { discoverDistillationJobs } from "../dist/distillation-discovery.js";
-import { enqueueDistillationJob, getDistillationConfig, listDistillationJobs, setDistillationConfig } from "../dist/distillation-jobs.js";
+import { enqueueDistillationJob, getDistillationConfig, leaseDistillationJob, listDistillationJobs, setDistillationConfig } from "../dist/distillation-jobs.js";
 
 const root = await createTestRoot("memhub-discovery-");
 isolateTestEnvironment(root, root);
@@ -398,7 +399,7 @@ try {
   await auditCapture("audit-unresolved", { project: null });
   await auditCapture("audit-uningested", { ingested: false });
   await auditCapture("audit-incomplete", { ingested: false, complete: false });
-  await enqueueDistillationJob({
+  const queuedAuditJob = await enqueueDistillationJob({
     stateRoot: auditRoot, accountId: auditDevice.account_id, projectId: "alpha",
     conversationId: "audit-chat", captures: [queuedAudit], reason: "manual"
   });
@@ -428,11 +429,18 @@ try {
     "audit review samples must not leak raw conversation text");
   assert.equal(audit.recovery.durable_ingested_reconcilable, 0,
     "an unqueued event below threshold is still legitimately waiting");
+  await leaseDistillationJob(auditRoot, auditDevice.account_id, {
+    jobId: queuedAuditJob.job.job_id, harness: "lease-regression", leaseSeconds: 30, useLeaseToken: true
+  });
   const afterIdle = await auditDistillationPipeline({
     stateRoot: auditRoot, accountId: auditDevice.account_id,
     resolveProject: async (hint) => hint === "alpha" ? "alpha" : null,
     now: new Date(Date.now() + 31 * 60_000)
   });
+  assert.equal(afterIdle.jobs.pending, 1,
+    "an expired distillation lease must return to the effective pending count");
+  assert.equal(afterIdle.jobs.leased, 0,
+    "an expired distillation lease must not be reported as actively leased");
   assert.equal(afterIdle.evidence.ready_to_enqueue, 1);
   assert.equal(afterIdle.evidence.waiting_for_idle_or_threshold, 0);
   assert.equal(afterIdle.recovery.durable_ingested_reconcilable, 1);
@@ -440,8 +448,58 @@ try {
   assert.ok(audit.warnings.some((item) => item.includes("complete_uningested")));
   assert.equal(audit.warnings.some((item) => item.includes("offline capture backlog")), false,
     "canonical distillation audit must not depend on retired side-channel queue state");
+  const leaseDiscovery = await discoverDistillationJobs({
+    stateRoot: auditRoot, accountId: auditDevice.account_id, enqueue: false,
+    resolveProject: async (hint) => hint === "alpha" ? "alpha" : null,
+    now: new Date(Date.now() + 31 * 60_000)
+  });
+  assert.equal(leaseDiscovery.pending_jobs, 1);
+  assert.equal(leaseDiscovery.leased_jobs, 0);
   assert.equal((await stat(indexPath)).mtimeMs, beforeReadOnlyAudit.mtimeMs,
     "a read-only audit must not run capture index migration/rebuild/write");
+
+  const archivedRoot = join(root, "archived-history");
+  const archivedDevice = testActor("acct-archived-history", "archived-history-harness");
+  await setDistillationConfig(archivedRoot, { auto_enabled: true, turn_threshold: 10, idle_minutes: 30 });
+  const archivedEvents = [];
+  for (const id of ["archived-queued", "archived-unresolved", "archived-reassigned"]) {
+    const stored = await storeCaptureEvent(archivedRoot, archivedDevice, {
+      event_id: id, host: "test", conversation_id: "archived-chat", continuity_id: `continuity-${id}`,
+      timestamp: new Date().toISOString(), project_hint: "legacy-project",
+      user_text: `user ${id}`, assistant_text: `assistant ${id}`, capture_status: "complete"
+    });
+    archivedEvents.push(stored.event);
+    await markCaptureIngested(archivedRoot, archivedDevice.account_id, id);
+  }
+  await enqueueDistillationJob({
+    stateRoot: archivedRoot, accountId: archivedDevice.account_id, projectId: "legacy-project",
+    captures: [archivedEvents[0]], reason: "manual"
+  });
+  await assignCaptureProjects({
+    stateRoot: archivedRoot, accountId: archivedDevice.account_id,
+    projects: { resolve: async (_accountId, ref) => ref === "synrex" ? "synrex" : null },
+    assignedBy: "host", project: "synrex", eventIds: ["archived-reassigned"]
+  });
+  const archivedResolve = async (hint) => hint === "synrex" ? "synrex" : null;
+  const archivedDiscovery = await discoverDistillationJobs({
+    stateRoot: archivedRoot, accountId: archivedDevice.account_id,
+    resolveProject: archivedResolve, enqueue: false,
+    now: new Date(Date.now() + 31 * 60_000)
+  });
+  assert.equal(archivedDiscovery.already_queued, 1,
+    "historical queued evidence remains claimed after its project is archived");
+  assert.equal(archivedDiscovery.unresolved, 1,
+    "only genuinely unclaimed evidence from an archived project remains unresolved");
+  assert.equal(archivedDiscovery.eligible, 2,
+    "a historical queue claim and an explicit reassignment both remain eligible evidence states");
+  const archivedAudit = await auditDistillationPipeline({
+    stateRoot: archivedRoot, accountId: archivedDevice.account_id,
+    resolveProject: archivedResolve, now: new Date(Date.now() + 31 * 60_000)
+  });
+  assert.equal(archivedAudit.evidence.already_queued, 1);
+  assert.equal(archivedAudit.evidence.unresolved_project, 1);
+  assert.equal(archivedAudit.evidence.eligible_unqueued, 1,
+    "audit must honor the durable reassignment snapshot instead of reclassifying it as unknown-project evidence");
   const dirtyIndex = new Database(indexPath);
   try {
     dirtyIndex.prepare("INSERT INTO capture_index_dirty(account_id,event_id) VALUES (?,?)")

@@ -11,11 +11,11 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Repo = "PhSanqi/Memhub"
+$Repo = "PhSanqi/LITSAN"
 
 foreach ($Command in @("node", "npm")) {
   if (-not (Get-Command $Command -ErrorAction SilentlyContinue)) {
-    throw "$Command is required. Install Node.js 20+ before installing Memhub."
+    throw "$Command is required. Install Node.js 20+ before installing LITSAN."
   }
 }
 
@@ -25,14 +25,14 @@ if ($NodeMajor -lt 20) {
 }
 
 if ($Version -eq "latest") {
-  $Release = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers @{ "User-Agent" = "Memhub-Installer" }
+  $Release = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers @{ "User-Agent" = "LITSAN-Installer" }
   $Tag = [string]$Release.tag_name
 } else {
   $Tag = if ($Version.StartsWith("v")) { $Version } else { "v$Version" }
 }
 
 if ($Tag -notmatch '^v\d+\.\d+\.\d+$') {
-  throw "Could not resolve a stable Memhub release tag: $Tag"
+  throw "Could not resolve a stable LITSAN release tag: $Tag"
 }
 
 $EditionLower = $Edition.ToLowerInvariant()
@@ -45,9 +45,9 @@ $Extract = Join-Path $Temp "extract"
 
 try {
   New-Item -ItemType Directory -Force -Path $Temp,$Extract,$InstallRoot | Out-Null
-  Write-Host "[memhub] release: $Tag"
-  Write-Host "[memhub] edition: Windows $EditionLower"
-  Write-Host "[memhub] downloading: $Asset"
+  Write-Host "[litsan] release: $Tag"
+  Write-Host "[litsan] edition: Windows $EditionLower"
+  Write-Host "[litsan] downloading: $Asset"
 
   Invoke-WebRequest -UseBasicParsing -Uri "$BaseUrl/$Asset" -OutFile $Archive
   Invoke-WebRequest -UseBasicParsing -Uri "$BaseUrl/SHA256SUMS.txt" -OutFile $Sums
@@ -57,7 +57,7 @@ try {
   $Expected = ($Line -split '\s+')[0].ToLowerInvariant()
   $Actual = (Get-FileHash -Algorithm SHA256 -Path $Archive).Hash.ToLowerInvariant()
   if ($Actual -ne $Expected) { throw "SHA-256 verification failed for $Asset" }
-  Write-Host "[memhub] SHA-256 verified"
+  Write-Host "[litsan] SHA-256 verified"
 
   Expand-Archive -Path $Archive -DestinationPath $Extract -Force
   $RootName = [IO.Path]::GetFileNameWithoutExtension($Asset)
@@ -70,21 +70,21 @@ try {
 
   $Installer = Join-Path $Target "editions\$EditionLower\windows\install.ps1"
   if ($PrepareOnly) {
-    Write-Host "[memhub] package prepared and verified: $Target"
+    Write-Host "[litsan] package prepared and verified: $Target"
     return
   }
-  Write-Host "[memhub] installing from: $Target"
+  Write-Host "[litsan] installing from: $Target"
   if ($EditionLower -eq "server") {
     & $Installer -Username $Username -Email $Email -PublicHost $PublicHost -StateRoot $StateRoot
   } else {
     & $Installer -StateRoot $StateRoot
   }
-  Write-Host "[memhub] installation complete"
-  Write-Host "[memhub] app files: $Target"
+  Write-Host "[litsan] installation complete"
+  Write-Host "[litsan] app files: $Target"
   if ($EditionLower -eq "local") {
-    Write-Host "[memhub] MCP: http://127.0.0.1:17861/mcp"
+    Write-Host "[litsan] MCP: http://127.0.0.1:17861/mcp"
   } else {
-    Write-Host "[memhub] Origin MCP: http://127.0.0.1:3001/memhub/mcp"
+    Write-Host "[litsan] Origin MCP: http://127.0.0.1:3001/memhub/mcp"
   }
 } finally {
   if (Test-Path $Temp) { Remove-Item -Recurse -Force $Temp }

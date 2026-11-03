@@ -1,9 +1,10 @@
+import { litsanEnv } from "../utils/litsan-compat.js";
 import { restartInstalledMemoryService } from "../cli/runtime-installer.js";
-export const DESKTOP_MANAGED_MEMORY_ENV = "MEMMY_DESKTOP_MANAGED_MEMORY";
+export const DESKTOP_MANAGED_MEMORY_ENV = "LITSAN_DESKTOP_MANAGED_MEMORY";
 export const MEMORY_RESTART_IPC_TYPE = "memmy-memory:restart";
 export async function requestMemoryServiceRestart(dependencies = {}) {
     const env = dependencies.env ?? process.env;
-    if (env[DESKTOP_MANAGED_MEMORY_ENV] !== "1") {
+    if (litsanEnv(DESKTOP_MANAGED_MEMORY_ENV, env) !== "1") {
         if ((dependencies.platform ?? process.platform) === "win32") {
             // Ending the scheduled task can also terminate a spawned restart helper.
             // Rebuild locally so the running task continues supervising this process.

@@ -27,7 +27,8 @@ const makeEvidence = (name) => [{
   timestamp: "2026-09-26T00:00:00.000Z", project_id: projectId,
   user_text: "Source evidence", assistant_text: "Recorded response"
 }];
-async function submit(job, runtime, description, enqueueDerived, artifactId) {
+async function submit(job, runtime, description, enqueueDerived, artifactId,
+  validateEvidence = async ({ job: currentJob }) => currentJob.evidence) {
   return submitDistillationControl({
     args: {
       job_id: job.job_id,
@@ -41,7 +42,7 @@ async function submit(job, runtime, description, enqueueDerived, artifactId) {
     leaseToken: job.lease_token,
     ...(enqueueDerived ? { enqueueDerived } : {}),
     resolveToolScope: async () => ({ projectId, resolutionSource: "explicit" }),
-    validateDistillationEvidenceChain: async () => {}
+    validateDistillationEvidenceChain: validateEvidence
   });
 }
 async function lease(name) {
@@ -93,6 +94,9 @@ const runtime = {
 try {
   const first = await lease("first");
   firstJobId = first.job_id;
+  await assert.rejects(submit(first, runtime, undefined, undefined, undefined, async () => {}),
+    /evidence validation returned no evidence list/);
+  assert.equal(coreWrites, 0, "invalid evidence validation must fail before Core is written");
   const originalError = console.error;
   const diagnostic = [];
   console.error = (...args) => diagnostic.push(args.map(String).join(" "));

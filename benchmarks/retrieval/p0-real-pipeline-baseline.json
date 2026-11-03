@@ -1,0 +1,56 @@
+[
+  {
+    "case_id": "current-truth-after-replacement",
+    "selected_evidence": ["fixture:memhub-profile@current"],
+    "current_claim_evidence": ["fixture:memhub-profile@current"],
+    "superseded_evidence": [],
+    "context_bytes": 222,
+    "hydrate_count": 0,
+    "latency_ms": 39.1
+  },
+  {
+    "case_id": "historical-fact-without-stale-current-truth",
+    "selected_evidence": ["fixture:memhub-timeline@current"],
+    "current_claim_evidence": ["fixture:memhub-timeline@current"],
+    "superseded_evidence": [],
+    "context_bytes": 209,
+    "hydrate_count": 0,
+    "latency_ms": 25.9
+  },
+  {
+    "case_id": "global-only",
+    "selected_evidence": ["fixture:global-profile@current"],
+    "current_claim_evidence": ["fixture:global-profile@current"],
+    "superseded_evidence": [],
+    "context_bytes": 201,
+    "hydrate_count": 0,
+    "latency_ms": 8.7
+  },
+  {
+    "case_id": "explicit-cross-project-skill-reuse",
+    "selected_evidence": ["fixture:memhub-profile@current", "fixture:other-skill@current"],
+    "current_claim_evidence": ["fixture:memhub-profile@current", "fixture:other-skill@current"],
+    "superseded_evidence": [],
+    "context_bytes": 652,
+    "hydrate_count": 0,
+    "latency_ms": 29.3
+  },
+  {
+    "case_id": "project-isolation-negative",
+    "selected_evidence": [],
+    "current_claim_evidence": [],
+    "superseded_evidence": [],
+    "context_bytes": 0,
+    "hydrate_count": 0,
+    "latency_ms": 24.4
+  },
+  {
+    "case_id": "account-isolation-negative",
+    "selected_evidence": [],
+    "current_claim_evidence": [],
+    "superseded_evidence": [],
+    "context_bytes": 0,
+    "hydrate_count": 0,
+    "latency_ms": 25.9
+  }
+]

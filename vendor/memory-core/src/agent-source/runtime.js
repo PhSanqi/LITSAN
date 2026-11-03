@@ -1,3 +1,4 @@
+import { defaultLitsanHome, litsanEnv } from "../utils/litsan-compat.js";
 import { createHash, randomUUID } from "node:crypto";
 import { createReadStream, createWriteStream, existsSync, readdirSync, rmSync } from "node:fs";
 import { mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
@@ -5,7 +6,7 @@ import { once } from "node:events";
 import { homedir } from "node:os";
 import { dirname, join, relative } from "node:path";
 import Database from "better-sqlite3";
-import { loadMemmyConfig } from "../config/index.js";
+import { loadLitsanConfig } from "../config/index.js";
 import { createMemoryLogger, memoryErrorFields } from "../logging/logger.js";
 import { MemoryServiceError } from "../utils/error.js";
 import { resolveClaudeCodeHomeDirectory, resolveCodexHomeDirectory, resolveDeepseekHarnessHomeDirectory, resolveHermesHomeDirectory, resolveOpenclawStateDirectory, resolveOpencodeConfigDirectory, resolvePiAgentDirectory, resolveQwenworkHomeDirectory, resolveWorkbuddyHomeDirectory } from "./agent-paths.js";
@@ -32,7 +33,7 @@ import { createOpencodeSkillTarget } from "./integration/opencode/index.js";
 import { createPiSkillTarget } from "./integration/pi/index.js";
 import { createQwenworkSkillTarget } from "./integration/qwenwork/index.js";
 import { createSkillTargetRegistry } from "./integration/target-registry.js";
-import { renderMemmyDefaultSkillManifest } from "./integration/templates/memmy-default.js";
+import { renderLitsanDefaultSkillManifest } from "./integration/templates/litsan-default.js";
 import { createWorkbuddySkillTarget } from "./integration/workbuddy/index.js";
 const logger = createMemoryLogger("agent-source");
 const INITIAL_SCAN_DELAY_MS = 5 * 60 * 1000;
@@ -41,7 +42,7 @@ const INITIAL_SCAN_MESSAGE_LIMIT = 1_000;
 const COMPLETED_DETAILS_RETENTION_MS = 60 * 60 * 1000;
 export function createAgentSourceExecutor(options) {
     const registry = options.sourceRegistry ?? createBuiltinSourceRegistry();
-    const configPath = options.configPath ?? join(process.env.MEMMY_HOME?.trim() || join(homedir(), ".memmy"), "config.yaml");
+    const configPath = options.configPath ?? join(litsanEnv("LITSAN_HOME", process.env)?.trim() || join(defaultLitsanHome()), "config.yaml");
     const integrationRegistry = options.integrationRegistry ?? createBuiltinIntegrationRegistry(configPath);
     const statePath = options.statePath ?? join(dirname(configPath), "memory-service", "agent-sources.json");
     const scanStoreDirectory = options.scanStoreDirectory ?? join(dirname(statePath), "agent-source-scans");
@@ -390,7 +391,7 @@ export function createAgentSourceExecutor(options) {
                 await target.installPlugin(sourceId);
             }
             else {
-                await target.install(renderMemmyDefaultSkillManifest(sourceId));
+                await target.install(renderLitsanDefaultSkillManifest(sourceId));
             }
         }
         else {
@@ -422,7 +423,7 @@ export function createAgentSourceExecutor(options) {
     async function runAutomation(startup) {
         if (disposed || scan.running)
             return;
-        const config = loadMemmyConfig(configPath).config.agentAccess;
+        const config = loadLitsanConfig(configPath).config.agentAccess;
         if (config.autoInjectSkill) {
             const discovered = await list();
             for (const source of discovered.sources) {
@@ -453,7 +454,7 @@ export function createAgentSourceExecutor(options) {
         startAutomation() {
             if (scanTimer || disposed)
                 return;
-            const config = loadMemmyConfig(configPath).config.agentAccess;
+            const config = loadLitsanConfig(configPath).config.agentAccess;
             scheduleAutomation(config.autoScanKnownAgents
                 ? options.initialScanDelayMs ?? INITIAL_SCAN_DELAY_MS
                 : options.scheduledScanIntervalMs ?? SCHEDULED_SCAN_INTERVAL_MS, config.autoScanKnownAgents);
@@ -520,13 +521,13 @@ export function createBuiltinSourceRegistry() {
 }
 export function createBuiltinIntegrationRegistry(configPath) {
     return createSkillTargetRegistry([
-        createCursorSkillTarget({ memmyConfigPath: configPath }),
-        createClaudeCodeSkillTarget({ memmyConfigPath: configPath }),
-        createCodexSkillTarget({ memmyConfigPath: configPath }),
-        createOpencodeSkillTarget({ memmyConfigPath: configPath }),
-        createOpenclawSkillTarget({ memmyConfigPath: configPath }),
-        createHermesSkillTarget({ memmyConfigPath: configPath }),
-        createDeepseekHarnessSkillTarget({ memmyConfigPath: configPath }),
+        createCursorSkillTarget({ litsanConfigPath: configPath }),
+        createClaudeCodeSkillTarget({ litsanConfigPath: configPath }),
+        createCodexSkillTarget({ litsanConfigPath: configPath }),
+        createOpencodeSkillTarget({ litsanConfigPath: configPath }),
+        createOpenclawSkillTarget({ litsanConfigPath: configPath }),
+        createHermesSkillTarget({ litsanConfigPath: configPath }),
+        createDeepseekHarnessSkillTarget({ litsanConfigPath: configPath }),
         createWorkbuddySkillTarget(),
         createPiSkillTarget(),
         createQwenworkSkillTarget()
@@ -900,7 +901,7 @@ async function* findSkillFiles(root) {
             throw error;
         }
         for (const entry of entries.sort((left, right) => left.name.localeCompare(right.name))) {
-            if (entry.name === "memmy-memory" || entry.name === "node_modules" || entry.name === ".git")
+            if (entry.name === "litsan-memory" || entry.name === "memmy-memory" || entry.name === "node_modules" || entry.name === ".git")
                 continue;
             const path = join(directory, entry.name);
             if (entry.isFile() && entry.name.toLowerCase() === "skill.md")

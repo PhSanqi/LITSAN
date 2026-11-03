@@ -13,8 +13,8 @@ import { discoverDistillationJobs } from '../dist/distillation-discovery.js';
 import { listDistillationJobs, setDistillationConfig } from '../dist/distillation-jobs.js';
 import { auditDistillationPipeline } from '../dist/distillation-audit.js';
 import { JsonResultTransport, RESULT_TTL_MS } from '../dist/result-transport.js';
-import { createMemhubRuntime } from '../dist/runtime.js';
-import { createMemhubMcpServerForRuntime } from '../dist/mcp.js';
+import { createLitsanRuntime } from '../dist/runtime.js';
+import { createLitsanMcpServerForRuntime } from '../dist/mcp.js';
 import { MemoryRestContextSource } from '../dist/memory-source.js';
 import { rankRecallHits } from '../dist/retrieval-ranker.js';
 
@@ -143,7 +143,7 @@ async function pureCaptureReads() {
     else await assert.rejects(audit(), /jobs must be an array/);
     assert.deepEqual(await snapshot(state), before, 'v1/invalid jobs audit performs zero writes');
   }
-  const runtime = createMemhubRuntime({ controlRoot: state, accountId: account, disableArchitecture: true });
+  const runtime = createLitsanRuntime({ controlRoot: state, accountId: account, disableArchitecture: true });
   await capture(state, 'three');
   child(`import { storeCaptureEvent, markCaptureIngested, closeCaptureIndexDb } from './dist/capture.js';
     const state=process.argv[1]; await storeCaptureEvent(state,{account_id:'phase2',actor_id:'test'},
@@ -183,7 +183,7 @@ async function transport() {
   assert.equal(await readFile(protectedFile, 'utf8'), 'protected');
   assert.equal(t.read(disk.result_transport.result_id).result_transport.offset, 0, 'fresh spool survives retention');
   const now = Date.now; Date.now = () => now() + RESULT_TTL_MS + 1;
-  try { assert.throws(() => otherInstance.read(first.result_transport.result_id), /result spool expired; rerun the original Memhub tool/); }
+  try { assert.throws(() => otherInstance.read(first.result_transport.result_id), /result spool expired; rerun the original LITSAN tool/); }
   finally { Date.now = now; }
   console.log('P2-6 transport memory + bounded retention: PASS');
 }
@@ -214,15 +214,15 @@ async function discovery() {
 }
 
 async function projectPayload() {
-  const state = join(root, 'mcp'), runtime = createMemhubRuntime({ controlRoot: state, accountId: account, disableArchitecture: true });
+  const state = join(root, 'mcp'), runtime = createLitsanRuntime({ controlRoot: state, accountId: account, disableArchitecture: true });
   await runtime.projects.create(account, { projectId: 'alpha', description: '😀'.repeat(281), aliases: ['first'] });
   await runtime.projects.addTodo(account, 'alpha', 'Pending work');
-  const server = createMemhubMcpServerForRuntime(runtime, state), client = new Client({ name: 'phase2', version: '1' });
+  const server = createLitsanMcpServerForRuntime(runtime, state), client = new Client({ name: 'phase2', version: '1' });
   const [ct, st] = InMemoryTransport.createLinkedPair(); await server.connect(st); await client.connect(ct);
   const call = async (name, args) => { const response = await client.callTool({ name, arguments: args }); assert.ok(!response.isError, response.content[0].text); return JSON.parse(response.content[0].text); };
   try {
     const before = await snapshot(state);
-    for (const [name, args] of [['memmy_project_list', {}], ['memmy_project', { action: 'list' }]]) {
+    for (const [name, args] of [['litsan_project_list', {}], ['litsan_project', { action: 'list' }]]) {
       const summary = await call(name, args), detail = await call(name, { ...args, detail: true });
       const s = (summary.projectDetails ?? summary.projects)[0], d = (detail.projectDetails ?? detail.projects)[0];
       assert.deepEqual(Object.keys(s).sort(), ['project','name','aliases','state','descriptionSource','description','descriptionTruncated','pendingTodoCount'].sort());
@@ -230,7 +230,7 @@ async function projectPayload() {
       assert.equal(d.description, '😀'.repeat(281)); assert.equal(d.todos.length, 1); assert.equal(d.pendingTodos.length, 1);
     }
     assert.deepEqual(await snapshot(state), before);
-    const matches = await call('memmy_project_list', { query: 'alpha' }); assert.equal(matches.matches[0].descriptionTruncated, true);
+    const matches = await call('litsan_project_list', { query: 'alpha' }); assert.equal(matches.matches[0].descriptionTruncated, true);
     const listed = (await client.listTools()).tools;
     // Compare tool schema/description fingerprints.
     for (const tool of listed) {
@@ -335,7 +335,7 @@ async function skillFanoutConvergence() {
   console.log('P2-2 skill search convergence & identical results: PASS');
 }
 
-// The distill fingerprint includes the authorized generation-fenced reconcile_commit action.
-const contracts = {"memhub_result":"aba09811776d11c4936a8fd2ff54ff7ed8cec9122b22772b3bbc66ab91e9d93d","memmy_turn":"7f33e823d11eaa61aee3ef88c0a35023fc8fa7b50af48a764be8139504bc88d0","memmy_context":"c1f76ef348f268cf2ebd5f7da0f9ea77f9c25a2f2b72ecdb74440031200b3079","memhub_memory":"bcad026561ec0a8406fb1efc2d1e89f043b5c1b1088c27b7d7fea9d9769709eb","memhub_branch":"7bf46ba1781569d150e14e3c5d20fb4aee436fe878d6f03f2018617f4b63ff9a","memhub_skill":"dad6672351ed28fdff6f0c81aaf7b908d38166eb87552d16a221ac65ef8653f1","memhub_distill":"6f80a876cf1e3bd54de705b925def988e0f54ef753798d20ac22f1ca424ae875","memmy_project_list":"454fbe81a358f02b75b9dbaa010e3dcd669ef19be4844009275f246f5bdc2c54","memhub_todo":"613779078165945be9fddb94f5b20f302ef1829d67c28b3b928d8efd844ee2c7","memmy_project_manage":"bbe854ecac70a9a28ca0b9f428caaeff966a59d3168fffdc0a88e557be4041b9","memmy_project":"07b56b08103e50194a17a482da0f7c9a8f7248ead171164e6b9882158894c68b"};
+// Fingerprints include Global State and the quiet-mode in-turn maintenance contract.
+const contracts = {"litsan_result":"f9305484ea46c0de03a826d942b73875eab60d09b70e45f6b82a4dc54dad7078","litsan_turn":"1a0e35343d2131533129a8816aabc182146fa42499ac256c18e4c14e47738996","litsan_context":"3f85a6da6098fd51e5eb8c3b788a90dc761241f3268a523b31bfa221cf490b42","litsan_memory":"2b96c2dceae874987fa865bb617cf041d16b5c608f77cf0ae1db93d594a3f6a1","litsan_branch":"af78d19b19d40cbc6e3d077a5bf7a77d6da719b3a940330231d81fe9e93eaddb","litsan_skill":"9729d68509cce3658428ae3eb52f78a7a637180daee642ecd4b533c2da2f3f13","litsan_distill":"ec4010e13001084a46c745e2b092aed78fe5553d3df02de0ff77c2b8d8d47658","litsan_card":"a5b7a041b593e5d14e3366b68f036783acf23b81dfce726f2fd62740f1b59330","litsan_project_list":"454fbe81a358f02b75b9dbaa010e3dcd669ef19be4844009275f246f5bdc2c54","litsan_todo":"6fd497fb4ee76885d4c7194d9359613e4a8322d4e7c4d8b4e4b4f504aa06f138","litsan_project_manage":"bbe854ecac70a9a28ca0b9f428caaeff966a59d3168fffdc0a88e557be4041b9","litsan_project":"46e8708825c859d271c0fb6fb0383d81f80619d08f2b0bb825f7054ce2a53405"};
 await registryCache(); await architectureCache(); await pureCaptureReads(); await transport(); await discovery(); await projectPayload(); await skillFanoutConvergence();
 console.log('phase2-performance: ok');

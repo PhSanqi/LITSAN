@@ -1,6 +1,6 @@
 import { assertTestPaths, isolateTestEnvironment } from "./test-isolation.mjs";
 // Isolated real-Core crash fixture. Exit after Core commit but before the marker.
-import { createMemhubRuntime } from "../dist/runtime.js";
+import { createLitsanRuntime } from "../dist/runtime.js";
 import { recoverCaptureIngest } from "../dist/capture-recovery.js";
 import { listCaptureEvents, withCaptureIngestAttempt } from "../dist/capture.js";
 import { ingestCaptureIntoMemory } from "../dist/capture-ingest.js";
@@ -11,7 +11,7 @@ if (![stateRoot, accountId, eventId, coreEndpoint, token, projectRegistryPath].e
 }
 assertTestPaths({ stateRoot, registry: projectRegistryPath });
 isolateTestEnvironment(stateRoot, stateRoot);
-const runtime = createMemhubRuntime({
+const runtime = createLitsanRuntime({
   accountId, ownerAccountId: accountId, ownerUserId: "local-user",
   memoryEndpoint: coreEndpoint, memoryToken: token, projectRegistryPath, controlRoot: stateRoot
 });

@@ -5,7 +5,7 @@ import { assertJsonValue, canonicalJson, sha256Hex } from "../contracts/index.js
 import { skillMetaFromMemory, traceMetaFromMemory } from "../algorithm/plugin-algorithms.js";
 import { PROJECT_VERSION } from "../cli/project-version.js";
 import { MEMORY_CAPABILITIES, MEMORY_PROTOCOL_VERSION, MEMORY_VIEWER_VERSION } from "../version.js";
-import { DEFAULT_MEMMY_CONFIG, loadMemmyConfig, resolveEvolutionConfig } from "../config/index.js";
+import { DEFAULT_LITSAN_CONFIG, loadLitsanConfig, resolveEvolutionConfig } from "../config/index.js";
 import { createMemoryLogger } from "../logging/logger.js";
 import { createEmbedder } from "../model/embedder.js";
 import { createLlmClient } from "../model/llm.js";
@@ -95,7 +95,7 @@ export class MemoryService {
         this.options = options;
         this.repos = options.backend?.repositories() ?? new Repositories(requireMemoryDb(options).db);
         this.mode = options.mode ?? "local";
-        this.config = cloneMemmyConfig(options.config ?? DEFAULT_MEMMY_CONFIG);
+        this.config = cloneLitsanConfig(options.config ?? DEFAULT_LITSAN_CONFIG);
         this.modelTasks = new MemoryModelTaskRouter(() => this.resolveModelTaskContext());
         this.llm = this.modelTasks.client("summary");
         this.skillLlm = this.modelTasks.client("evolution");
@@ -399,8 +399,8 @@ export class MemoryService {
         serviceLogger.info("initialized", memoryConfigLogFields(this.config));
     }
     resolveModelTaskContext() {
-        const taskConfig = cloneMemmyConfig(this.options.configPath || this.options.configLoader
-            ? (this.options.configLoader ?? loadMemmyConfig)(this.options.configPath).config
+        const taskConfig = cloneLitsanConfig(this.options.configPath || this.options.configLoader
+            ? (this.options.configLoader ?? loadLitsanConfig)(this.options.configPath).config
             : this.config);
         const summary = this.options.llm
             ?? createConfiguredMemoryLlm(taskConfig, "memory_summary");
@@ -527,8 +527,8 @@ export class MemoryService {
     }
     reloadConfig(request = {}) {
         const previousConfig = this.config;
-        const loader = this.options.configLoader ?? loadMemmyConfig;
-        const nextConfig = cloneMemmyConfig(loader(this.options.configPath).config);
+        const loader = this.options.configLoader ?? loadLitsanConfig;
+        const nextConfig = cloneLitsanConfig(loader(this.options.configPath).config);
         const changed = stableStringify(previousConfig) !== stableStringify(nextConfig);
         const requiresRestart = stableStringify(previousConfig.storage) !== stableStringify(nextConfig.storage);
         const reloadedAt = nowIso();
@@ -729,7 +729,7 @@ export class MemoryService {
             schemaVersion: this.schemaVersion().version,
             exportedAt: nowIso(),
             manifest: {
-                service: "memmy-memory-service",
+                service: "litsan-memory-service",
                 includeRawText: request.includeRawText === true,
                 includeAudit: request.includeAudit !== false,
                 backend: this.storageCapabilities().backend,
@@ -1842,7 +1842,7 @@ function errorMessageFromUnknown(value) {
     }
     return undefined;
 }
-function cloneMemmyConfig(config) {
+function cloneLitsanConfig(config) {
     return structuredClone(config);
 }
 function freezeModelSelectionConfig(config) {
@@ -1949,7 +1949,7 @@ async function probeEmbedding(embedder) {
     const startedAt = Date.now();
     const status = embedder.status();
     try {
-        const vector = await embedder.embedOne("Memmy model connectivity test", "query");
+        const vector = await embedder.embedOne("LITSAN model connectivity test", "query");
         if (vector.length === 0 || vector.some((value) => !Number.isFinite(value))) {
             throw new Error("embedding model returned an invalid vector");
         }

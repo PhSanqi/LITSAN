@@ -12,4 +12,4 @@ export * from "./project-scope.js";
 export * from "./local-memory-client.js";
 export * from "./memory-source.js";
 export * from "./runtime.js";
-export { createMemhubMcpHandler, createMemhubMcpServer, createMemhubMcpServerForRuntime } from "./mcp.js";
+export { createLitsanMcpHandler, createLitsanMcpServer, createLitsanMcpServerForRuntime } from "./mcp.js";

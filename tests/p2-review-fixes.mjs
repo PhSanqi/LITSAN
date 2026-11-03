@@ -12,8 +12,8 @@ import { JsonProjectRegistry } from '../dist/project-registry.js';
 import { FileProjectArchitectureSource } from '../dist/architecture-source.js';
 import * as capture from '../dist/capture.js';
 import { recoverCaptureIngest } from '../dist/capture-recovery.js';
-import { createMemhubRuntime } from '../dist/runtime.js';
-import { createMemhubMcpServerForRuntime } from '../dist/mcp.js';
+import { createLitsanRuntime } from '../dist/runtime.js';
+import { createLitsanMcpServerForRuntime } from '../dist/mcp.js';
 import { JsonResultTransport, RESULT_TTL_MS } from '../dist/result-transport.js';
 import { selectPassages } from '../dist/turn-knowledge-plan.js';
 
@@ -94,7 +94,7 @@ test('F2 recover_ingest can inspect a crashed WAL without Core writes in dry run
   await capture.markCaptureIngested(state, 'review', 'one');
   capture.closeCaptureIndexDb(state);
   crashWal(state);
-  const runtime = createMemhubRuntime({ controlRoot: state, accountId: 'review', disableArchitecture: true });
+  const runtime = createLitsanRuntime({ controlRoot: state, accountId: 'review', disableArchitecture: true });
   await runtime.projects.create('review', { projectId: 'alpha', description: 'fixture' });
   runtime.memoryClient.openSession = async () => { throw new Error('unexpected Core write'); };
   try {
@@ -138,15 +138,15 @@ test('F5 managed canonical architecture overrides another process discovery cach
 
 test('F6 F7 unbound resume by ack key and event id, persisted ack status', async () => {
   const state = join(root, 'turns');
-  const runtime = createMemhubRuntime({ controlRoot: state, accountId: 'review', disableArchitecture: true });
+  const runtime = createLitsanRuntime({ controlRoot: state, accountId: 'review', disableArchitecture: true });
   runtime.memoryClient.openSession = async () => ({});
   runtime.memoryClient.completeTurn = async () => ({});
-  const server = createMemhubMcpServerForRuntime(runtime, state);
+  const server = createLitsanMcpServerForRuntime(runtime, state);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'review', version: '1' });
   await server.server.connect(serverTransport); await client.connect(clientTransport);
   const call = async args => {
-    const result = await client.callTool({ name: 'memmy_turn', arguments: args });
+    const result = await client.callTool({ name: 'litsan_turn', arguments: args });
     assert.ok(!result.isError, result.content[0].text);
     return JSON.parse(result.content[0].text);
   };
@@ -168,15 +168,15 @@ test('F6 F7 unbound resume by ack key and event id, persisted ack status', async
 
 test('F7 ack reports completed state after a checkpoint and replayed open', async () => {
   const state = join(root, 'ack-status');
-  const runtime = createMemhubRuntime({ controlRoot: state, accountId: 'review', disableArchitecture: true });
+  const runtime = createLitsanRuntime({ controlRoot: state, accountId: 'review', disableArchitecture: true });
   runtime.memoryClient.openSession = async () => ({});
   runtime.memoryClient.completeTurn = async () => ({});
-  const server = createMemhubMcpServerForRuntime(runtime, state);
+  const server = createLitsanMcpServerForRuntime(runtime, state);
   const [ct, st] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'status', version: '1' });
   await server.server.connect(st); await client.connect(ct);
   const call = async args => {
-    const result = await client.callTool({ name: 'memmy_turn', arguments: args });
+    const result = await client.callTool({ name: 'litsan_turn', arguments: args });
     assert.ok(!result.isError, result.content[0].text);
     return JSON.parse(result.content[0].text);
   };

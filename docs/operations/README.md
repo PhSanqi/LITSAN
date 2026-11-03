@@ -1,5 +1,7 @@
 # Operations documents
 
+LITSAN (formerly Memhub). Legacy `MEMHUB_*` / `MEMMY_*` environment variables still work.
+
 - [Distillation automation and tool failures](distillation-and-tool-errors.md)
 - [Editions and release packages](editions.md)
 - [Remote authentication](remote-auth.md)

@@ -1,0 +1,348 @@
+{
+  "schema_version": 3,
+  "visualization_contract": "memhub-project-map-ir-v1",
+  "source_of_truth": "canonical-l2",
+  "revision_source": "exact-l2-revision-ledger",
+  "projection_only": true,
+  "project_id": "alpha",
+  "requires_project": false,
+  "state": {
+    "current_head_event_id": "event:timeline-alpha:1x2ig88",
+    "latest_l2_revision_at": "2026-10-03T09:00:00.000Z",
+    "current_l2_memory_ids": [
+      "timeline-alpha"
+    ],
+    "workstreams": [
+      {
+        "id": "stream-capture",
+        "label": "Capture",
+        "basis": "explicit",
+        "event_count": 2,
+        "current_event_id": "event:timeline-alpha:1ygwdzi",
+        "versions": [
+          "v1",
+          "v2"
+        ]
+      },
+      {
+        "id": "stream-dashboard",
+        "label": "Dashboard",
+        "basis": "explicit",
+        "event_count": 1,
+        "current_event_id": "event:timeline-alpha:1x2ig88",
+        "versions": [
+          "v2"
+        ]
+      }
+    ],
+    "events": [
+      {
+        "id": "event:timeline-alpha:nynjcf",
+        "memory_id": "timeline-alpha",
+        "date": "2026-10-01",
+        "date_label": "2026-10-01",
+        "title": "[Capture] v1 candidate",
+        "summary": "Capture validation started.",
+        "order": 1,
+        "workstream_id": "stream-capture",
+        "workstream_label": "Capture",
+        "workstream_basis": "explicit",
+        "stage": "active",
+        "version": "v1",
+        "current_head": false,
+        "workstream_head": false,
+        "revision_count": 2,
+        "first_revision_ref": "l2:timeline-alpha:revision-1",
+        "latest_revision_ref": "l2:timeline-alpha:revision-2",
+        "first_seen_at": "2026-10-01T08:00:00.000Z",
+        "last_seen_at": "2026-10-03T09:00:00.000Z",
+        "architecture_refs": [],
+        "architecture_level": null,
+        "architecture_change_kind": null,
+        "architecture_confidence": null
+      },
+      {
+        "id": "event:timeline-alpha:1ygwdzi",
+        "memory_id": "timeline-alpha",
+        "date": "2026-10-02",
+        "date_label": "2026-10-02",
+        "title": "[Capture] v2 deployed",
+        "summary": "Capture passed.",
+        "order": 2,
+        "workstream_id": "stream-capture",
+        "workstream_label": "Capture",
+        "workstream_basis": "explicit",
+        "stage": "completed",
+        "version": "v2",
+        "current_head": false,
+        "workstream_head": true,
+        "revision_count": 1,
+        "first_revision_ref": "l2:timeline-alpha:revision-2",
+        "latest_revision_ref": "l2:timeline-alpha:revision-2",
+        "first_seen_at": "2026-10-03T08:00:00.000Z",
+        "last_seen_at": "2026-10-03T09:00:00.000Z",
+        "architecture_refs": [
+          "capture"
+        ],
+        "architecture_level": "domain",
+        "architecture_change_kind": "refine",
+        "architecture_confidence": 0.9
+      },
+      {
+        "id": "event:timeline-alpha:1x2ig88",
+        "memory_id": "timeline-alpha",
+        "date": "2026-10-03",
+        "date_label": "2026-10-03",
+        "title": "[Dashboard] v2 pending",
+        "summary": "Browser acceptance pending.",
+        "order": 3,
+        "workstream_id": "stream-dashboard",
+        "workstream_label": "Dashboard",
+        "workstream_basis": "explicit",
+        "stage": "pending",
+        "version": "v2",
+        "current_head": true,
+        "workstream_head": true,
+        "revision_count": 1,
+        "first_revision_ref": "l2:timeline-alpha:revision-2",
+        "latest_revision_ref": "l2:timeline-alpha:revision-2",
+        "first_seen_at": "2026-10-03T08:00:00.000Z",
+        "last_seen_at": "2026-10-03T09:00:00.000Z",
+        "architecture_refs": [],
+        "architecture_level": null,
+        "architecture_change_kind": null,
+        "architecture_confidence": null
+      }
+    ]
+  },
+  "architecture": {
+    "available": true,
+    "contract": "memhub-architecture-cognitive-map-v1",
+    "authority": "derived",
+    "abstraction_cutoff": "method",
+    "generated_at": "2026-10-03T10:00:00.000Z",
+    "fingerprint": "fixture-map-fingerprint",
+    "nodes": [
+      {
+        "id": "alpha",
+        "kind": "project",
+        "label": "Alpha",
+        "summary": "Alpha project",
+        "parent_id": null,
+        "order": 0,
+        "evidence_refs": [
+          "l1:turn-1"
+        ],
+        "confidence": 1,
+        "event_ids": []
+      },
+      {
+        "id": "capture",
+        "kind": "domain",
+        "label": "Capture",
+        "summary": "Capture pipeline",
+        "parent_id": "alpha",
+        "order": 1,
+        "evidence_refs": [
+          "l1:turn-1",
+          "l1:turn-2"
+        ],
+        "confidence": 0.9,
+        "event_ids": [
+          "event:timeline-alpha:1ygwdzi"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "from": "alpha",
+        "to": "capture",
+        "type": "contains",
+        "evidence_refs": [
+          "l1:turn-1"
+        ],
+        "confidence": 1
+      }
+    ],
+    "timeline_links": [
+      {
+        "event_date": "2026-10-02",
+        "event_title": "[Capture] v2 deployed",
+        "architecture_refs": [
+          "capture"
+        ],
+        "architecture_level": "domain",
+        "change_kind": "refine",
+        "evidence_refs": [
+          "l1:turn-2"
+        ],
+        "confidence": 0.9
+      }
+    ]
+  },
+  "drilldown": {
+    "revisions": [
+      {
+        "ref": "l2:timeline-stale:stale",
+        "memory_id": "timeline-stale",
+        "committed_at": "2026-09-25T08:00:00.000Z",
+        "current": true,
+        "event_ids": [],
+        "evidence_refs": [
+          "l1:turn-1",
+          "l1:turn-2"
+        ]
+      },
+      {
+        "ref": "l2:timeline-alpha:revision-1",
+        "memory_id": "timeline-alpha",
+        "committed_at": "2026-10-01T08:00:00.000Z",
+        "current": false,
+        "event_ids": [
+          "event:timeline-alpha:nynjcf"
+        ],
+        "evidence_refs": [
+          "l1:turn-1",
+          "l1:turn-2"
+        ]
+      },
+      {
+        "ref": "l2:timeline-alpha:revision-2",
+        "memory_id": "timeline-alpha",
+        "committed_at": "2026-10-03T08:00:00.000Z",
+        "current": true,
+        "event_ids": [
+          "event:timeline-alpha:nynjcf",
+          "event:timeline-alpha:1ygwdzi",
+          "event:timeline-alpha:1x2ig88"
+        ],
+        "evidence_refs": [
+          "l1:turn-1",
+          "l1:turn-2"
+        ]
+      }
+    ],
+    "todos": [
+      {
+        "id": "pending",
+        "text": "Finish browser acceptance",
+        "status": "pending",
+        "created_at": "2026-10-03T08:30:00.000Z",
+        "updated_at": "2026-10-03T08:30:00.000Z",
+        "completed_at": null
+      }
+    ]
+  },
+  "stats": {
+    "events": 3,
+    "workstreams": 2,
+    "l2_revisions": 3,
+    "versions": 2,
+    "pending_todos": 1,
+    "architecture_nodes": 2,
+    "architecture_links": 1
+  },
+  "archify": {
+    "role": "optional_export_and_design_reference",
+    "exportable": true,
+    "compatible_diagram_types": [
+      "lifecycle",
+      "architecture"
+    ],
+    "invariant": "Timeline remains a disposable projection of canonical project L2. Architecture is a derived, evidence-backed Project Architecture cognitive map with method as its abstraction cutoff. Neither projection replaces L2 chronology or the governed hard Architecture contract.",
+    "lifecycle_ir": {
+      "schema_version": 2,
+      "diagram_type": "lifecycle",
+      "meta": {
+        "title": "LITSAN Project State · alpha",
+        "subtitle": "L2 progress flow · 2 of 2 workstreams · up to 5 representative states per lane",
+        "output": "memhub-project-state-alpha.html"
+      },
+      "lanes": [
+        {
+          "id": "main",
+          "label": "Dashboard"
+        },
+        {
+          "id": "lane_2",
+          "label": "Capture"
+        }
+      ],
+      "states": [
+        {
+          "id": "state_1",
+          "type": "active",
+          "label": "[Capture] v1 candidate",
+          "sublabel": "2026-10-01 · v1 · active",
+          "lane": "lane_2",
+          "col": 0,
+          "width": 220
+        },
+        {
+          "id": "state_2",
+          "type": "success",
+          "label": "[Capture] v2 deployed",
+          "sublabel": "2026-10-02 · v2 · completed",
+          "lane": "lane_2",
+          "col": 1,
+          "width": 220
+        },
+        {
+          "id": "state_3",
+          "type": "active",
+          "label": "[Dashboard] v2 pending",
+          "sublabel": "2026-10-03 · v2 · pending · current L…",
+          "lane": "main",
+          "col": 2,
+          "width": 220
+        }
+      ],
+      "transitions": [
+        {
+          "from": "state_1",
+          "to": "state_2"
+        },
+        {
+          "from": "state_2",
+          "to": "state_3"
+        }
+      ],
+      "cards": []
+    },
+    "architecture_ir": {
+      "schema_version": 1,
+      "diagram_type": "architecture",
+      "meta": {
+        "title": "LITSAN Architecture Cognitive Map · alpha",
+        "subtitle": "2 nodes · derived · cutoff at method",
+        "output": "memhub-architecture-map-alpha.html"
+      },
+      "nodes": [
+        {
+          "id": "alpha",
+          "kind": "project",
+          "label": "Alpha",
+          "parent_id": null,
+          "order": 0,
+          "confidence": 1
+        },
+        {
+          "id": "capture",
+          "kind": "domain",
+          "label": "Capture",
+          "parent_id": "alpha",
+          "order": 1,
+          "confidence": 0.9
+        }
+      ],
+      "edges": [
+        {
+          "from": "alpha",
+          "to": "capture",
+          "type": "contains",
+          "confidence": 1
+        }
+      ]
+    }
+  }
+}

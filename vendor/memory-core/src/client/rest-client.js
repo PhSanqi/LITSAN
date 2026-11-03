@@ -60,7 +60,7 @@ export class MemoryRestClient {
             headers: {
                 ...this.headers,
                 ...requestHeaders,
-                "x-memmy-time-zone": this.timeZone,
+                "x-litsan-time-zone": this.timeZone,
                 ...(body === undefined ? {} : { "content-type": "application/json" }),
                 ...(this.token ? { authorization: `Bearer ${this.token}` } : {})
             },

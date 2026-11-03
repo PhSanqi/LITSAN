@@ -1,13 +1,34 @@
+import type { AccountId, UserId } from "./contracts/identity.js";
+import type { ProjectReader } from "./core/ports/projects.js";
+import type { MemoryViewerReader } from "./core/ports/memory.js";
+import type { BranchReader } from "./core/ports/branches.js";
+import type { ProjectTimelineBranch } from "./contracts/project-map.js";
+import { readBranchDraft } from "./branch-drafts.js";
+import { TIMELINE_DIGEST_KEY, timelineDigest, timelineEventHash } from "./core/maintenance/timeline-digest.js";
 import { stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { getDistillationConfig, listDistillationJobs, type DistillationJob } from "./distillation-jobs.js";
+import { getMaintenanceConfig, readMaintenanceLog, readMaintenanceOfferState } from "./maintenance-store.js";
+import { queueStatus } from "./maintenance-control.js";
 import { captureIndexStats } from "./capture.js";
 import { captureCoreRawTurnId } from "./capture-ingest.js";
 import { redactSecrets } from "./secret-redaction.js";
 import { listL1Turns } from "./turn-log.js";
-import type { MemhubRuntime } from "./runtime.js";
+
 import { normalizeProjectKey, type ProjectDescriptor } from "./project-registry.js";
-import { buildMemoryVisualization } from "./memory-visualization.js";
+import { projectMemoryVisualization } from "./memory-visualization.js";
+import { loadLayerPayload } from "./shell/archify/layer-payload.js";
+import { buildProjectModel, type ProjectModelBuilderDeps } from "./shell/archify/project-model.js";
+import { GLOBAL_STATE_TITLE, globalStateEvidenceRef, latestCompletedGlobalState } from "./global-state.js";
+
+export interface MemoryControlPlaneDeps {
+  accountId: AccountId;
+  projects: Pick<ProjectReader, "storageIds" | "resolve" | "list">;
+  architecture: ProjectModelBuilderDeps["architecture"];
+  branches?: Pick<BranchReader, "list">;
+  userId: UserId;
+  memoryClient: MemoryViewerReader;
+}
 
 export type MemoryControlKind =
   | "overview"
@@ -16,17 +37,22 @@ export type MemoryControlKind =
   | "l2"
   | "l3"
   | "l4"
+  | "global_state"
   | "skills"
   | "visualization"
   | "processing";
 
 export interface MemoryControlRequest {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: MemoryControlPlaneDeps;
   kind: MemoryControlKind;
   projects: ProjectDescriptor[];
   projectId?: string;
   includeOverviewItems?: boolean;
+  /** Visualization only: also load current architecture doc refs (doc-drift signal). Off for maintenance generation. */
+  includeArchitectureDocs?: boolean;
+  /** Maintenance generation needs canonical events, not branch draft presentation. */
+  includeTimelineBranches?: boolean;
   /** L1 list only: show read-side `abandoned` (stale open/partial) turns. */
   includeIncomplete?: boolean;
 }
@@ -54,6 +80,8 @@ export async function readMemoryControlData(input: MemoryControlRequest): Promis
       return coreLayerPayload(input, "l3");
     case "l4":
       return coreLayerPayload(input, "l4");
+    case "global_state":
+      return globalStatePayload(input);
     case "skills":
       return coreLayerPayload(input, "skills");
     case "visualization":
@@ -68,49 +96,87 @@ export async function readMemoryControlData(input: MemoryControlRequest): Promis
 
 async function visualizationPayload(input: MemoryControlRequest): Promise<unknown> {
   if (!input.projectId) {
-    const visual = buildMemoryVisualization({ l2: [] });
+    const visual = projectMemoryVisualization({
+      projectId: null, l2: [], revisions: [], architecture: { map: null, fingerprint: null }, todos: []
+    });
     return { ...visual, items: visual.state.events, total: visual.state.events.length };
   }
-  const [l2Payload, allJobs, storageIdsList] = await Promise.all([
-    coreLayerPayload(input, "l2"),
-    listDistillationJobs(input.stateRoot, input.runtime.accountId),
-    input.runtime.projects.storageIds(input.runtime.accountId, input.projectId)
-  ]);
-  const storageIds = new Set(storageIdsList);
-  const revisions = allJobs
-    .filter((job) =>
-      job.status === "completed" &&
-      job.target === "l2" &&
-      job.result_kind === "l2" &&
-      Boolean(job.result_id) &&
-      Boolean(job.result_content?.trim()) &&
-      Boolean(job.project_id && storageIds.has(job.project_id))
-    )
-    .map((job) => ({
-      ref: `l2:${job.result_id}:${job.job_id}`,
-      layer: "L2" as const,
-      memory_id: job.result_id!,
-      project_id: job.project_id,
-      committed_at: job.result_committed_at ?? job.completed_at ?? job.updated_at,
-      content: job.result_content!.trim(),
-      evidence_refs: job.evidence_refs.slice()
-    }));
   const selectedProject = input.projects.find((project) => normalizeProjectKey(project.projectId) === normalizeProjectKey(input.projectId!));
-  const visual = buildMemoryVisualization({
-    projectId: input.projectId,
-    l2: itemsValue(l2Payload).map(objectRecord),
-    revisions,
-    todos: selectedProject?.todos ?? []
+  const [l2Payload, model] = await Promise.all([
+    coreLayerPayload(input, "l2"),
+    buildProjectModel(input.runtime, {
+      stateRoot: input.stateRoot,
+      projectId: input.projectId,
+      l2: [],
+      todos: selectedProject?.todos ?? [],
+      includeArchitectureDocs: input.includeArchitectureDocs === true
+    })
+  ]);
+  const visual = projectMemoryVisualization({ ...model, l2: itemsValue(l2Payload).map(objectRecord) });
+  const hasBranchReader = input.includeTimelineBranches !== false && Boolean(input.runtime.branches);
+  const branches = hasBranchReader ? await input.runtime.branches!.list(input.runtime.accountId, input.projectId, { includeClosed: true }) : [];
+  const timelineBranches: ProjectTimelineBranch[] = await Promise.all(branches.map(async branch => {
+    const draft = await readBranchDraft(input.stateRoot, input.runtime.accountId, input.projectId!, branch.branchId);
+    const mergeId = branch.merge_job_id ?? draft?.merge_job_id;
+    const mergeRevision = mergeId ? model.revisions.find(revision => revision.ref.split(":").at(-1) === mergeId) : undefined;
+    return {
+      id: branch.branchId, name: branch.name, goal: branch.goal, status: branch.status, created_at: branch.createdAt,
+      base_l2_revision: branch.base_l2_revision ?? null,
+      merged_at: branch.merged_at ?? draft?.merged_at ?? null,
+      merge_revision_ref: mergeRevision?.ref ?? null,
+      events: (draft?.events ?? []).map((row, index) => ({
+        date: row.event.date, title: `EN: ${row.event.title_en} ZH: ${row.event.title_zh}`,
+        summary: `EN: ${row.event.body_en} ZH: ${row.event.body_zh}`,
+        evidence_refs: row.event.evidence_refs, appended_at: row.appended_at,
+        merged: draft?.status === "merged" || index < (draft?.merged_event_count ?? 0)
+      }))
+    };
+  }));
+  // Read only: viewing a map must never generate or lease maintenance cards.
+  const storeExists = await stat(join(input.stateRoot, "maintenance", "cards.json")).then(() => true, error => {
+    if (error.code === "ENOENT") return false;
+    throw error;
   });
-  return { ...visual, items: visual.state.events, total: visual.state.events.length };
+  let maintenance_status;
+  if (storeExists) {
+    const { readMaintenanceStore } = await import("./maintenance-store.js");
+    const [store, ids] = await Promise.all([
+      readMaintenanceStore(input.stateRoot, input.runtime.accountId),
+      input.runtime.projects.storageIds(input.runtime.accountId, input.projectId)
+    ]);
+    const digest = timelineDigest(store.artifacts?.[JSON.stringify([input.projectId, TIMELINE_DIGEST_KEY])]);
+    const eventHashes = new Map(visual.state.events.map(event => [event.id, timelineEventHash(event)]));
+    const valid = (id: string) => eventHashes.has(id) && eventHashes.get(id) === digest.processed[id];
+    visual.state.timeline_digest = {
+      milestones: digest.milestones.filter(item => Array.isArray(item.source_ids) && item.source_ids.length > 0 && item.source_ids.every(valid)),
+      processed_ids: [...eventHashes.keys()].filter(valid),
+      processed: [...eventHashes.keys()].filter(valid).length,
+      total: eventHashes.size
+    };
+    const storageIds = new Set(ids), cards = store.cards.filter(card => storageIds.has(card.project_id));
+    const open = cards.filter(card => card.status === "pending" || card.status === "leased");
+    const pending = open.filter(card => card.status === "pending");
+    const by_kind: Record<string, number> = {};
+    for (const card of open) by_kind[card.kind] = (by_kind[card.kind] ?? 0) + 1;
+    maintenance_status = {
+      pending: pending.length, leased: open.length - pending.length,
+      requested: open.filter(card => Boolean((card as { requested_at?: string }).requested_at)).length,
+      by_kind,
+      oldest_pending_at: pending.map(card => card.created_at).sort((a, b) => Date.parse(a) - Date.parse(b))[0] ?? null,
+      last_accepted_at: cards.filter(card => card.status === "accepted" && card.accepted_at).map(card => card.accepted_at!)
+        .sort((a, b) => Date.parse(b) - Date.parse(a))[0] ?? null
+    };
+  }
+  return { ...visual, ...(hasBranchReader ? { state: { ...visual.state, branches: timelineBranches } } : {}), ...(maintenance_status ? { maintenance_status } : {}), items: visual.state.events, total: visual.state.events.length };
 }
 
 async function overviewPayload(input: MemoryControlRequest): Promise<unknown> {
-  const [l1, l2, l3, l4, skills, jobs] = await Promise.all([
+  const [l1, l2, l3, l4, globalState, skills, jobs] = await Promise.all([
     l1OverviewStats(input),
     coreLayerPayload(input, "l2", false),
     coreLayerPayload(input, "l3", false),
     coreLayerPayload(input, "l4", false),
+    globalStatePayload(input),
     coreLayerPayload(input, "skills"),
     listControlPlaneJobs(input.stateRoot, input.runtime.accountId)
   ]);
@@ -138,6 +204,7 @@ async function overviewPayload(input: MemoryControlRequest): Promise<unknown> {
       L2: totalValue(l2),
       L3: totalValue(l3),
       L4: totalValue(l4),
+      GlobalState: totalValue(globalState),
       Skill: totalValue(skills),
       pendingTodo: pendingTodos.length
     },
@@ -165,6 +232,26 @@ async function overviewPayload(input: MemoryControlRequest): Promise<unknown> {
     } : {}),
     account_id: input.runtime.accountId,
     project_id: input.projectId ?? null
+  };
+}
+
+async function globalStatePayload(input: MemoryControlRequest): Promise<unknown> {
+  if (input.projectId) return { items: [], total: 0, account_scoped: true };
+  const current = latestCompletedGlobalState(await listDistillationJobs(input.stateRoot, input.runtime.accountId, true));
+  if (!current?.result_content || !current.result_id) return { items: [], total: 0, account_scoped: true };
+  return {
+    items: [{
+      id: current.result_id,
+      title: GLOBAL_STATE_TITLE,
+      content: current.result_content,
+      evidence_ref: globalStateEvidenceRef(current),
+      status: "completed",
+      scope: "account",
+      updated_at: current.result_committed_at ?? current.completed_at ?? current.updated_at,
+      source_evidence_refs: current.evidence_refs.slice()
+    }],
+    total: 1,
+    account_scoped: true
   };
 }
 
@@ -401,6 +488,8 @@ async function unifiedL1Payload(input: MemoryControlRequest, limit: number): Pro
     source_kind: "capture",
     memory_layer: "L1",
     core_ingested: item.ingested || pairedCaptureIds.has(item.event_id),
+    ...(item.origin ? { origin: item.origin } : {}),
+    ...(item.trigger ? { trigger: item.trigger } : {}),
     ...(abandonedCaptureIds.has(item.event_id) ? { status: "abandoned" as const, abandoned: true } : {}),
     project_id: item.resolved_project_id ?? null,
     updated_at: item.timestamp
@@ -616,24 +705,11 @@ async function coreLayerPayload(
 ): Promise<unknown> {
   const archivedProjectKeys = !input.projectId && kind !== "l4" ? await archivedProjectKeySet(input) : new Set<string>();
   const archivedStorageIds = !input.projectId && kind !== "l4" ? await archivedProjectStorageIds(input) : [];
-  let payload: Record<string, unknown> = {};
-  let items: Record<string, unknown>[] = [];
-  for (let page = 1; page <= 100 && items.length < 100; page += 1) {
-    const params = new URLSearchParams({
-      limit: "100",
-      page: String(page),
-      userId: input.runtime.userId
-    });
-    if (input.projectId && kind !== "l4") params.set("projectId", input.projectId);
-    params.set("status", "activated");
-    if (hydrateBody && kind !== "skills") params.set("includeBody", "1");
-    const pagePayload = objectRecord(await input.runtime.memoryClient.viewerGet(`/api/v1/${kind}?${params.toString()}`));
-    if (page === 1) payload = pagePayload;
-    const pageItems = Array.isArray(pagePayload.items) ? pagePayload.items.map(objectRecord) : [];
-    items.push(...pageItems.filter((item) => !isArchivedProjectRef(projectFromCoreItem(item), archivedProjectKeys)));
-    if (pagePayload.hasNext !== true || pageItems.length === 0 || !hydrateBody) break;
-  }
-  items = items.slice(0, 100);
+  let { payload, items } = await loadLayerPayload({
+    memoryClient: input.runtime.memoryClient, userId: input.runtime.userId,
+    projectId: input.projectId, kind, hydrateBody,
+    includeItem: item => !isArchivedProjectRef(projectFromCoreItem(item), archivedProjectKeys)
+  });
   if (kind === "l2") {
     const jobs = await listControlPlaneJobs(input.stateRoot, input.runtime.accountId);
     const canonicalByProject = latestCanonicalL2ByProject(jobs);
@@ -665,15 +741,22 @@ async function coreLayerPayload(
 }
 
 async function processingPayload(input: MemoryControlRequest): Promise<unknown> {
-  const [allJobs, config] = await Promise.all([
+  const now = Date.now();
+  const [allJobs, config, maintenanceConfig, today, recentLog, offerState] = await Promise.all([
     listControlPlaneJobs(input.stateRoot, input.runtime.accountId),
-    getDistillationConfig(input.stateRoot)
+    getDistillationConfig(input.stateRoot),
+    getMaintenanceConfig(input.stateRoot),
+    queueStatus({ stateRoot: input.stateRoot, runtime: input.runtime, dry: true, now }),
+    readMaintenanceLog(input.stateRoot, input.runtime.accountId),
+    readMaintenanceOfferState(input.stateRoot, input.runtime.accountId, now)
   ]);
   const items = await visibleControlPlaneJobs(input, allJobs);
   return {
     items,
     total: items.length,
     config,
+    maintenance: { config: maintenanceConfig, today: { ...today, cards_offered: offerState.cards_offered, est_tokens_offered: offerState.est_tokens_offered },
+      recent_log: recentLog.sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 50) },
     counts: {
       pending: items.filter((job) => job.status === "pending").length,
       leased: items.filter((job) => job.status === "leased").length,
@@ -877,3 +960,4 @@ function totalValue(value: unknown): number {
   if (typeof record.total === "number" && Number.isFinite(record.total)) return record.total;
   return Array.isArray(record.items) ? record.items.length : 0;
 }
+

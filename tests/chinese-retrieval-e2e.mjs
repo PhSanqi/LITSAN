@@ -117,7 +117,7 @@ try {
 
   // Simulate an FTS subsystem failure without disabling ordinary Memory Core
   // retrieval. Pattern fallback must still return the Chinese memory, and the
-  // degraded route must remain visible to Memhub instead of looking like an
+  // degraded route must remain visible to LITSAN instead of looking like an
   // ordinary empty result.
   const db = new Database(dbPath);
   db.exec("DROP TABLE memories_fts");

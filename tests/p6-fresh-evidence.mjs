@@ -10,8 +10,8 @@ import { captureCoreRawTurnId, captureTurnId } from '../dist/capture-ingest.js';
 import { renderConsole } from '../dist/web-ui.js';
 import { buildTurnKnowledgePlan } from '../dist/turn-knowledge-plan.js';
 import { buildContextCapsule } from '../dist/context-capsule.js';
-import { createMemhubRuntime } from '../dist/runtime.js';
-import { createMemhubMcpServerForRuntime } from '../dist/mcp.js';
+import { createLitsanRuntime } from '../dist/runtime.js';
+import { createLitsanMcpServerForRuntime } from '../dist/mcp.js';
 import { Client, InMemoryTransport } from '@modelcontextprotocol/client';
 
 const hit = (layer, updatedAt = '2026-10-19T00:00:00.000Z', id = layer) => ({
@@ -184,8 +184,8 @@ test('capsule keeps resolved evidence and admits only explicitly scoped unbound 
   assert.deepEqual(resolved.projectMemory.map(item => item.id), ['bound']);
 });
 
-test('memmy_context returns populated fresh evidence through runtime, router and MCP; load and why hydrate its exact L1 ref', () => fixture(async ({ root, add }) => {
-  const runtime = createMemhubRuntime({ accountId: 'acct', controlRoot: root, disableArchitecture: true,
+test('litsan_context returns populated fresh evidence through runtime, router and MCP; load and why hydrate its exact L1 ref', () => fixture(async ({ root, add }) => {
+  const runtime = createLitsanRuntime({ accountId: 'acct', controlRoot: root, disableArchitecture: true,
     memoryEndpoint: 'http://127.0.0.1:1', memoryToken: '' });
   runtime.memoryClient.search = async req => ({ debug: { hits: req.layers.includes('L2') ? [hit('L3'), hit('L2')] : [] } });
   await runtime.projects.create('acct', { projectId: 'demo', description: 'Retrieval repair project' });
@@ -194,7 +194,7 @@ test('memmy_context returns populated fresh evidence through runtime, router and
   await add('mcp-open', { capture_status: 'open' });
   await add('mcp-private', { user_text: '<private>hidden</private>', assistant_text: '<private>hidden</private>' });
   await add('mcp-other-account', {}, 'other-account');
-  const server = createMemhubMcpServerForRuntime(runtime, root);
+  const server = createLitsanMcpServerForRuntime(runtime, root);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'p6-fresh', version: '1.0' });
   await server.server.connect(serverTransport);
@@ -205,7 +205,7 @@ test('memmy_context returns populated fresh evidence through runtime, router and
     return { data: JSON.parse(response.content[0].text), bytes: Buffer.byteLength(response.content[0].text, 'utf8') };
   };
   try {
-    const { data, bytes } = await call('memmy_context', { query: 'retrieval repair', project: 'demo', cross_project_skills: false });
+    const { data, bytes } = await call('litsan_context', { query: 'retrieval repair', project: 'demo', cross_project_skills: false });
     assert.equal(data.resolvedProjectId, 'demo');
     assert.deepEqual(fresh(data).map(item => item.id), ['mcp-4', 'mcp-3', 'mcp-2', 'mcp-1']);
     assert.equal(data.projectMemory[0].provenance.memoryLayer, 'L3');
@@ -216,19 +216,19 @@ test('memmy_context returns populated fresh evidence through runtime, router and
     console.log(`p6_populated_brief_bytes=${bytes}`);
     const item = fresh(data)[0];
     assert.equal(item.provenance.hydration.evidence_ref, item.evidenceRef);
-    const { data: loaded } = await call('memhub_memory', { action: 'load', evidence_ref: item.evidenceRef });
+    const { data: loaded } = await call('litsan_memory', { action: 'load', evidence_ref: item.evidenceRef });
     assert.equal(loaded.item.evidence_ref, 'l1:mcp-4');
     assert.equal(loaded.item.layer, 'L1');
     assert.equal(loaded.item.memory_id, 'mcp-4');
     assert.match(loaded.item.content, /retrieval repair complete 4/);
     assert.ok(loaded.item.content.length > item.content.length);
-    const { data: why } = await call('memhub_memory', { action: 'why', evidence_ref: item.evidenceRef, query: 'retrieval repair' });
+    const { data: why } = await call('litsan_memory', { action: 'why', evidence_ref: item.evidenceRef, query: 'retrieval repair' });
     assert.equal(why.evidence_ref, item.evidenceRef);
     assert.equal(why.root.layer, 'L1');
-    const { data: noContinuity } = await call('memmy_context', { query: 'continue the repair', conversation_id: 'continuity', cross_project_skills: false });
+    const { data: noContinuity } = await call('litsan_context', { query: 'continue the repair', conversation_id: 'continuity', cross_project_skills: false });
     assert.equal(noContinuity.resolvedProjectId, null);
     assert.equal(noContinuity.projectMemory.length, 0);
-    const { data: continued } = await call('memmy_context', { query: 'continue the repair', continuity_id: 'continuity', cross_project_skills: false });
+    const { data: continued } = await call('litsan_context', { query: 'continue the repair', continuity_id: 'continuity', cross_project_skills: false });
     assert.equal(continued.resolvedProjectId, null);
     assert.equal(continued.recallScope, 'global_only');
     assert.deepEqual(fresh(continued).map(item => item.id), ['mcp-4', 'mcp-3']);

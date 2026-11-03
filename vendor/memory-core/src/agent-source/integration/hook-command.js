@@ -1,3 +1,4 @@
+import { litsanEnv } from "../../utils/litsan-compat.js";
 /** Hook command helpers. */
 import { accessSync, constants, statSync } from "node:fs";
 import { basename, isAbsolute, join } from "node:path";
@@ -10,7 +11,7 @@ export function createNodeHookCommand(hookScriptPath, runtime = defaultNodeExecu
 export function resolveNodeExecutable(runtime = defaultNodeExecutableRuntime()) {
     const nodeName = runtime.platform === "win32" ? "node.exe" : "node";
     const candidates = [
-        runtime.env.MEMMY_HOOK_NODE,
+        litsanEnv("LITSAN_HOOK_NODE", runtime.env),
         runtime.env.NODE,
         runtime.execPath,
         join(runtime.hermesHomeDirectory, "node", "bin", nodeName),

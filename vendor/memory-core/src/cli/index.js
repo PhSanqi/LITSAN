@@ -1,11 +1,14 @@
 #!/usr/bin/env node
-// Must load first: resolve MEMMY_CLOUD_SERVICE from external env, packaged manifest, or development .env.
+// Must load first: resolve LITSAN_CLOUD_SERVICE from external env, packaged manifest, or development .env.
 import "./load-env.js";
 import { realpathSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { CLI_ANALYTICS_EVENTS, createCliAnalytics, createNoopCliAnalytics, elapsedMs, errorCodeFromUnknown, resolveCliAnalyticsParams, shouldTrackCliAnalytics, } from "./analytics.js";
 import { formatOutput, runCommand } from "./commands.js";
+import { legacyCliNotice } from "../utils/litsan-compat.js";
 export async function main(argv = process.argv.slice(2), deps = {}) {
+    const notice = legacyCliNotice(deps.argvPath ?? process.argv[1], argv);
+    if (notice) process.stderr.write(notice);
     const startedAt = (deps.now ?? Date.now)();
     const analytics = resolveMainAnalytics(argv, deps);
     const baseParams = resolveCliAnalyticsParams(argv, { argvPath: deps.argvPath });

@@ -1,8 +1,8 @@
 # 日常工作流
 
-以下流程面向已安装自己 Memhub 实例的使用者。公开示例不代表任何真实用户的记忆；只有通过自己实例的认证工作区或连接器，才能读取和继续自己的项目。
+以下流程面向已安装自己 LITSAN 实例的使用者。公开示例不代表任何真实用户的记忆；只有通过自己实例的认证工作区或连接器，才能读取和继续自己的项目。
 
-Memhub 的日常价值不是让用户频繁浏览“记忆数据库”，而是让每次工作恢复更短：先知道当前账号和项目，马上看到下一步与最近 continuity，需要追溯时再进入时间线和原始证据。本页围绕真正的使用动作，而不是围绕内部表结构组织。
+LITSAN 的日常价值不是让用户频繁浏览“记忆数据库”，而是让每次工作恢复更短：先知道当前账号和项目，马上看到下一步与最近 continuity，需要追溯时再进入时间线和原始证据。本页围绕真正的使用动作，而不是围绕内部表结构组织。
 
 ## 先确认 Scope，再开始工作
 
@@ -34,6 +34,8 @@ TODO 与项目绑定。切换到“全部项目”时，portfolio 只需要显�
 
 如果 TODO 与 Current Truth 冲突，优先核对时间：TODO 可能是旧任务，L2 可能记录了后续决策。完成或取消旧 TODO，比让模型猜哪条更可靠。
 
+使用 `litsan_todo` 新增 TODO 时，可先生成唯一 UUID，作为 `todo_id` 传入。如果回执丢失，用相同的项目、UUID 和文本重试，会返回原 TODO，不会改变其状态。同一账号内，如果该 UUID 已用于不同文本或其他项目，请求会被拒绝。不提供 `todo_id` 时，每次新增都会创建新 TODO；重试前应先查看列表。
+
 ## 工作流四：理解 L1 → L2 → L3 → L4
 
 L1 是原始对话证据，追加为主。它回答“这条事实最初来自哪次会话、什么时候、哪个项目、哪个 Harness”。L1 不是用户画像，也不应该把某次临时情绪或第三方说法直接当成长期特征。
@@ -56,7 +58,7 @@ User 的 L2 页面适合看项目发展；L3/L4 适合看稳定结论；L1 用�
 
 ## 工作流六：跨对话继续
 
-在会话 A 中明确项目并完成工作，确保 capture 进入 L1。结束前记录必要 TODO。打开会话 B，显式提供当前项目/workspace 证据，让 Harness 调用 Memhub context。检查它是否先拿到 Current Truth、L3/L2 与 TODO，而不是要求你复制整个聊天历史。
+在会话 A 中明确项目并完成工作，确保 capture 进入 L1。结束前记录必要 TODO。打开会话 B，显式提供当前项目/workspace 证据，让 Harness 调用 LITSAN context。检查它是否先拿到 Current Truth、L3/L2 与 TODO，而不是要求你复制整个聊天历史。
 
 如果会话 B 得到错误项目，先检查当前轮 workspace/project evidence 与项目 alias/description。如果没有任何明确项目线索，global-only 比猜错项目更安全；不要用宿主会话状态修补项目路由。
 
@@ -80,7 +82,7 @@ Skill 是可执行方法，不是业务记忆。好的 Skill 应描述可以重�
 
 调用 Skill 时仍然需要当前项目 scope。Skill 提供“怎么做”，项目记忆提供“在这个项目里做什么、为什么这样做”。两者组合但不合并。
 
-Memhub 会记录 Skill 的 selected/loaded/invoked/success/failure/user-correction telemetry。重复成功执行比“文本看起来像一个流程”更能证明一个 Skill 值得长期保留：少量成功只能形成 candidate，达到重复成功且没有失败/纠正后才进入 proven 状态。这个 promotion state 是治理信号，不会自动绕过 Skill revision/retire 的正式授权路径。
+LITSAN 会记录 Skill 的 selected/loaded/invoked/success/failure/user-correction telemetry。重复成功执行比“文本看起来像一个流程”更能证明一个 Skill 值得长期保留：少量成功只能形成 candidate，达到重复成功且没有失败/纠正后才进入 proven 状态。这个 promotion state 是治理信号，不会自动绕过 Skill revision/retire 的正式授权路径。
 
 ## 工作流十：全部项目 Portfolio
 
@@ -92,23 +94,21 @@ Portfolio 应按行动优先级排序：有 pending TODO 的项目优先，其�
 
 ## 工作流十一：Progressive disclosure
 
-长记忆检索默认采用 `discover → contextualize/hydrate`，而不是一次把命中的所有正文塞给模型。`memmy_context` 负责发现 compact L2/L3/L4 候选，并在能够证明当前 revision 时返回 exact `evidenceRef`；只有真正需要深入的一条，才通过 `memhub_memory action=load` 读取完整 revision。Skill 正文则通过 `memhub_skill action=load` 单独加载。
+长记忆检索默认采用 `discover → contextualize/hydrate`，而不是一次把命中的所有正文塞给模型。`litsan_context` 负责发现 compact L2/L3/L4 候选，并在能够证明当前 revision 时返回 exact `evidenceRef`；只有真正需要深入的一条，才通过 `litsan_memory action=load` 读取完整 revision。Skill 正文则通过 `litsan_skill action=load` 单独加载。
 
-`memhub_memory` 必须使用 `memmy_context` 返回的 exact ref，例如 `l2:<memory-id>:<revision-id>`，不能从稳定 Memory ID 自己拼“最新版本”。这样即使后续又产生新 revision，本次审计/推理读取的仍是原先选中的不可变内容。Hydration 会记录次数与估算 token，用于判断哪些长期记忆真正被重复使用，而不是把“存得多”误认为“有价值”。
+`litsan_memory` 必须使用 `litsan_context` 返回的 exact ref，例如 `l2:<memory-id>:<revision-id>`，不能从稳定 Memory ID 自己拼“最新版本”。这样即使后续又产生新 revision，本次审计/推理读取的仍是原先选中的不可变内容。Hydration 会记录次数与估算 token，用于判断哪些长期记忆真正被重复使用，而不是把“存得多”误认为“有价值”。
 
-## 工作流十二：可视化时间线、历史 revision 与证据链
+## 工作流十二：项目地图、时间线与证据
 
-User/Admin 的“可视化 / Visual map”是 Memory Core 与 distillation revision ledger 的只读投影，不是新的记忆数据库。图中会把当前 L2/L3/L4、历史 revisions、L2 时间节点、Skill 和 evidence refs 放在同一关系图里：实线表示时间/演化，evidence 使用虚线；历史 revision 使用灰态虚线节点，current revision 保持活跃状态。点击节点可以查看 exact revision ref、project、时间和上游 evidence，并回到对应 L2/L3/L4/Skill 真源页面继续管理。
+在 User 或 Admin 中选择具体项目并打开“项目地图”。上方架构图展示该项目的领域、能力、流程、方法和机制，以及它们的关系；双击节点可查看说明和已有证据。架构图是项目架构的派生视图，不是新的记忆层或独立的 Current Truth。
 
-管理页内置轻量 SVG renderer，避免为观察能力增加第二套服务或索引。同时可以导出两种 disposable artifact：一个当前关系图的 standalone HTML；一个 Archify-compatible lifecycle IR。后者已经按照 Archify lifecycle schema 生成，可交给 Archify 做更完整的 viewer/search/route/reach 或独立 HTML 渲染。无论哪种导出，都不能回写成为 Current Truth。
+下方时间线以时间为横轴，展示项目主线和按主题归组的支线。已整理的里程碑来自时间线摘要，尚未整理的历史以预览形式显示；主题连线不表示真实 Git 分叉或合并。双击事件可查看细节和来源。语言切换使用已有的中英文内容；缺译时保留原文，架构图会提示缺译。
 
-当“全部项目”或其他宽范围一次命中很多节点时，浏览器关系图采用有界展示，而不是把数百个节点和关系全部铺开。超过当前显示预算后，前端会在 L2/L3/L4、Skill、Event、Evidence 等 lane 之间做均衡抽样，并优先保留 current memory/current revision，再保留时间节点、历史 revision 和 evidence；关系边则在 evidence / revision / chronology 类型之间均衡取样。页面必须明确显示节点与关系各自的“匹配总数 / 当前显示数”，不能静默截断。需要完整观察时应先缩小到具体项目或继续搜索。这里的采样只影响观察视图，不改变 API payload、Memory Core、revision ledger 或任何 canonical 内容。
-
-两个导出入口的语义也不同：Archify IR 从当前 API payload 导出完整 lifecycle IR；standalone HTML 只导出浏览器当前实际渲染的关系图，并在文件中记录覆盖范围。如果当前视图因节点或关系过多而有界，HTML 必须明确标注节点与关系各自的显示/匹配数量，不能把局部快照伪装成完整关系图。
+“导出当前流图”保存当前渲染的项目地图快照；它用于沟通和检查，不会回写项目架构或记忆。需要核实事实时，继续查看节点或事件所引用的原始证据与 exact revision。
 
 ## 工作流十三：Consolidation / Reflection
 
-当同一项目积累多条 L2 或 L3 revisions 后，可以用 `memhub_distill action=consolidate` 生成只读 consolidation plan。它沿用 EverOS Reflection 的核心思想，但不新增 Reflection layer：选择多个历史 revisions，收集它们原本的 canonical upstream evidence，让当前 Harness 做 merge/re-extract，然后仍通过现有 `memhub_distill submit` 写回同一个 `project-timeline:<project>` 或 `project-profile:<project>` canonical artifact。
+当同一项目积累多条 L2 或 L3 revisions 后，可以用 `litsan_distill action=consolidate` 生成只读 consolidation plan。它沿用 EverOS Reflection 的核心思想，但不新增 Reflection layer：选择多个历史 revisions，收集它们原本的 canonical upstream evidence，让当前 Harness 做 merge/re-extract，然后仍通过现有 `litsan_distill submit` 写回同一个 `project-timeline:<project>` 或 `project-profile:<project>` canonical artifact。
 
 旧 revision 不会物理删除，而是保留为可追溯历史；新 revision 成为 Current Truth。Consolidation plan 只负责选取和给出 evidence/write contract，不会自动让模型生成事实，也不会绕过 scope/evidence 校验。证据不足或只有一个 revision 时应保持不动作。
 
@@ -182,11 +182,11 @@ Current Truth 不是一段无限增长的项目介绍，而是从最新 chronolo
 
 问三个问题：这是原始事实还是总结？是否需要时间顺序才能理解？是否已经稳定到可以长期影响未来工作？原始对话进入 L1；需要前后状态的项目事实进入 L2；跨多个时间点稳定的项目规则进入 L3；只有多个项目都支持的用户特征才进入 L4。若信息本质是“执行步骤”，考虑 Skill 而不是业务记忆。
 
-这个判断能显著减少“所有东西都塞进长期记忆”的倾向。Memhub 的价值来自边界清晰，而不是层级数量越多越好。
+这个判断能显著减少“所有东西都塞进长期记忆”的倾向。LITSAN 的价值来自边界清晰，而不是层级数量越多越好。
 
 ## 前置条件与 UI 示例
 
-开始日常工作流前，至少应存在一个稳定账号、一个已注册项目，并且 Harness 能访问 Memhub context。推荐先用 User Workspace 验证当前 scope，再开始高价值工作。一个典型 UI 路径是：`全部项目 → 选择 memhub → Overview → NEXT / Current Truth → L2 → L1 evidence`。如果只是想判断下一步，停在 Overview；只有需要追溯时间变化时才进入 L2，只有需要核对原始来源时再进入 L1。
+开始日常工作流前，至少应存在一个稳定账号、一个已注册项目，并且 Harness 能访问 LITSAN context。推荐先用 User Workspace 验证当前 scope，再开始高价值工作。一个典型 UI 路径是：`全部项目 → 选择 memhub → Overview → NEXT / Current Truth → L2 → L1 evidence`。如果只是想判断下一步，停在 Overview；只有需要追溯时间变化时才进入 L2，只有需要核对原始来源时再进入 L1。
 
 另一个典型跨项目路径是：`全部项目 → project A → 完成 TODO → 全部项目 → project B`。切换后顶部 scope、URL project state 和 Current Truth 都应同步改变。若 project B 页面仍显示 A 的业务事实，先停止继续工作并修复 scope；不要让后续 turn 扩大污染。
 

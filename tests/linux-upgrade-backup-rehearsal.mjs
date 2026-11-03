@@ -128,7 +128,7 @@ try {
   await rm(restored, { recursive: true });
   await cp(snapshot, restored, { recursive: true });
   assert.deepEqual(await listHashes(restored), baseline,
-    "rollback must restore units, credentials, complete Memhub state and both SQLite databases");
+    "rollback must restore units, credentials, complete LITSAN state and both SQLite databases");
   checkSqlite(restored, "core", ["core-before-upgrade"]);
   checkSqlite(restored, "capture", ["capture-before-upgrade"]);
   checkSqlite(source, "core", ["core-before-upgrade"]);

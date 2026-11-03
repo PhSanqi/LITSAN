@@ -1,6 +1,6 @@
 import { readFile, stat } from "node:fs/promises";
 import { join } from "node:path";
-import { removeMemmySkillDirectory, replaceMemmySkillDirectory } from "./skill-directory.js";
+import { removeLitsanSkillDirectory, replaceLitsanSkillDirectory } from "./skill-directory.js";
 export function createSkillOnlyTarget(input) {
     return {
         targetId: input.targetId,
@@ -20,19 +20,19 @@ export function createSkillOnlyTarget(input) {
             if (!root) {
                 throw new Error(`${input.displayName} is not installed or its directory is unavailable`);
             }
-            await replaceMemmySkillDirectory(root, manifest);
+            await replaceLitsanSkillDirectory(root, manifest);
         },
         async uninstall() {
             const root = await this.resolveRootDirectory();
             if (root)
-                await removeMemmySkillDirectory(root);
+                await removeLitsanSkillDirectory(root);
         },
         async isInstalled() {
             const root = await this.resolveRootDirectory();
             if (!root)
                 return false;
-            const content = await readTextFile(join(root, "skills", "memmy-memory", "SKILL.md"));
-            return content.includes("name: memmy-memory") && content.includes("## Agent Loop");
+            const content = await readTextFile(join(root, "skills", "litsan-memory", "SKILL.md"));
+            return content.includes("name: litsan-memory") && content.includes("## Agent Loop");
         }
     };
 }

@@ -2,25 +2,25 @@
 
 **第一次使用请选全新安装。** Local 适合单机，Server 适合多设备共享你自己的账号。官网/GitHub Pages 是静态介绍，不提供登录或托管记忆服务；请勿用别人的站点工作区作为安装入口。只有确实运行过早期版本并保留旧状态的用户才需要迁移流程，不需要为了验证迁移主动安装旧版本。
 
-本页覆盖 Memhub 的 Local / Server × Linux / Windows 四种组合，并把“安装成功”的定义从“脚本退出码为 0”提升到“服务、入口、身份、项目和恢复路径都经过验证”。如果你只是第一次试用，优先 Local；如果明确需要多设备、长期在线或远程 MCP，再选择 Server。
+本页覆盖 LITSAN 的 Local / Server × Linux / Windows 四种组合，并把“安装成功”的定义从“脚本退出码为 0”提升到“服务、入口、身份、项目和恢复路径都经过验证”。如果你只是第一次试用，优先 Local；如果明确需要多设备、长期在线或远程 MCP，再选择 Server。
 
 ## 安装前先理解三个边界
 
-第一，Memory Core 是私有数据层，默认绑定 loopback，不要把 18960 直接发布到公网。第二，Memhub MCP runtime 默认监听 loopback 3001：Local 客户端直接连接它，Server 则通过 Cloudflare Access/Tunnel 等认证反向代理把公网 `/mcp` 转到同一个 runtime。Local 与 Remote 只有传输/认证路径不同，不维护第二套 MCP 实现。
+第一，Memory Core 是私有数据层，默认绑定 loopback，不要把 18960 直接发布到公网。第二，LITSAN MCP runtime 默认监听 loopback 3001：Local 客户端直接连接它，Server 则通过 Cloudflare Access/Tunnel 等认证反向代理把公网 `/mcp` 转到同一个 runtime。Local 与 Remote 只有传输/认证路径不同，不维护第二套 MCP 实现。
 
-安装脚本会创建账号、token、状态目录和运行配置。请把 `MEMHUB_HOME` 或默认状态目录视为需要备份的数据，而不是临时缓存。Capture 原始证据、项目注册、会话绑定与 Memory Core 数据库承担不同职责，不能只备份其中一个 SQLite 文件就认为系统可恢复。
+安装脚本会创建账号、token、状态目录和运行配置。请把 `LITSAN_HOME` 或默认状态目录视为需要备份的数据，而不是临时缓存。Capture 原始证据、项目注册、会话绑定与 Memory Core 数据库承担不同职责，不能只备份其中一个 SQLite 文件就认为系统可恢复。
 
 ## Local Edition：Linux
 
 从仓库根目录执行：
 
 ```bash
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
 bash editions/local/linux/install.sh
 ```
 
-安装目录默认为 `MEMHUB_HOME=$HOME/.memmy/memhub`（优先级：显式 `--home` > `MEMHUB_HOME` > 已存在的 `~/.memmy/memhub` > 含 `memhub.env` 或 `accounts.json` 的旧目录 `$HOME/.memhub`，旧目录原地沿用并只警告一次，绝不迁移或复制数据）。网关控制根是另一个概念：显式 `--state-root` > `MEMHUB_STATE_ROOT` > 存在 `accounts.json` 的 `<home>/server` > `<home>`。版本安装会同时设置 `MEMHUB_HOME=<home>` 与 `MEMHUB_STATE_ROOT=<home>/server`；两者不是别名，可以合法地不同。它为 Memory Core 准备配置和本地 SQLite，Memory Core 监听 `127.0.0.1:18960`；Memhub MCP runtime 使用 3001。systemd user units 包括 `memhub-core.service`、`memhub.service` 与 `memhub-stack.target`，全部由 `deploy/install-user-service.sh` 生成并显式设置 `MEMHUB_HOME`。
+安装目录默认为 `LITSAN_HOME=$HOME/.memmy/memhub`（优先级：显式 `--home` > `LITSAN_HOME` > 已存在的 `~/.memmy/memhub` > 含 `memhub.env` 或 `accounts.json` 的旧目录 `$HOME/.memhub`，旧目录原地沿用并只警告一次，绝不迁移或复制数据）。网关控制根是另一个概念：显式 `--state-root` > `LITSAN_STATE_ROOT` > 存在 `accounts.json` 的 `<home>/server` > `<home>`。版本安装会同时设置 `LITSAN_HOME=<home>` 与 `LITSAN_STATE_ROOT=<home>/server`；两者不是别名，可以合法地不同。它为 Memory Core 准备配置和本地 SQLite，Memory Core 监听 `127.0.0.1:18960`；LITSAN MCP runtime 使用 3001。systemd user units 包括 `memhub-core.service`、`memhub.service` 与 `memhub-stack.target`，全部由 `deploy/install-user-service.sh` 生成并显式设置 `LITSAN_HOME`。
 
 安装完成后依次检查：
 
@@ -40,13 +40,13 @@ http://127.0.0.1:3001/mcp
 
 ## Local Edition：Windows
 
-首次在 Windows 安装 Memhub，直接执行新装流程即可；**不需要先安装旧版、制造旧定时任务或执行历史迁移**。仅当这台机器原本确实运行过早期 split-task 版本时，旧实例升级才是需要单独审计的场景；不能把隔离测试当作实际旧实例迁移证明。
+首次在 Windows 安装 LITSAN，直接执行新装流程即可；**不需要先安装旧版、制造旧定时任务或执行历史迁移**。仅当这台机器原本确实运行过早期 split-task 版本时，旧实例升级才是需要单独审计的场景；不能把隔离测试当作实际旧实例迁移证明。
 
 PowerShell：
 
 ```powershell
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
 powershell -ExecutionPolicy Bypass -File .\editions\local\windows\install.ps1
 ```
 
@@ -63,9 +63,9 @@ http://127.0.0.1:3001/mcp
 Linux Server：
 
 ```bash
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
-MEMHUB_PUBLIC_HOST=memory.example.com bash editions/server/linux/install.sh
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
+LITSAN_PUBLIC_HOST=memory.example.com bash editions/server/linux/install.sh
 ```
 
 安装器创建与 Local 相同的 `memhub-core.service`、`memhub.service` 与 `memhub-stack.target`。Memory Core 仍在 `127.0.0.1:18960`；MCP origin 在：
@@ -76,17 +76,17 @@ http://127.0.0.1:3001/mcp
 
 先在服务器上验证 origin。只有 origin 健康以后，再配置 Cloudflare Tunnel / Access。推荐排错顺序：本机进程 → loopback HTTP → Host/public-host 校验 → Tunnel → Access policy → 远程客户端 OAuth/MCP。这样任何一步失败都能明确归属。
 
-`MEMHUB_PUBLIC_HOST` 用于 Gateway 的 public host 约束，不意味着 Gateway 应直接监听公网地址。公网 DNS 指向 Tunnel 或认证反向代理，而不是把 Node 进程暴露在 Internet。
+`LITSAN_PUBLIC_HOST` 用于 Gateway 的 public host 约束，不意味着 Gateway 应直接监听公网地址。公网 DNS 指向 Tunnel 或认证反向代理，而不是把 Node 进程暴露在 Internet。
 
 ## Server Edition：Windows
 
-首次部署 Server 与旧实例迁移是两条不同的流程。新装按以下步骤进行；如果机器上已有 Memhub 状态或定时任务，应先核对来源、备份和所有权，不要用新装命令直接覆盖已有实例。
+首次部署 Server 与旧实例迁移是两条不同的流程。新装按以下步骤进行；如果机器上已有 LITSAN 状态或定时任务，应先核对来源、备份和所有权，不要用新装命令直接覆盖已有实例。
 
 PowerShell：
 
 ```powershell
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
 powershell -ExecutionPolicy Bypass -File .\editions\server\windows\install.ps1 -PublicHost memory.example.com
 ```
 
@@ -94,7 +94,7 @@ Windows Server 的产品边界与 Linux Server 一致：Memory Core 私有、Gat
 
 ## Cloudflare Access 与远程身份
 
-Server Edition 推荐 Cloudflare Access 作为人类身份边界。Memhub 验证 Access JWT，再把外部身份映射到稳定 `account_id`。账号角色保存在 Memhub 内部，不信任浏览器随意传入的 role header。
+Server Edition 推荐 Cloudflare Access 作为人类身份边界。LITSAN 验证 Access JWT，再把外部身份映射到稳定 `account_id`。账号角色保存在 LITSAN 内部，不信任浏览器随意传入的 role header。
 
 机器客户端与人类浏览器可以使用不同的认证交互，但最终都必须映射到稳定 `account_id`。远程 MCP 客户端在 Cloudflare/OAuth 边界完成认证；认证凭据不应该进入 AI prompt，也不应该写入项目记忆。
 
@@ -124,7 +124,9 @@ http://127.0.0.1:3001/mcp
 
 Server 远程客户端使用经过认证保护的外部 MCP URL。不要把 origin `127.0.0.1:3001` 填到另一台机器上；它只对服务器本机有意义。
 
-客户端直接使用 MCP endpoint。Agent 每轮使用 Memhub 时应先调用 `memmy_context`，携带当前请求和显式 `project/workspace_project` 证据，再调用 `memmy_turn action=open`；最终回答前调用 `memmy_turn action=commit`。conversation/session id 仅为可选 provenance，不作为项目、Branch 或蒸馏批次的路由键。
+客户端直接使用 MCP endpoint。Agent 每轮使用 LITSAN 时应先调用 `litsan_context`，携带当前请求和显式 `project/workspace_project` 证据，再调用 `litsan_turn action=open`；最终回答前调用 `litsan_turn action=commit`。conversation/session id 仅为可选 provenance，不作为项目、Branch 或蒸馏批次的路由键。
+
+quiet 模式下，`open` 可能返回一张同项目、同分支的维护卡。客户端可用 `litsan_card action=inline_load` 加载，并在 `commit` 的 `maintenance_answer` 中单独提交结果；跳过时正常 commit 会释放租约。默认上限为每卡 3000 估算 token，可通过 `client_profile.max_card_tokens` 显式调整，超限卡保留给有足够容量的客户端。宿主需要主动调用这些 MCP 工具；同步调用可能增加回复等待，LITSAN 不会自行启动模型或代理。
 
 ## 升级前备份与 preflight
 
@@ -166,7 +168,7 @@ Local 与 Server 都检查 `memhub.service`。如果 core 失败，MCP runtime �
 
 404 首先检查路径。Server Origin MCP 是 `/mcp`，网页入口仍是 `/memhub` 及其子路由；不要把浏览器页面路径与 MCP transport 路径混在一起。
 
-401 要区分匿名被拒绝和已认证仍被拒绝。匿名访问 Admin 被拒绝是正确安全行为；已登录账号没有 Admin role 时同样应该被拒绝。Host validation 失败则检查 `MEMHUB_PUBLIC_HOST` 与反向代理 Host header。
+401 要区分匿名被拒绝和已认证仍被拒绝。匿名访问 Admin 被拒绝是正确安全行为；已登录账号没有 Admin role 时同样应该被拒绝。Host validation 失败则检查 `LITSAN_PUBLIC_HOST` 与反向代理 Host header。
 
 ## 平台差异
 
@@ -207,7 +209,7 @@ Memory Core 是私有持久化/检索数据层；MCP runtime 承担账号、项�
 
 Server 的浏览器验证至少包括：首页或 Docs 公共页面返回 200；匿名 User/Admin 返回认证挑战或 401；合法 User 身份能进入 User；Admin role 才能进入 Admin；公网 MCP endpoint 能完成协议握手。不要用浏览器首页 200 代替 MCP 验证，也不要用 MCP 可用代替 Admin 权限验证。
 
-部署后再检查 Host/Origin validation。`MEMHUB_PUBLIC_HOST` 应与真实公开 host 一致；如果反向代理改写 Host，需要保证 Gateway 接收到允许值。错误做法是为了通过验证关闭 Host/Origin 检查，因为那会把一个配置问题变成安全边界缺失。
+部署后再检查 Host/Origin validation。`LITSAN_PUBLIC_HOST` 应与真实公开 host 一致；如果反向代理改写 Host，需要保证 Gateway 接收到允许值。错误做法是为了通过验证关闭 Host/Origin 检查，因为那会把一个配置问题变成安全边界缺失。
 
 ## 配置与状态目录应该怎么备份
 

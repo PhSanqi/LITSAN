@@ -223,21 +223,21 @@ assert.match(windowsStackOwner, /GetOwnerSid/);
 assert.doesNotMatch(windowsStackOwner, /\$Mode|--mode/);
 assert.doesNotMatch(windowsStackOwner, /Stop-Process|Kill\(|Remove-Item/);
 assert.match(windowsTaskOwnership, /Memhub-Stack/);
-assert.match(windowsTaskOwnership, /Legacy Memhub tasks/);
-assert.match(windowsTaskOwnership, /Memhub-Bridge/,
+assert.match(windowsTaskOwnership, /Legacy LITSAN tasks/);
+assert.match(windowsTaskOwnership, /LITSAN-Bridge/,
   "old Bridge task may exist only as a migration blocker");
 
 // Common Windows installer owns all non-historical lifecycle logic.
-assert.match(commonWindows, /Assert-MemhubInstallTaskSet/);
-assert.match(commonWindows, /Assert-MemhubStackProcessOwner/);
-assert.match(commonWindows, /Resolve-MemhubMemoryToken/);
+assert.match(commonWindows, /Assert-LitsanInstallTaskSet/);
+assert.match(commonWindows, /Assert-LitsanStackProcessOwner/);
+assert.match(commonWindows, /Resolve-LitsanMemoryToken/);
 assert.match(commonWindows, /--action preflight/);
 assert.match(commonWindows, /--action stop/);
-assert.match(commonWindows, /Remove-MemhubVerifiedStackTask/);
+assert.match(commonWindows, /Remove-LitsanVerifiedStackTask/);
 assert.match(commonWindows, /runtime\\node\\node\.exe/);
-assert.ok(commonWindows.indexOf("Assert-MemhubInstallTaskSet") < commonWindows.indexOf("New-Item -ItemType Directory"));
-assert.ok(commonWindows.indexOf("Resolve-MemhubMemoryToken") < commonWindows.indexOf("--action stop"));
-assert.ok(commonWindows.indexOf("Assert-MemhubStackProcessOwner") < commonWindows.indexOf("--action stop"));
+assert.ok(commonWindows.indexOf("Assert-LitsanInstallTaskSet") < commonWindows.indexOf("New-Item -ItemType Directory"));
+assert.ok(commonWindows.indexOf("Resolve-LitsanMemoryToken") < commonWindows.indexOf("--action stop"));
+assert.ok(commonWindows.indexOf("Assert-LitsanStackProcessOwner") < commonWindows.indexOf("--action stop"));
 assert.equal((commonWindows.match(/Install-LogonTask\s+"Memhub-/g) ?? []).length, 1);
 
 if (process.platform === "linux") {
@@ -276,7 +276,7 @@ if (process.platform === "linux") {
       const cleanState = join(home, "not-created");
       const blocked = run(cleanState);
       assert.equal(blocked.status, 2);
-      assert.match(blocked.stderr, /Existing Memhub systemd unit/);
+      assert.match(blocked.stderr, /Existing LITSAN systemd unit/);
       assert.equal(existsSync(cleanState), false);
     }
 

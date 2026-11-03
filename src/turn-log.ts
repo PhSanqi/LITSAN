@@ -1,3 +1,7 @@
+import type { AccountId, UserId } from "./contracts/identity.js";
+import type { ProjectReader } from "./core/ports/projects.js";
+import type { TurnSessionWriter } from "./core/ports/memory.js";
+import type { TurnProvenance } from "./contracts/capture.js";
 import { createHash } from "node:crypto";
 import {
   captureIsFullyExcludedFromMemory,
@@ -6,19 +10,26 @@ import {
   readCaptureProjectIndexPage,
   readIndexedCaptureEvent,
   isCaptureIngested,
+  listCaptureEvents,
   markCaptureIngested,
   normalizeCaptureEvent,
   storeCaptureEvent,
   withCaptureIngestAttempt,
-  type MemhubCaptureEvent,
+  type LitsanCaptureEvent,
   type StoredCaptureEvent,
   TRUSTED_TURN_SOURCE_KINDS
 } from "./capture.js";
 import { resolveCaptureProject } from "./capture-project-resolution.js";
 import { ingestCaptureIntoMemory } from "./capture-ingest.js";
-import type { MemhubRuntime } from "./runtime.js";
 
-export type L1TurnStatus = MemhubCaptureEvent["capture_status"];
+export interface TurnLogDeps {
+  accountId: AccountId;
+  projects: Pick<ProjectReader, "resolve">;
+  userId: UserId;
+  memoryClient: TurnSessionWriter;
+}
+
+export type L1TurnStatus = LitsanCaptureEvent["capture_status"];
 
 export interface L1TurnInput {
   event_id?: string;
@@ -40,7 +51,7 @@ export interface L1TurnInput {
   provenance?: Record<string, unknown>;
 }
 
-export interface L1TurnView {
+export interface L1TurnView extends TurnProvenance {
   event_id: string;
   account_id: string;
   host: string;
@@ -61,7 +72,7 @@ export interface L1TurnView {
 
 export async function upsertL1Turn(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: TurnLogDeps;
   actorId: string;
   turn: L1TurnInput;
 }): Promise<{
@@ -71,17 +82,28 @@ export async function upsertL1Turn(input: {
   ingestion?: unknown;
   project_id: string | null;
 }> {
+  const eventId = input.turn.event_id ?? stableTurnEventId(
+    input.runtime.accountId,
+    input.turn.continuity_id ?? input.turn.conversation_id,
+    input.turn.turn_id ?? input.turn.timestamp ?? new Date().toISOString()
+  );
+  const existing = (await listCaptureEvents(input.stateRoot, input.runtime.accountId, { eventId, limit: 1 }))[0];
+  const provenance = normalizeTurnProvenance(input.turn.provenance ?? {}, existing?.provenance);
+  if (provenance.relates_to && !(await listCaptureEvents(input.stateRoot, input.runtime.accountId,
+    { eventId: provenance.relates_to.event_id, limit: 1 })).length) {
+    throw new TypeError("relates_to event not found");
+  }
   const event = normalizeCaptureEvent({
     ...input.turn,
     provenance: {
-      ...(input.turn.provenance ?? {}),
-      source_kinds: { ...TRUSTED_TURN_SOURCE_KINDS }
+      ...provenance,
+      source_kinds: {
+        ...TRUSTED_TURN_SOURCE_KINDS,
+        user_text: provenance.origin === "agent" ? "agent_inferred" :
+          provenance.origin === "automation" ? "tool_output" : "user_said"
+      }
     },
-    event_id: input.turn.event_id ?? stableTurnEventId(
-      input.runtime.accountId,
-      input.turn.continuity_id ?? input.turn.conversation_id,
-      input.turn.turn_id ?? input.turn.timestamp ?? new Date().toISOString()
-    ),
+    event_id: eventId,
     timestamp: input.turn.timestamp ?? new Date().toISOString()
   });
 
@@ -195,6 +217,8 @@ function stableTurnEventId(accountId: string, continuityId: string, turnId: stri
 
 function turnView(event: StoredCaptureEvent, ingested: boolean): L1TurnView {
   return {
+    ...Object.fromEntries(["origin", "trigger", "initiator", "relates_to"]
+      .filter(key => event.provenance?.[key] !== undefined).map(key => [key, event.provenance![key]])),
     event_id: event.event_id,
     account_id: event.account_id,
     host: event.host,
@@ -211,4 +235,45 @@ function turnView(event: StoredCaptureEvent, ingested: boolean): L1TurnView {
     status: event.capture_status,
     ingested
   };
+}
+
+function normalizeTurnProvenance(incoming: Record<string, unknown>, stored?: Record<string, unknown>): Record<string, unknown> & TurnProvenance {
+  const result = { ...incoming };
+  for (const key of ["origin", "trigger", "initiator", "relates_to"]) {
+    if (result[key] === undefined && stored?.[key] !== undefined) result[key] = stored[key];
+  }
+  if (result.origin === undefined) result.origin = "user";
+  if (!["user", "agent", "automation"].includes(result.origin as string)) {
+    throw new TypeError("origin must be user, agent, or automation");
+  }
+  if (stored?.origin !== undefined && result.origin !== stored.origin) throw new TypeError("origin cannot change after open");
+  if (result.trigger !== undefined && !["user_prompt", "hook", "task_notification", "side_session_note", "session_message",
+    "scheduled_wakeup", "ci_event", "delegate", "cli_run", "other"].includes(result.trigger as string)) {
+    throw new TypeError("trigger must be a supported turn trigger");
+  }
+  for (const key of ["initiator", "relates_to"] as const) {
+    const value = result[key];
+    if (value === undefined) continue;
+    if (!value || typeof value !== "object" || Array.isArray(value)) throw new TypeError(`${key} must be an object`);
+    const fields = value as Record<string, unknown>;
+    const allowed = key === "initiator" ? ["harness", "session_id", "event_id"] : ["event_id", "relation"];
+    if (Object.keys(fields).some(field => !allowed.includes(field))) throw new TypeError(`${key} has unknown properties`);
+    const normalized: Record<string, string> = {};
+    for (const field of allowed) {
+      const text = fields[field];
+      if (text === undefined && key === "initiator") continue;
+      if (typeof text !== "string" || (key === "relates_to" && !text.trim())) {
+        throw new TypeError(`${key}.${field} must be a string${key === "relates_to" ? " and is required" : ""}`);
+      }
+      if (key === "initiator" && text.length > (field === "harness" ? 80 : 300)) {
+        throw new TypeError(`initiator.${field} exceeds maximum length ${field === "harness" ? 80 : 300}`);
+      }
+      normalized[field] = text;
+    }
+    if (key === "relates_to" && !["relays", "duplicate_of", "continues"].includes(normalized.relation!)) {
+      throw new TypeError("relates_to.relation must be relays, duplicate_of, or continues");
+    }
+    result[key] = normalized;
+  }
+  return result as Record<string, unknown> & TurnProvenance;
 }

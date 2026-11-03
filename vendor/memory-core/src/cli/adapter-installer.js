@@ -25,7 +25,7 @@ export async function installAgentAdapters(options) {
 }
 async function installOpenClaw(source, root, options) {
     const openClawRoot = process.env.OPENCLAW_STATE_DIR?.trim() || join(root, ".openclaw");
-    const target = join(openClawRoot, "plugins", "memmy-memory");
+    const target = join(openClawRoot, "plugins", "litsan-memory");
     if (!existsSync(openClawRoot) && !options.explicit)
         return result("openclaw", target, false, false, options);
     if (!existsSync(openClawRoot) && options.explicit)
@@ -34,8 +34,8 @@ async function installOpenClaw(source, root, options) {
         await replaceDirectory(source, target);
         const configPath = join(openClawRoot, "openclaw.json");
         const current = existsSync(configPath) ? await readFile(configPath, "utf8") : "{}\n";
-        let next = applyEdits(current, modify(current, ["plugins", "slots", "memory"], "memmy-memory", { formattingOptions: { insertSpaces: true, tabSize: 2 } }));
-        next = applyEdits(next, modify(next, ["plugins", "entries", "memmy-memory", "enabled"], true, { formattingOptions: { insertSpaces: true, tabSize: 2 } }));
+        let next = applyEdits(current, modify(current, ["plugins", "slots", "memory"], "litsan-memory", { formattingOptions: { insertSpaces: true, tabSize: 2 } }));
+        next = applyEdits(next, modify(next, ["plugins", "entries", "litsan-memory", "enabled"], true, { formattingOptions: { insertSpaces: true, tabSize: 2 } }));
         await writeAtomic(configPath, next.endsWith("\n") ? next : `${next}\n`);
         if (options.restartHosts !== false)
             runOptional("openclaw", ["gateway", "restart"]);
@@ -44,7 +44,7 @@ async function installOpenClaw(source, root, options) {
 }
 async function installHermes(source, root, options) {
     const hermesRoot = process.env.HERMES_HOME?.trim() || join(root, ".hermes");
-    const target = join(hermesRoot, "plugins", "memmy");
+    const target = join(hermesRoot, "plugins", "litsan");
     if (!existsSync(hermesRoot) && !options.explicit)
         return result("hermes", target, false, false, options);
     if (!existsSync(hermesRoot) && options.explicit)
@@ -54,7 +54,7 @@ async function installHermes(source, root, options) {
         const configPath = join(hermesRoot, "config.yaml");
         const parsed = existsSync(configPath) ? parseYaml(await readFile(configPath, "utf8")) : {};
         const config = record(parsed);
-        config.memory = { ...record(config.memory), provider: "memmy" };
+        config.memory = { ...record(config.memory), provider: "litsan" };
         await writeAtomic(configPath, stringifyYaml(config, { lineWidth: 0 }));
     }
     return result("hermes", target, true, true, options);

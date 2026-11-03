@@ -1,22 +1,28 @@
+import type { ProjectArchitectureDocument } from "./contracts/architecture.js";
+import type { CodeEvidenceSnapshot, CodeEvidenceItem } from "./contracts/code-evidence.js";
+import { scanCodeEvidence } from "./shell/archify/code-evidence.js";
+import { applyCodeLayers, validateHistoricalCodeOwners } from "./archify/code-evidence.js";
+export type { ProjectArchitectureDocument } from "./contracts/architecture.js";
 import { createHash } from "node:crypto";
 import { mkdir, readdir, readFile, rename, stat, writeFile } from "node:fs/promises";
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import type { ContextItem } from "./context-capsule.js";
 import { withFileMutationLock } from "./file-mutation-lock.js";
 import { validateProjectId } from "./project-registry.js";
-
-export interface ProjectArchitectureDocument {
-  projectId: string;
-  workspaceDir: string;
-  path: string;
-  relativePath: string;
-  exists: boolean;
-  content: string;
-  fingerprint: string;
-}
+import {
+  architectureCognitiveMapFingerprint,
+  parseArchitectureCognitiveMapCandidate,
+  renderArchitectureCognitiveMapMarkdown,
+  type ArchitectureCognitiveMap,
+  type ArchitectureCognitiveMapDocument
+} from "./architecture-cognitive-map.js";
 
 export interface ProjectArchitectureSource {
+  getProjectCodeEvidence?(input: { accountId: string; projectId: string }): Promise<CodeEvidenceSnapshot | null>;
+  inspectProjectCodeEvidence?(input: { accountId: string; projectId: string }): Promise<{ snapshot: CodeEvidenceSnapshot; files: Array<{ path: string; hash: string }> } | null>;
+  getProjectCodeCitations?(input: { accountId: string; projectId: string; refs: string[] }): Promise<CodeEvidenceItem[]>;
   listProjects(accountId: string): Promise<string[]>;
+  listProjectArchitectureMarkdown(input: { accountId: string; projectId: string }): Promise<{ path: string; content: string }[]>;
   getProjectArchitecture(input: {
     accountId: string;
     projectId: string;
@@ -33,13 +39,28 @@ export interface ProjectArchitectureSource {
     expectedFingerprint: string;
     content: string;
   }): Promise<{ before: ProjectArchitectureDocument; after: ProjectArchitectureDocument }>;
+  inspectProjectCognitiveMap(input: {
+    accountId: string;
+    projectId: string;
+  }): Promise<ArchitectureCognitiveMapDocument>;
+  writeProjectCognitiveMap(input: {
+    accountId: string;
+    projectId: string;
+    expectedFingerprint: string;
+    map: ArchitectureCognitiveMap;
+  }): Promise<{ before: ArchitectureCognitiveMapDocument; after: ArchitectureCognitiveMapDocument }>;
 }
 
 export class NullProjectArchitectureSource implements ProjectArchitectureSource {
   async listProjects(): Promise<string[]> { return []; }
+  async listProjectArchitectureMarkdown(): Promise<{ path: string; content: string }[]> { return []; }
   async getProjectArchitecture(): Promise<ContextItem[]> { return []; }
   async inspectProjectArchitecture(): Promise<null> { return null; }
   async writeProjectArchitecture(): Promise<never> { throw new Error("Project Architecture is disabled"); }
+  async inspectProjectCognitiveMap(input: { projectId: string }): Promise<ArchitectureCognitiveMapDocument> {
+    return { projectId: input.projectId, path: "", exists: false, map: null, fingerprint: architectureCognitiveMapFingerprint(null) };
+  }
+  async writeProjectCognitiveMap(): Promise<never> { throw new Error("Project Architecture is disabled"); }
 }
 
 export interface FileProjectArchitectureSourceOptions {
@@ -49,7 +70,7 @@ export interface FileProjectArchitectureSourceOptions {
 }
 
 /**
- * Project Architecture reader/writer. Memhub-managed canonical documents live
+ * Project Architecture reader/writer. LITSAN-managed canonical documents live
  * under its private writable state root. Repository Markdown and legacy
  * `normify-<project>` trees remain read-only discovery/migration inputs.
  */
@@ -70,6 +91,66 @@ export class FileProjectArchitectureSource implements ProjectArchitectureSource 
     return [...new Set(dirs.map((item) => item.projectId))].sort();
   }
 
+  async getProjectCodeEvidence(input: { accountId: string; projectId: string }): Promise<CodeEvidenceSnapshot | null> {
+    requireNonEmpty(input.accountId, "accountId");
+    const projectId = validateProjectId(input.projectId);
+    const workspace = await this.projectWorkspaceDir(projectId);
+    return workspace ? scanCodeEvidence(workspace, projectId) : null;
+  }
+
+  async inspectProjectCodeEvidence(input: { accountId: string; projectId: string }): Promise<{ snapshot: CodeEvidenceSnapshot; files: Array<{ path: string; hash: string }> } | null> {
+    requireNonEmpty(input.accountId, "accountId");
+    const projectId = validateProjectId(input.projectId);
+    const workspace = await this.projectWorkspaceDir(projectId);
+    if (!workspace) return null;
+    const files: Array<{ path: string; hash: string }> = [];
+    const snapshot = await scanCodeEvidence(workspace, projectId, (path, hash) => files.push({ path, hash }));
+    return { snapshot, files };
+  }
+
+  async getProjectCodeCitations(input: { accountId: string; projectId: string; refs: string[] }): Promise<CodeEvidenceItem[]> {
+    const root = dirname(this.managedCognitiveMapPath(requireNonEmpty(input.accountId, "accountId"), input.projectId));
+    const prefix = "code:" + validateProjectId(input.projectId) + ":";
+    const wanted = new Set(input.refs);
+    const revisions = [...new Set(input.refs.filter(ref => ref.startsWith(prefix)).map(ref => ref.slice(prefix.length).split(":")[0]!))]
+      .filter(revision => /^[a-f0-9]{12}$/.test(revision)).slice(0, 40);
+    const items: CodeEvidenceItem[] = [];
+    for (const revision of revisions) {
+      const text = await readFile(join(root, "code-evidence", revision + ".json"), "utf8").catch(error => {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") return null;
+        throw error;
+      });
+      if (!text) continue;
+      const snapshot = JSON.parse(text) as CodeEvidenceSnapshot;
+      if (snapshot.project !== input.projectId || snapshot.revision !== revision || snapshot.version !== 1) throw new Error("invalid code snapshot identity");
+      items.push(...snapshot.items.filter(item => wanted.has(item.ref) && item.ref.startsWith(prefix + revision + ":")));
+    }
+    return items;
+  }
+
+  /** Full Hard Architecture inputs, including repository docs when managed docs exist. */
+  async listProjectArchitectureMarkdown(input: { accountId: string; projectId: string }): Promise<{ path: string; content: string }[]> {
+    const accountId = requireNonEmpty(input.accountId, "accountId");
+    const projectId = validateProjectId(input.projectId);
+    const managedPath = this.managedArchitecturePath(accountId, projectId);
+    const candidates = (await this.architectureDirs(accountId)).filter(item => sameProject(item.projectId, projectId));
+    if (await fileExists(managedPath)) candidates.unshift({ projectId, dir: dirname(managedPath), scope: "memhub-managed", format: "managed-project-doc" });
+    const workspaceDir = await this.projectWorkspaceDir(projectId);
+    if (workspaceDir) candidates.push({ projectId, dir: workspaceDir, scope: "project-repo", format: "project-docs" });
+    const rows = new Map<string, { path: string; content: string }>();
+    for (const candidate of candidates) {
+      for (const path of await architectureMarkdownFiles(candidate, projectId)) {
+        const absolute = resolve(path);
+        if (rows.has(absolute)) continue;
+        rows.set(absolute, {
+          path: candidate.scope + "/" + relative(candidate.dir, path).replaceAll("\\", "/"),
+          content: await readFile(path, "utf8")
+        });
+      }
+    }
+    return [...rows.values()].sort((a, b) => a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
+  }
+
   async getProjectArchitecture(input: {
     accountId: string;
     projectId: string;
@@ -79,14 +160,13 @@ export class FileProjectArchitectureSource implements ProjectArchitectureSource 
     const projectId = validateProjectId(input.projectId);
     const query = requireNonEmpty(input.query, "query");
     const managedPath = this.managedArchitecturePath(accountId, projectId);
+    const cognitive = await this.inspectProjectCognitiveMap({ accountId, projectId });
     let candidates: ArchitectureDir[] = await fileExists(managedPath)
       ? [{ projectId, dir: dirname(managedPath), scope: "memhub-managed", format: "managed-project-doc" }]
       : (await this.architectureDirs(accountId))
         .filter((item) => sameProject(item.projectId, projectId));
     const managedCandidates = candidates.filter((item) => item.scope === "memhub-managed");
     if (managedCandidates.length > 0) candidates = managedCandidates;
-    if (candidates.length === 0) return [];
-
     const queryTokens = tokens(query);
     const rows = [] as Array<{
       path: string;
@@ -115,7 +195,10 @@ export class FileProjectArchitectureSource implements ProjectArchitectureSource 
     const rankedRows = [...uniqueRows.values()]
       .sort((a, b) => b.score - a.score || a.path.localeCompare(b.path));
 
-    let remaining = this.maxChars;
+    const cognitiveReserve = cognitive.exists && cognitive.map
+      ? Math.min(6_000, Math.max(2_000, Math.floor(this.maxChars * 0.35)))
+      : 0;
+    let remaining = Math.max(0, this.maxChars - cognitiveReserve);
     const items: ContextItem[] = [];
     for (const row of rankedRows) {
       if (remaining <= 0) break;
@@ -138,6 +221,29 @@ export class FileProjectArchitectureSource implements ProjectArchitectureSource 
       });
       remaining -= clipped.length;
     }
+    if (cognitive.exists && cognitive.map) {
+        const allowance = cognitiveReserve + remaining;
+        const rendered = renderArchitectureCognitiveMapMarkdown(cognitive.map).slice(0, allowance);
+        if (rendered.trim()) {
+          items.push({
+            id: `architecture-cognitive:${projectId}:${cognitive.fingerprint.slice(0, 16)}`,
+            content: rendered,
+            authority: "derived",
+            scope: "project",
+            source: "project-architecture-cognitive-map",
+            projectId,
+            updatedAt: cognitive.map.generated_at,
+            provenance: {
+              storage: "memhub-managed",
+              format: cognitive.map.contract,
+              authority: "derived",
+              abstraction_cutoff: cognitive.map.abstraction_cutoff,
+              fingerprint: cognitive.fingerprint,
+              source_evidence_refs: cognitive.map.source_evidence_refs
+            }
+          });
+        }
+    }
     return items;
   }
 
@@ -157,7 +263,7 @@ export class FileProjectArchitectureSource implements ProjectArchitectureSource 
     }
 
     // First write may migrate an existing repository Architecture document
-    // into Memhub-managed state. The repository remains read-only; its current
+    // into LITSAN-managed state. The repository remains read-only; its current
     // body is only the reviewed seed and participates in the stale-plan hash.
     let seedContent = "";
     const workspaceDir = await this.projectWorkspaceDir(projectId);
@@ -204,6 +310,85 @@ export class FileProjectArchitectureSource implements ProjectArchitectureSource 
     });
   }
 
+  async inspectProjectCognitiveMap(input: {
+    accountId: string;
+    projectId: string;
+  }): Promise<ArchitectureCognitiveMapDocument> {
+    const accountId = requireNonEmpty(input.accountId, "accountId");
+    const projectId = validateProjectId(input.projectId);
+    const path = this.managedCognitiveMapPath(accountId, projectId);
+    try {
+      const raw = JSON.parse(await readFile(path, "utf8")) as ArchitectureCognitiveMap;
+      if (raw.project_id !== projectId || raw.contract !== "memhub-architecture-cognitive-map-v1" || raw.authority !== "derived") {
+        throw new Error("invalid Project Architecture Cognitive Map identity");
+      }
+      parseArchitectureCognitiveMapCandidate(raw);
+      return { projectId, path, exists: true, map: raw, fingerprint: architectureCognitiveMapFingerprint(raw) };
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException)?.code !== "ENOENT") throw error;
+      return { projectId, path, exists: false, map: null, fingerprint: architectureCognitiveMapFingerprint(null) };
+    }
+  }
+
+  async writeProjectCognitiveMap(input: {
+    accountId: string;
+    projectId: string;
+    expectedFingerprint: string;
+    map: ArchitectureCognitiveMap;
+  }): Promise<{ before: ArchitectureCognitiveMapDocument; after: ArchitectureCognitiveMapDocument }> {
+    const accountId = requireNonEmpty(input.accountId, "accountId");
+    const projectId = validateProjectId(input.projectId);
+    if (input.map.project_id !== projectId || input.map.authority !== "derived") {
+      throw new Error("Project Architecture Cognitive Map identity mismatch");
+    }
+    const path = this.managedCognitiveMapPath(accountId, projectId);
+    return withFileMutationLock(path, async () => {
+      const before = await this.inspectProjectCognitiveMap({ accountId, projectId });
+      if (before.fingerprint !== input.expectedFingerprint) {
+        throw new Error("Project Architecture Cognitive Map changed after it was read; retry from the latest map");
+      }
+      let map = input.map;
+      const refs = [...map.source_evidence_refs, ...map.nodes.flatMap(n => [...n.evidence_refs, ...(n.facets?.layer_evidence_refs ?? []), ...(n.facts ?? []).flatMap(f => f.evidence_refs)]),
+        ...map.edges.flatMap(e => e.evidence_refs), ...map.timeline_links.flatMap(l => l.evidence_refs)];
+      if (refs.some(ref => ref.startsWith("code:"))) {
+        const code = await this.getProjectCodeEvidence({ accountId, projectId });
+        const allowed = new Set(code?.items.map(item => item.ref));
+        const historical = refs.filter(ref => ref.startsWith("code:") && !allowed.has(ref));
+        const retained = new Set(before.map?.source_evidence_refs);
+        const snapshots = await this.getProjectCodeCitations({ accountId, projectId, refs: historical });
+        const backed = new Set(snapshots.map(item => item.ref));
+        if (historical.some(ref => !retained.has(ref) || !backed.has(ref))) throw new Error("stale or foreign code evidence; request a fresh bootstrap package");
+        validateHistoricalCodeOwners(map, before.map, new Set(historical));
+        const candidate = applyCodeLayers(map, code, before.map);
+        map = { ...map, ...candidate };
+        if (!candidate.facet_vocab) delete map.facet_vocab;
+        map.source_evidence_refs = [...new Set([...map.source_evidence_refs, ...map.nodes.flatMap(node => node.facets?.layer_evidence_refs ?? [])])];
+        if (code && refs.some(ref => allowed.has(ref))) {
+          const snapshotDir = join(dirname(path), "code-evidence");
+          await mkdir(snapshotDir, { recursive: true, mode: 0o700 });
+          const snapshotPath = join(snapshotDir, code.revision + ".json");
+          const text = JSON.stringify(code) + "\n";
+          try {
+            if (await readFile(snapshotPath, "utf8") !== text) throw new Error("code snapshot identity collision");
+          }
+          catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+            // The project fence serializes writers; publish a complete snapshot before its map can reference it.
+            const tmp = `${snapshotPath}.tmp-${process.pid}-${Date.now()}`;
+            await writeFile(tmp, text, { encoding: "utf8", mode: 0o600, flag: "wx" });
+            await rename(tmp, snapshotPath);
+          }
+        }
+      }
+      await mkdir(dirname(path), { recursive: true, mode: 0o700 });
+      const tmp = `${path}.tmp-${process.pid}-${Date.now()}`;
+      await writeFile(tmp, `${JSON.stringify(map, null, 2)}\n`, { encoding: "utf8", mode: 0o600 });
+      await rename(tmp, path);
+      const after = await this.inspectProjectCognitiveMap({ accountId, projectId });
+      return { before, after };
+    });
+  }
+
   private async architectureDirs(accountId: string): Promise<ArchitectureDir[]> {
     const cacheKey = JSON.stringify([this.rootDir, this.managedRootDir, accountId]);
     const cached = FileProjectArchitectureSource.directoryCache.get(cacheKey);
@@ -212,7 +397,7 @@ export class FileProjectArchitectureSource implements ProjectArchitectureSource 
     const managedAccountRoot = join(this.managedRootDir, accountHash(accountId));
     for (const dir of await childDirs(managedAccountRoot)) {
       const projectId = managedProjectIdFromDir(dir);
-      if (projectId && await fileExists(join(dir, "ARCHITECTURE.md"))) {
+      if (projectId && (await fileExists(join(dir, "ARCHITECTURE.md")) || await fileExists(join(dir, "COGNITIVE_MAP.json")))) {
         results.push({ projectId, dir, scope: "memhub-managed", format: "managed-project-doc" });
       }
     }
@@ -270,6 +455,16 @@ export class FileProjectArchitectureSource implements ProjectArchitectureSource 
     const rel = relative(accountRoot, path);
     if (!rel || isAbsolute(rel) || rel === ".." || rel.startsWith(`..${sep}`)) {
       throw new Error("Project Architecture path must stay inside the account directory");
+    }
+    return path;
+  }
+
+  private managedCognitiveMapPath(accountId: string, projectId: string): string {
+    const accountRoot = join(this.managedRootDir, accountHash(accountId));
+    const path = resolve(accountRoot, encodeURIComponent(validateProjectId(projectId)), "COGNITIVE_MAP.json");
+    const rel = relative(accountRoot, path);
+    if (!rel || isAbsolute(rel) || rel === ".." || rel.startsWith(`..${sep}`)) {
+      throw new Error("Project Architecture Cognitive Map path must stay inside the account directory");
     }
     return path;
   }

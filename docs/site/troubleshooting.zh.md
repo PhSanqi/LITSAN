@@ -2,7 +2,7 @@
 
 先确认访问的是自己的 Local/Server 实例：公开 GitHub Pages/产品展示站不会提供 /user、/admin、MCP 或数据恢复接口。不要将真实 token、原始对话、账号导出或故障截图直接贴到公开 Issue；请先脱敏。
 
-排错的核心原则是先确定故障层，再修改最小范围。Memhub 有入口、身份、账号、项目路由、L1 capture、Processing job、Memory Core、Control Plane、反向代理等多个边界；“记忆没工作”只是现象，不是根因。不要一看到异常就清空状态目录、重装所有服务或删除项目。
+排错的核心原则是先确定故障层，再修改最小范围。LITSAN 有入口、身份、账号、项目路由、L1 capture、Processing job、Memory Core、Control Plane、反向代理等多个边界；“记忆没工作”只是现象，不是根因。不要一看到异常就清空状态目录、重装所有服务或删除项目。
 
 ## 诊断顺序
 
@@ -51,7 +51,7 @@ Local loopback 管理使用独立 local-admin token。Cloudflare 请求不能伪
 
 ## 症状：404 或路径不一致
 
-Memhub 的网页 Control Plane 支持 base path rewrite，公开 root base 可能映射为 `/`、`/user`、`/admin`、`/docs`。不要根据一个环境的网页 URL 猜 MCP transport 路径。
+LITSAN 的网页 Control Plane 支持 base path rewrite，公开 root base 可能映射为 `/`、`/user`、`/admin`、`/docs`。不要根据一个环境的网页 URL 猜 MCP transport 路径。
 
 Server Origin MCP 路径是 `/mcp`。网页和 MCP 是不同入口。确认反向代理把公网 `/mcp` 转到同一个 loopback MCP runtime，而不是 Web UI。
 
@@ -77,7 +77,7 @@ Server Origin MCP 路径是 `/mcp`。网页和 MCP 是不同入口。确认反�
 
 ## 症状：L1 没有新证据
 
-主 MCP 路径下先检查 Harness 是否真的执行了 `memmy_turn open` 与 `memmy_turn commit`，以及调用时是否给出正确的项目/workspace 证据。Legacy capture endpoint 在迁移期可以继续存在，但不是新的 Local/Remote MCP 主链。L1 authoritative source 是 per-turn evidence；索引只是可重建元数据。
+主 MCP 路径下先检查 Harness 是否真的执行了 `litsan_turn open` 与 `litsan_turn commit`，以及调用时是否给出正确的项目/workspace 证据。Legacy capture endpoint 在迁移期可以继续存在，但不是新的 Local/Remote MCP 主链。L1 authoritative source 是 per-turn evidence；索引只是可重建元数据。
 
 如果索引异常但原始 capture 在，系统可以重建索引。不要反过来把 index 当唯一事实来源。
 
@@ -97,7 +97,7 @@ L3 应来自项目 L2 的稳定模式；L4 应有至少两个项目 L3 支持。
 
 ## 症状：Processing 长时间 leased
 
-确认任务租约是否过期、worker 是否仍存在、网络/模型调用是否卡住。不要同时启动多个不具备隔离的 worker 去抢同一 job。Memhub job lease/completion/retry 负责幂等和重试边界。
+确认任务租约是否过期、worker 是否仍存在、网络/模型调用是否卡住。不要同时启动多个不具备隔离的 worker 去抢同一 job。LITSAN job lease/completion/retry 负责幂等和重试边界。
 
 如果 worker 已崩溃，按运行时设计让 lease/retry 恢复，而不是直接把数据库状态手工改成 completed。
 

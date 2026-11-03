@@ -1,3 +1,4 @@
+import { env } from "./brand.mjs";
 import { existsSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -29,9 +30,9 @@ export class EmbeddedMemoryCore {
     const host = options.host ?? "127.0.0.1";
     const port = options.port ?? 18960;
     this.endpoint = `http://${host}:${port}`;
-    this.configPath = resolve(options.configPath ?? process.env.MEMHUB_CORE_CONFIG ?? core.configPath);
-    this.dbPath = resolve(options.dbPath ?? process.env.MEMHUB_CORE_DB ?? core.dbPath);
-    this.entrypoint = resolve(options.entrypoint ?? process.env.MEMHUB_MEMORY_CORE_ENTRY ?? defaultEntrypoint());
+    this.configPath = resolve(options.configPath ?? env("CORE_CONFIG") ?? core.configPath);
+    this.dbPath = resolve(options.dbPath ?? env("CORE_DB") ?? core.dbPath);
+    this.entrypoint = resolve(options.entrypoint ?? env("MEMORY_CORE_ENTRY") ?? defaultEntrypoint());
   }
 
   async start(): Promise<string> {

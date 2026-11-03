@@ -1,8 +1,10 @@
+import { removeOwnedLegacySkill } from "../../agent-source/integration/legacy-files.js";
+import { litsanEnv } from "../../utils/litsan-compat.js";
 import { cp, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-export const SUPPORTED_MEMMY_AGENT_IDS = [
+export const SUPPORTED_LITSAN_AGENT_IDS = [
     "codex",
     "cursor",
     "claude",
@@ -16,7 +18,7 @@ export const SUPPORTED_MEMMY_AGENT_IDS = [
 ];
 const START_MARKER = "<!-- memmy:start v=1 -->";
 const END_MARKER = "<!-- memmy:end v=1 -->";
-const SKILL_DIRECTORY_NAME = "memmy-memory";
+const SKILL_DIRECTORY_NAME = "litsan-memory";
 const AGENT_TARGETS = {
     codex: {
         injectRelativePath: "AGENTS.md",
@@ -59,22 +61,22 @@ const AGENT_TARGETS = {
         skillsRelativePath: "skills"
     }
 };
-export async function installMemmyMemorySkillForAgents(agents, options = {}) {
-    if (process.env.MEMMY_AGENT_INTEGRATION_ROOT?.trim() && options.agentRoot && !options.dryRun) {
+export async function installLitsanMemorySkillForAgents(agents, options = {}) {
+    if (litsanEnv("LITSAN_AGENT_INTEGRATION_ROOT", process.env)?.trim() && options.agentRoot && !options.dryRun) {
         throw new Error("--agent-root cannot be combined with packaged Hook/plugin integration; use the agent's configured home");
     }
     const results = await Promise.all(normalizeAgentIds(agents).map(async (agent) => {
         if (options.skipUnavailable && !(await isExistingDirectory(targetForAgent(agent, options.agentRoot).root))) {
             return null;
         }
-        return installMemmyMemorySkillForAgent(agent, options);
+        return installLitsanMemorySkillForAgent(agent, options);
     }));
     const installed = results.filter((result) => result !== null);
     await installPackagedAgentIntegrations(installed, options);
     return installed;
 }
 async function installPackagedAgentIntegrations(installed, options) {
-    const integrationRoot = process.env.MEMMY_AGENT_INTEGRATION_ROOT?.trim();
+    const integrationRoot = litsanEnv("LITSAN_AGENT_INTEGRATION_ROOT", process.env)?.trim();
     if (!integrationRoot || options.dryRun || installed.length === 0)
         return;
     const modulePath = join(resolve(expandHome(integrationRoot)), "services", "builtin-skill-target-registry.js");
@@ -85,7 +87,7 @@ async function installPackagedAgentIntegrations(installed, options) {
     if (typeof integrationModule.createBuiltinSkillTargetRegistry !== "function") {
         throw new Error(`invalid packaged agent integration registry: ${modulePath}`);
     }
-    const registry = integrationModule.createBuiltinSkillTargetRegistry(options.memmyConfigPath);
+    const registry = integrationModule.createBuiltinSkillTargetRegistry((options.litsanConfigPath ?? options.memmyConfigPath));
     for (const result of installed) {
         const targetId = result.agent === "claude" ? "claude_code" : result.agent;
         const target = registry.get(targetId);
@@ -95,7 +97,7 @@ async function installPackagedAgentIntegrations(installed, options) {
         await target.installPlugin(targetId);
     }
 }
-export async function installMemmyMemorySkillForAgent(agent, options = {}) {
+export async function installLitsanMemorySkillForAgent(agent, options = {}) {
     const target = targetForAgent(agent, options.agentRoot);
     if (!(await isExistingDirectory(target.root))) {
         throw new Error(`${agent} is not installed or its directory is unavailable: ${target.root}`);
@@ -116,6 +118,7 @@ export async function installMemmyMemorySkillForAgent(agent, options = {}) {
             await writeFileAtomically(injectPath, upsertMarkerBlock(await readTextFile(injectPath), await readFile(injectSourcePath, "utf8")));
         }
         await replaceDirectoryAtomically(skillSourcePath, skillPath);
+        await removeOwnedLegacySkill(target.root);
     }
     return {
         agent,
@@ -189,7 +192,7 @@ function defaultAgentRoot(agent) {
     }
 }
 function configuredDirectory(environmentVariable, fallback) {
-    const configured = process.env[environmentVariable]?.trim();
+    const configured = litsanEnv(environmentVariable, process.env)?.trim();
     return configured ? expandHome(configured) : fallback;
 }
 async function resolveCliAssetRoot(rootOverride) {

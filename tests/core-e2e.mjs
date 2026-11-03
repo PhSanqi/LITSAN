@@ -144,7 +144,7 @@ try {
   assert.ok(largeCapsule.contextBudget.truncatedItems >= 3);
   for (const item of [...largeCapsule.globalMemory, ...largeCapsule.projectMemory, ...largeCapsule.reusableSkills]) {
     assert.equal(item.provenance?.contextTruncated, true);
-    assert.match(item.content, /truncated by Memhub context budget/);
+    assert.match(item.content, /truncated by LITSAN context budget/);
   }
 
   assert.doesNotThrow(() => assertLoopbackMemoryEndpoint("http://127.0.0.1:18960"));
@@ -259,11 +259,11 @@ try {
   const calls = [];
   const memory = {
     async recall(input) {
-      calls.push(input.projectId);
+      calls.push(input.scope?.primaryProject ?? null);
       return {
         globalMemory: [{ id: "g", content: "global", authority: "remembered", scope: "global", source: "test" }],
-        projectMemory: input.projectId
-          ? [{ id: "p", content: input.projectId, authority: "remembered", scope: "project", source: "test", projectId: input.projectId }]
+        projectMemory: input.scope?.primaryProject
+          ? [{ id: "p", content: input.scope.primaryProject, authority: "remembered", scope: "project", source: "test", projectId: input.scope.primaryProject }]
           : []
       };
     },
@@ -482,7 +482,7 @@ try {
   await mkdir(state, { recursive: true });
   // Preserve legacy storage aliases to exercise their read/merge compatibility.
   await writeFile(join(state, "project-registry.json"), JSON.stringify({ version: 1, projects: [
-    ["alpha-memory", ["Alpha Memory"]], ["memhub", ["Memhub"]], ["delta-project", []]
+    ["alpha-memory", ["Alpha Memory"]], ["memhub", ["LITSAN"]], ["delta-project", []]
   ].map(([projectId, aliases]) => ({
     accountId: "acct", projectId, name: projectId, description: "", aliases, state: "active",
     createdAt: "2026-10-10T00:00:00.000Z", updatedAt: "2026-10-10T00:00:00.000Z"
@@ -586,8 +586,8 @@ try {
       aliasCalls.push(input);
       return {
         globalMemory: [],
-        projectMemory: input.projectId
-          ? [{ id: "alias-p", content: "alias project", authority: "remembered", scope: "project", source: "test", projectId: input.projectId }]
+        projectMemory: input.scope?.primaryProject
+          ? [{ id: "alias-p", content: "alias project", authority: "remembered", scope: "project", source: "test", projectId: input.scope.primaryProject }]
           : [],
         reusableSkills: []
       };
@@ -603,7 +603,7 @@ try {
     knownProjectIds: ["alpha-memory", "Alpha Memory"]
   });
   assert.equal(aliasCapsule.resolvedProjectId, "alpha-memory");
-  assert.ok(aliasCalls[0].projectStorageIds.includes("Alpha Memory"));
+  assert.ok(aliasCalls[0].scope.projectStorageIds.includes("Alpha Memory"));
 
   const owner = await addAccount(state, "owner", "owner@example.com");
   await assert.rejects(() => resolveCloudflareAccount(state, { sub: "unknown", email: "unknown@example.com" }), /允许列表/);

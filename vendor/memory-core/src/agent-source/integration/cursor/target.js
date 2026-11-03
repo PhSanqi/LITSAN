@@ -1,26 +1,28 @@
+import { migrateOwnedIntegrationFiles } from "../legacy-files.js";
+import { defaultLitsanHome } from "../../../utils/litsan-compat.js";
 /** Target module. */
 import { mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { createNodeHookCommand } from "../hook-command.js";
-import { readMemmyMemoryServiceConfig } from "../memmy-runtime-config.js";
-import { removeMemmySkillDirectory, replaceMemmySkillDirectory } from "../skill-directory.js";
-import { renderMemmyPluginSkillManifest } from "../templates/memmy-plugin.js";
-import { renderMemmyResumeHookScript } from "../templates/memmy-resume-hook.js";
-import { loadMemmyWorkspaceBridgeRuntimeAsset } from "../workspace-bridge/runtime-loader.js";
+import { readLitsanMemoryServiceConfig } from "../litsan-runtime-config.js";
+import { removeLitsanSkillDirectory, replaceLitsanSkillDirectory } from "../skill-directory.js";
+import { renderLitsanPluginSkillManifest } from "../templates/litsan-plugin.js";
+import { renderLitsanResumeHookScript } from "../templates/litsan-resume-hook.js";
+import { loadLitsanWorkspaceBridgeRuntimeAsset } from "../workspace-bridge/runtime-loader.js";
 const CURSOR_TARGET_ID = "cursor";
 const CURSOR_DISPLAY_NAME = "Cursor";
 const HOOKS_FILE_NAME = "hooks.json";
 const HOOK_DIRECTORY_NAME = "hooks";
-const HOOK_SCRIPT_FILE_NAME = "memmy-resume-hook.mjs";
+const HOOK_SCRIPT_FILE_NAME = "litsan-resume-hook.mjs";
 const LEGACY_HOOK_SCRIPT_FILE_NAME = "memmy-memory-resume-hook.mjs";
-const HOOK_CONFIG_FILE_NAME = "memmy-memory-config.json";
-const WORKSPACE_BRIDGE_FILE_NAME = "memmy-workspace-bridge.mjs";
+const HOOK_CONFIG_FILE_NAME = "litsan-memory-config.json";
+const WORKSPACE_BRIDGE_FILE_NAME = "litsan-workspace-bridge.mjs";
 const HOOK_TIMEOUT_SECONDS = 60;
 /** Creates create cursor skill target. */
 export function createCursorSkillTarget(deps = {}) {
     const cursorRootDirectory = deps.rootDirectory ?? join(homedir(), ".cursor");
-    const memmyConfigPath = deps.memmyConfigPath ?? join(homedir(), ".memmy", "config.yaml");
+    const litsanConfigPath = (deps.litsanConfigPath ?? deps.memmyConfigPath) ?? join(defaultLitsanHome(), "config.yaml");
     return {
         targetId: CURSOR_TARGET_ID,
         displayName: CURSOR_DISPLAY_NAME,
@@ -29,34 +31,33 @@ export function createCursorSkillTarget(deps = {}) {
         },
         async install(manifest) {
             await mkdir(cursorRootDirectory, { recursive: true });
-            await replaceMemmySkillDirectory(cursorRootDirectory, manifest);
+            await replaceLitsanSkillDirectory(cursorRootDirectory, manifest);
         },
         async uninstall(_targetId) {
-            await removeMemmySkillDirectory(cursorRootDirectory);
+            await removeLitsanSkillDirectory(cursorRootDirectory);
         },
         async isInstalled(_targetId) {
-            return (await readTextFile(join(cursorRootDirectory, "skills", "memmy-memory", "SKILL.md"))).includes("name: memmy-memory");
+            return (await readTextFile(join(cursorRootDirectory, "skills", "litsan-memory", "SKILL.md"))).includes("name: litsan-memory");
         },
         async installPlugin(_targetId) {
+            await migrateOwnedIntegrationFiles(cursorRootDirectory);
             await mkdir(cursorRootDirectory, { recursive: true });
             const hookDirectory = join(cursorRootDirectory, HOOK_DIRECTORY_NAME);
             const hookScriptPath = join(hookDirectory, HOOK_SCRIPT_FILE_NAME);
             await mkdir(hookDirectory, { recursive: true });
-            await writeFileAtomically(join(hookDirectory, HOOK_CONFIG_FILE_NAME), `${JSON.stringify({ memmy_config_path: memmyConfigPath, ...(await readMemmyMemoryServiceConfig(memmyConfigPath)) }, null, 2)}\n`);
-            await writeFileAtomically(hookScriptPath, renderMemmyResumeHookScript({ source: CURSOR_TARGET_ID, mode: "cursor" }));
-            await writeFileAtomically(join(hookDirectory, WORKSPACE_BRIDGE_FILE_NAME), await loadMemmyWorkspaceBridgeRuntimeAsset());
+            await writeFileAtomically(join(hookDirectory, HOOK_CONFIG_FILE_NAME), `${JSON.stringify({ litsan_config_path: litsanConfigPath, ...(await readLitsanMemoryServiceConfig(litsanConfigPath)) }, null, 2)}\n`);
+            await writeFileAtomically(hookScriptPath, renderLitsanResumeHookScript({ source: CURSOR_TARGET_ID, mode: "cursor" }));
+            await writeFileAtomically(join(hookDirectory, WORKSPACE_BRIDGE_FILE_NAME), await loadLitsanWorkspaceBridgeRuntimeAsset());
             await upsertCursorHookConfig(join(cursorRootDirectory, HOOKS_FILE_NAME), hookScriptPath);
-            await rm(join(cursorRootDirectory, HOOK_DIRECTORY_NAME, LEGACY_HOOK_SCRIPT_FILE_NAME), { force: true });
-            const manifest = renderMemmyPluginSkillManifest(_targetId);
-            await replaceMemmySkillDirectory(cursorRootDirectory, manifest);
+            const manifest = renderLitsanPluginSkillManifest(_targetId);
+            await replaceLitsanSkillDirectory(cursorRootDirectory, manifest);
         },
         async uninstallPlugin(_targetId) {
             await removeCursorHookConfig(join(cursorRootDirectory, HOOKS_FILE_NAME));
             await rm(join(cursorRootDirectory, HOOK_DIRECTORY_NAME, HOOK_SCRIPT_FILE_NAME), { force: true });
-            await rm(join(cursorRootDirectory, HOOK_DIRECTORY_NAME, LEGACY_HOOK_SCRIPT_FILE_NAME), { force: true });
             await rm(join(cursorRootDirectory, HOOK_DIRECTORY_NAME, HOOK_CONFIG_FILE_NAME), { force: true });
             await rm(join(cursorRootDirectory, HOOK_DIRECTORY_NAME, WORKSPACE_BRIDGE_FILE_NAME), { force: true });
-            await removeMemmySkillDirectory(cursorRootDirectory);
+            await removeLitsanSkillDirectory(cursorRootDirectory);
         }
     };
 }
@@ -164,12 +165,12 @@ function removeCursorResumeHookEntries(value) {
     if (!Array.isArray(value)) {
         return [];
     }
-    return value.filter((item) => isRecord(item) && !isMemmyResumeHook(item));
+    return value.filter((item) => isRecord(item) && !isLitsanResumeHook(item));
 }
-function isMemmyResumeHook(value) {
+function isLitsanResumeHook(value) {
     return isRecord(value) &&
         typeof value.command === "string" &&
-        (value.command.includes(HOOK_SCRIPT_FILE_NAME) || value.command.includes(LEGACY_HOOK_SCRIPT_FILE_NAME));
+        (value.command.match(/(?:memmy|litsan)-(?:memory-)?resume-hook\.mjs/u) || value.command.includes(LEGACY_HOOK_SCRIPT_FILE_NAME));
 }
 /**
  * Writes a text file atomically.

@@ -20,3 +20,6 @@ sessions/
 !.env.example
 recovery/
 .tmp-tests/
+__pycache__/
+*.pyc
+.tsbuild/

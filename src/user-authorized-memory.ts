@@ -1,3 +1,5 @@
+import type { AccountId, UserId, SourceContext } from "./contracts/identity.js";
+import type { MemoryDistiller, MemoryViewerReader } from "./core/ports/memory.js";
 import { createHash, randomUUID } from "node:crypto";
 import { validateDurableMemoryContent } from "./distillation-contract.js";
 import {
@@ -5,7 +7,14 @@ import {
   type DistillationEvidenceItem
 } from "./distillation-jobs.js";
 import { hydrateMemoryEvidence } from "./memory-hydration.js";
-import type { MemhubRuntime } from "./runtime.js";
+
+export interface UserAuthorizedMemoryDeps {
+  accountId: AccountId;
+  memory: MemoryDistiller;
+  userId: UserId;
+  source: SourceContext;
+  memoryClient: MemoryViewerReader;
+}
 
 export const USER_AUTHORIZED_MEMORY_CONTRACT_VERSION = "memhub-user-authorized-memory-v1";
 
@@ -26,7 +35,7 @@ const authorizations = new Map<string, UserAuthorizedMemoryPlan>();
 
 export async function planUserAuthorizedMemory(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: UserAuthorizedMemoryDeps;
   kind: "l3" | "l4";
   projectId: string | null;
   content: string;
@@ -57,17 +66,17 @@ export async function planUserAuthorizedMemory(input: {
       throw new Error("L4 base_evidence_ref must be account-scoped");
     }
     const core = activeCoreItems.find((item) => item.id === base.memory_id);
-    if (!core) throw new Error("base_evidence_ref is not the current active Core memory; refresh memmy_context before planning");
+    if (!core) throw new Error("base_evidence_ref is not the current active Core memory; refresh litsan_context before planning");
     const coreContent = coreMemoryContent(core);
     if (!coreContent || sha256(normalizeContent(coreContent)) !== sha256(normalizeContent(base.content))) {
-      throw new Error("base_evidence_ref no longer matches the current Core memory body; refresh memmy_context before planning");
+      throw new Error("base_evidence_ref no longer matches the current Core memory body; refresh litsan_context before planning");
     }
     expectedRevisionRef = base.evidence_ref;
     expectedMemoryId = base.memory_id;
     expectedCoreContentHash = sha256(normalizeContent(coreContent));
     currentContent = normalizeContent(base.content);
   } else if (activeCoreItems.length > 0) {
-    throw new Error(`current ${input.kind.toUpperCase()} exists; base_evidence_ref from memmy_context is required for a governed replacement`);
+    throw new Error(`current ${input.kind.toUpperCase()} exists; base_evidence_ref from litsan_context is required for a governed replacement`);
   }
   if (currentContent === content) {
     throw new TypeError("proposed L3/L4 content is identical to the current canonical revision");
@@ -105,7 +114,7 @@ export async function planUserAuthorizedMemory(input: {
     instructions: [
       "Show proposed_content to the user in full, without shortening, paraphrasing, or hiding unchanged sections.",
       "Ask the user to explicitly confirm writing this exact full replacement.",
-      "After confirmation, open/capture that confirmation turn as L1 and call memhub_memory action=execute with this authorization_id and confirmation_evidence_ref=l1:<event-id>.",
+      "After confirmation, open/capture that confirmation turn as L1 and call litsan_memory action=execute with this authorization_id and confirmation_evidence_ref=l1:<event-id>.",
       "Do not execute from implied consent, an earlier approval, or a different proposed_content."
     ]
   };
@@ -113,7 +122,7 @@ export async function planUserAuthorizedMemory(input: {
 
 export async function executeUserAuthorizedMemory(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: UserAuthorizedMemoryDeps;
   authorizationId: string;
   confirmationEvidenceRef: string;
 }): Promise<Record<string, unknown>> {
@@ -227,7 +236,7 @@ export async function executeUserAuthorizedMemory(input: {
 }
 
 async function activeLayerItems(
-  runtime: MemhubRuntime,
+  runtime: UserAuthorizedMemoryDeps,
   kind: "l3" | "l4",
   projectId: string | null
 ): Promise<Record<string, unknown>[]> {

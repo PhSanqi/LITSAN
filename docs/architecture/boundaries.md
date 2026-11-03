@@ -1,6 +1,6 @@
-# Memhub boundaries
+# LITSAN boundaries
 
-## Memhub owns
+## LITSAN owns
 
 - stable account identity and authenticated transport mapping;
 - canonical Project Registry, Todo and explicit Branch metadata;
@@ -8,16 +8,19 @@
 - L2/L3/L4/Skill evidence contracts and canonical artifact identity;
 - distillation job control state;
 - Memory Core integration and bounded retrieval;
-- Project Architecture governance;
+- Project Architecture governance, including a strict authority boundary between the governed hard Architecture Contract and the derived Architecture Cognitive Map;
 - Control Plane inspection and authorized mutation.
 
 ## Harness/model owns
 
 - semantic interpretation of supplied evidence;
 - producing candidate L2/L3/L4/Skill content;
+- producing an optional complete Architecture Cognitive Map candidate during L2 semantic work when evidence materially changes project structure;
 - deciding, within the contract, whether evidence justifies a semantic update.
 
-Memhub validates account, project, evidence, layer and revision boundaries. It does not fabricate semantic conclusions.
+LITSAN validates account, project, evidence, layer and revision boundaries. It does not fabricate semantic conclusions.
+
+For Project Architecture, the Harness may infer the derived Cognitive Map, but it cannot write or promote hard constraints. The map must stop at method/mechanism abstraction, carry evidence/confidence, and pass a fingerprint fence. Hard Architecture remains explicit-user-authority content governed by `architecture_plan -> approval -> architecture_execute`.
 
 ## Project boundary
 
@@ -27,7 +30,7 @@ Cross-project reuse is limited to explicitly allowed account-level L4 context an
 
 ## Branch boundary
 
-Branch is explicit project-local workstream metadata. It may narrow retrieval inside an already-resolved project; it never broadens project scope and is never bound to a chat window.
+Branch is explicit project-local workstream metadata. It may narrow retrieval inside an already-resolved project; it never broadens project scope. A conversation is bound to a Branch only through an explicit `workstream` hint, never through transport or session identity.
 
 ## Transport boundary
 
@@ -37,17 +40,17 @@ Both local and remote callers terminate at the same MCP runtime. Loopback reques
 
 Current high-level tools:
 
-- `memmy_turn`
-- `memmy_context`
-- `memhub_memory`
-- `memhub_distill`
-- `memmy_project_list`
-- `memmy_project_manage`
-- `memhub_todo`
-- `memmy_project`
-- `memhub_branch`
-- `memhub_skill`
-- `memhub_result`
+- `litsan_turn`
+- `litsan_context`
+- `litsan_memory`
+- `litsan_distill`
+- `litsan_project_list`
+- `litsan_project_manage`
+- `litsan_todo`
+- `litsan_project`
+- `litsan_branch`
+- `litsan_skill`
+- `litsan_result`
 
 Project mutation and architecture replacement use plan -> explicit authorization -> execute. Explicit L3/L4 user authority uses complete-text review plus L1 confirmation evidence.
 

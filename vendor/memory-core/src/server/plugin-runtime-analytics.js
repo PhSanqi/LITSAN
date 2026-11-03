@@ -53,11 +53,11 @@ export function resolveExternalAgentSource(input) {
     const adapterId = stringValue(input.adapterId);
     if (!adapterId)
         return null;
-    const hookMatch = /^memmy-(.+)-hook$/u.exec(adapterId);
+    const hookMatch = /^(?:memmy|litsan)-(.+)-hook$/u.exec(adapterId);
     if (hookMatch?.[1] && EXTERNAL_AGENT_SOURCE_IDS.has(hookMatch[1])) {
         return hookMatch[1];
     }
-    const pluginMatch = /^memmy-(.+)-plugin$/u.exec(adapterId);
+    const pluginMatch = /^(?:memmy|litsan)-(.+)-plugin$/u.exec(adapterId);
     if (pluginMatch?.[1] && EXTERNAL_AGENT_SOURCE_IDS.has(pluginMatch[1])) {
         return pluginMatch[1];
     }
@@ -73,7 +73,7 @@ export function resolveExternalPluginToolCallSource(input) {
     if (adapterId?.startsWith("agent-source:"))
         return null;
     if (adapterId) {
-        const pluginMatch = /^memmy-(.+)-plugin$/u.exec(adapterId);
+        const pluginMatch = /^(?:memmy|litsan)-(.+)-plugin$/u.exec(adapterId);
         if (pluginMatch?.[1] && NATIVE_PLUGIN_AGENT_SOURCE_IDS.has(pluginMatch[1])) {
             return pluginMatch[1];
         }

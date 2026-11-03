@@ -1,3 +1,5 @@
+import type { AccountId } from "./contracts/identity.js";
+import type { MemoryViewerReader } from "./core/ports/memory.js";
 import { createHash, randomUUID } from "node:crypto";
 import { appendFile, mkdir, readFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
@@ -7,7 +9,9 @@ import {
   distillationRevisionBody
 } from "./distillation-contract.js";
 import type { ContextItem } from "./context-capsule.js";
-import type { MemhubRuntime } from "./runtime.js";
+import type { DistilledFactMetadataSet } from "./contracts/distillation.js";
+import { extractDistilledFactMetadata, factProjectStorageIds, filterFactMetadataEvidence, verifiedFactEvidenceRefs, type FactProjectReader } from "./fact-metadata.js";
+
 import {
   distillationResultTimestamp,
   listDistillationJobs,
@@ -16,9 +20,15 @@ import {
 } from "./distillation-jobs.js";
 import { tokenizeRetrievalText } from "./retrieval-ranker.js";
 
+export interface MemoryHydrationDeps {
+  accountId: AccountId;
+  memoryClient: MemoryViewerReader;
+  projects?: FactProjectReader;
+}
+
 export interface HydratedMemoryEvidence {
   evidence_ref: string;
-  layer: "L1" | "L2" | "L3" | "L4";
+  layer: "L1" | "L2" | "L3" | "L4" | "GlobalState";
   memory_id: string;
   revision_id?: string;
   project_id: string | null;
@@ -27,6 +37,7 @@ export interface HydratedMemoryEvidence {
   committed_at: string;
   source_conversation_id?: string;
   source_evidence_refs: string[];
+  fact_metadata?: DistilledFactMetadataSet;
   estimated_tokens: number;
 }
 
@@ -60,6 +71,7 @@ export async function hydrateMemoryEvidence(input: {
   stateRoot: string;
   accountId: string;
   evidenceRef: string;
+  projects?: FactProjectReader;
 }): Promise<HydratedMemoryEvidence> {
   const ref = input.evidenceRef.trim();
   const l1 = /^l1:(.+)$/.exec(ref);
@@ -88,9 +100,9 @@ export async function hydrateMemoryEvidence(input: {
     };
   }
 
-  const versioned = /^(l2|l3|l4):([^:]+):([^:]+)$/.exec(ref);
-  if (!versioned) throw new TypeError("evidence_ref must be l1:<event-id> or l2/l3/l4:<memory-id>:<revision-id>");
-  const prefix = versioned[1]! as "l2" | "l3" | "l4";
+  const versioned = /^(l2|l3|l4|global_state):([^:]+):([^:]+)$/.exec(ref);
+  if (!versioned) throw new TypeError("evidence_ref must be l1:<event-id>, l2/l3/l4:<memory-id>:<revision-id>, or global_state:<artifact-id>:<revision-id>");
+  const prefix = versioned[1]! as "l2" | "l3" | "l4" | "global_state";
   const memoryId = versioned[2]!;
   const revisionId = versioned[3]!;
   const jobs = await listDistillationJobs(input.stateRoot, input.accountId, true);
@@ -103,10 +115,21 @@ export async function hydrateMemoryEvidence(input: {
     Boolean(candidate.result_content?.trim())
   );
   if (!job?.result_content) throw new Error(`exact Memory revision not found: ${ref}`);
-  const content = distillationRevisionBody(job);
+  const content = prefix === "global_state" ? job.result_content : distillationRevisionBody(job);
+  const layer = prefix === "global_state" ? "GlobalState" : prefix.toUpperCase() as "L2" | "L3" | "L4";
+  const projectStorageIds = prefix === "l2"
+    ? await factProjectStorageIds(input.projects, input.accountId, job.project_id)
+    : [];
+  const factMetadata = prefix === "l2" || prefix === "l3"
+    ? filterFactMetadataEvidence(
+      job.result_fact_metadata ?? extractDistilledFactMetadata(prefix, content, prefix === "l3" ? job.evidence_refs : []),
+      verifiedFactEvidenceRefs({ kind: prefix, accountId: input.accountId, projectId: job.project_id,
+        projectStorageIds, evidence: job.evidence, jobs, asOf: distillationResultTimestamp(job) ?? job.updated_at })
+    )
+    : undefined;
   return {
     evidence_ref: ref,
-    layer: prefix.toUpperCase() as "L2" | "L3" | "L4",
+    layer,
     memory_id: memoryId,
     revision_id: revisionId,
     project_id: job.project_id,
@@ -115,6 +138,7 @@ export async function hydrateMemoryEvidence(input: {
     committed_at: distillationResultTimestamp(job) ?? job.completed_at ?? job.updated_at,
     ...(job.conversation_id ? { source_conversation_id: job.conversation_id } : {}),
     source_evidence_refs: job.evidence_refs.slice(),
+    ...(factMetadata ? { fact_metadata: factMetadata } : {}),
     estimated_tokens: estimateTokens(content)
   };
 }
@@ -182,7 +206,7 @@ export async function explainMemoryWhy(input: {
       preferred_sequence: ["prior_state_or_plan", "trigger", "constraint", "tradeoff", "decision", "execution_or_reversal"]
     },
     persistence: "none",
-    note: "This is a bounded evidence view. Memhub does not store the Harness causal judgement as a new memory layer."
+    note: "This is a bounded evidence view. LITSAN does not store the Harness causal judgement as a new memory layer."
   };
 }
 
@@ -226,7 +250,7 @@ function titleFromContent(content: string, fallback: string): string {
 }
 
 function revisionJobFromRef(jobs: readonly DistillationJob[], ref: string): DistillationJob | undefined {
-  const match = /^(l2|l3|l4):([^:]+):([^:]+)$/.exec(ref.trim());
+  const match = /^(l2|l3|l4|global_state):([^:]+):([^:]+)$/.exec(ref.trim());
   if (!match) return undefined;
   const target = match[1]!;
   const resultId = match[2]!;
@@ -303,11 +327,12 @@ function telemetryPath(stateRoot: string, accountId: string): string {
 
 export async function attachExactEvidenceRefsToContext(
   stateRoot: string,
-  runtime: MemhubRuntime,
+  runtime: MemoryHydrationDeps,
   capsule: { globalMemory: ContextItem[]; projectMemory: ContextItem[] }
 ): Promise<void> {
   await attachExactDistillationEvidenceRefs({
     stateRoot, accountId: runtime.accountId,
+    projects: runtime.projects,
     items: [...capsule.globalMemory, ...capsule.projectMemory],
     readMemory: (id) => runtime.memoryClient.viewerGet(`/api/v1/memory/${encodeURIComponent(id)}`)
   });

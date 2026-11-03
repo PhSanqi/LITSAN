@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="PhSanqi/Memhub"
+REPO="PhSanqi/LITSAN"
 EDITION="${MEMHUB_EDITION:-local}"
 VERSION="${MEMHUB_VERSION:-latest}"
 INSTALL_BASE="${MEMHUB_INSTALL_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/memhub}"
@@ -13,7 +13,7 @@ PREPARE_ONLY="${MEMHUB_PREPARE_ONLY:-0}"
 
 usage() {
   cat <<'EOF'
-Memhub Complete installer (bundled Node.js runtime)
+LITSAN Complete installer (bundled Node.js runtime)
 
 Usage:
   install-complete.sh [--edition local|server] [--version latest|vX.Y.Z]
@@ -51,7 +51,7 @@ if [[ -n "$PACKAGE_ROOT" ]]; then
   NODE="$PACKAGE_ROOT/runtime/node/bin/node"
   if [[ "$PREPARE_ONLY" == "1" ]]; then
     (cd "$PACKAGE_ROOT" && "$NODE" scripts/complete-runtime-smoke.cjs)
-    echo "[memhub] complete package verified: $PACKAGE_ROOT"
+    echo "[litsan] complete package verified: $PACKAGE_ROOT"
     exit 0
   fi
   export NODE
@@ -61,7 +61,7 @@ if [[ -n "$PACKAGE_ROOT" ]]; then
     [[ -n "$EMAIL" ]] && export MEMHUB_EMAIL="$EMAIL" || unset MEMHUB_EMAIL || true
     [[ -n "$PUBLIC_HOST" ]] && export MEMHUB_PUBLIC_HOST="$PUBLIC_HOST" || unset MEMHUB_PUBLIC_HOST || true
   fi
-  echo "[memhub] using bundled runtime: $($NODE --version)"
+  echo "[litsan] using bundled runtime: $($NODE --version)"
   bash "$PACKAGE_ROOT/editions/$EDITION/linux/install.sh"
   exit 0
 fi
@@ -76,14 +76,14 @@ if [[ "$VERSION" == "latest" ]]; then
 else
   TAG="$VERSION"; [[ "$TAG" == v* ]] || TAG="v$TAG"
 fi
-[[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Could not resolve a stable Memhub release tag: $TAG" >&2; exit 2; }
+[[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Could not resolve a stable LITSAN release tag: $TAG" >&2; exit 2; }
 
 ASSET="memhub-${TAG}-linux-x64-complete.tar.gz"
 BASE_URL="https://github.com/$REPO/releases/download/$TAG"
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/memhub-complete.XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
-echo "[memhub] complete release: $TAG"
-echo "[memhub] downloading: $ASSET"
+echo "[litsan] complete release: $TAG"
+echo "[litsan] downloading: $ASSET"
 curl -fL --retry 3 --retry-delay 1 "$BASE_URL/$ASSET" -o "$TMP/$ASSET"
 curl -fL --retry 3 --retry-delay 1 "$BASE_URL/SHA256SUMS.txt" -o "$TMP/SHA256SUMS.txt"
 EXPECTED_LINE="$(grep -E "^[0-9a-fA-F]{64}  ${ASSET//./\\.}$" "$TMP/SHA256SUMS.txt" || true)"

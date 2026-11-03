@@ -1,11 +1,14 @@
 #!/usr/bin/env node
+import { memoryConfigKey } from "../utils/litsan-compat.js";
+import { legacyCliNotice } from "../utils/litsan-compat.js";
+import { litsanEnv } from "../utils/litsan-compat.js";
 import { mutateMemoryConfig } from "../config/writer.js";
 import { existsSync, linkSync, mkdirSync, readdirSync, rmdirSync, statSync, readFileSync, realpathSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createStorageBackend } from "../storage/backend.js";
-import { loadMemmyConfig } from "../config/index.js";
+import { loadLitsanConfig } from "../config/index.js";
 import { createMemoryLogger, memoryErrorFields } from "../logging/logger.js";
 import { MemoryService } from "../service/memory-service.js";
 import { closeMemoryHttpServer, listenMemoryHttpServer } from "./http.js";
@@ -45,11 +48,11 @@ export async function main(argv = process.argv.slice(2)) {
 }
 async function runMemoryService(argv, lifecycle) {
     const options = parseServeArgs(argv);
-    const { config, path: configPath } = loadMemmyConfig(options.configPath);
-    const host = options.host ?? process.env.MEMMY_MEMORY_HOST ?? process.env.MEMORY_SERVICE_HOST ?? "127.0.0.1";
+    const { config, path: configPath } = loadLitsanConfig(options.configPath);
+    const host = options.host ?? litsanEnv("LITSAN_MEMORY_HOST", process.env) ?? process.env.MEMORY_SERVICE_HOST ?? "127.0.0.1";
     assertLoopbackBindHost(host);
     const port = options.port ??
-        numberEnv("MEMMY_MEMORY_PORT") ??
+        numberEnv("LITSAN_MEMORY_PORT") ??
         numberEnv("MEMORY_SERVICE_PORT") ??
         18960;
     const sqlitePath = options.dbPath ?? config.storage.sqlitePath;
@@ -402,7 +405,7 @@ function parsePort(value) {
     return port;
 }
 function numberEnv(name) {
-    const value = process.env[name];
+    const value = litsanEnv(name, process.env);
     if (!value)
         return undefined;
     return parsePort(value);
@@ -414,11 +417,11 @@ export function agentSourceAutomationEnabled(env = process.env) {
 export async function writeCurrentEndpoint(configPath, endpoint) {
     try {
         await mutateMemoryConfig(configPath, (root) => {
-            const memmyMemory = mutableRecord(root.memmyMemory);
-            const storage = mutableRecord(memmyMemory.storage);
+            const litsanMemory = mutableRecord((root.litsanMemory ?? root.memmyMemory));
+            const storage = mutableRecord(litsanMemory.storage);
             storage.endpoint = endpoint;
-            memmyMemory.storage = storage;
-            root.memmyMemory = memmyMemory;
+            litsanMemory.storage = storage;
+            root[memoryConfigKey(root)] = litsanMemory;
         });
     }
     catch (error) {
@@ -446,6 +449,8 @@ function realpathOrSelf(path) {
     }
 }
 if (isDirectRun()) {
+    const notice = legacyCliNotice(process.argv[1], process.argv.slice(2));
+    if (notice) process.stderr.write(notice);
     main().catch((error) => {
         logger.error("service.fatal", memoryErrorFields(error));
         process.exitCode = 1;

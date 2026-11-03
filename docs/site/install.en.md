@@ -6,19 +6,19 @@ This page covers Local / Server × Linux / Windows and treats installation as mo
 
 ## Understand the boundaries first
 
-Memory Core is the private data plane and should remain loopback-only. The Memhub MCP runtime is the identity/project/context/tool boundary. Local clients connect to it directly on loopback; Server publishes that same `/mcp` endpoint through authenticated ingress. Do not expose Memory Core on the Internet to make an MCP client easier to configure.
+Memory Core is the private data plane and should remain loopback-only. The LITSAN MCP runtime is the identity/project/context/tool boundary. Local clients connect to it directly on loopback; Server publishes that same `/mcp` endpoint through authenticated ingress. Do not expose Memory Core on the Internet to make an MCP client easier to configure.
 
-State under `MEMHUB_HOME` or the default state root is durable material. It is not just cache. Backups must consider raw capture, Memory Core durable state, project registry, account/device state, and bindings.
+State under `LITSAN_HOME` or the default state root is durable material. It is not just cache. Backups must consider raw capture, Memory Core durable state, project registry, account/device state, and bindings.
 
 ## Local Linux
 
 ```bash
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
 bash editions/local/linux/install.sh
 ```
 
-The install home is `MEMHUB_HOME=$HOME/.memmy/memhub` (explicit `--home` > `MEMHUB_HOME` > existing `~/.memmy/memhub` > legacy `$HOME/.memhub` containing `memhub.env` or `accounts.json`, used in place with one warning; data is never moved or copied). The gateway control root is separate: explicit `--state-root` > `MEMHUB_STATE_ROOT` > `<home>/server` when it holds `accounts.json` > `<home>`. Edition installs set `MEMHUB_HOME=<home>` and `MEMHUB_STATE_ROOT=<home>/server` together; the two values are not aliases and may legitimately differ. The installer creates systemd user units for Memory Core and the local MCP runtime; both entrypoints render them through `deploy/install-user-service.sh`, which sets `MEMHUB_HOME` explicitly. Verify:
+The install home is `LITSAN_HOME=$HOME/.memmy/memhub` (explicit `--home` > `LITSAN_HOME` > existing `~/.memmy/memhub` > legacy `$HOME/.memhub` containing `memhub.env` or `accounts.json`, used in place with one warning; data is never moved or copied). The gateway control root is separate: explicit `--state-root` > `LITSAN_STATE_ROOT` > `<home>/server` when it holds `accounts.json` > `<home>`. Edition installs set `LITSAN_HOME=<home>` and `LITSAN_STATE_ROOT=<home>/server` together; the two values are not aliases and may legitimately differ. The installer creates systemd user units for Memory Core and the local MCP runtime; both entrypoints render them through `deploy/install-user-service.sh`, which sets `LITSAN_HOME` explicitly. Verify:
 
 ```bash
 systemctl --user status memhub-core.service
@@ -28,13 +28,15 @@ ss -ltn | grep -E '3001|18960'
 
 MCP clients use `http://127.0.0.1:3001/mcp` directly. Clients use the MCP endpoint directly.
 
+In quiet mode, `litsan_turn action=open` can offer one same-project, same-branch maintenance card. A compatible client may load it with `litsan_card action=inline_load` and submit a separate `maintenance_answer` with `commit`; committing without an answer releases the lease. The default card limit is 3000 estimated tokens and can be adjusted with `client_profile.max_card_tokens`; oversized cards remain pending for a capable client. Hosts must call the MCP tools themselves. Synchronous calls can delay the reply; LITSAN does not start a model or agent.
+
 ## Local Windows
 
 For a first Windows installation, use the fresh-install path directly. **Do not install an old release or create legacy Scheduled Tasks just to run a migration.** Migration from an actually installed early split-task release is a separate, audited scenario; disposable compatibility tests are not proof of a live migration.
 
 ```powershell
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
 powershell -ExecutionPolicy Bypass -File .\editions\local\windows\install.ps1
 ```
 
@@ -43,20 +45,20 @@ The product boundaries and ports are the same as Linux. Do not change the user's
 ## Server Linux
 
 ```bash
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
-MEMHUB_PUBLIC_HOST=memory.example.com bash editions/server/linux/install.sh
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
+LITSAN_PUBLIC_HOST=memory.example.com bash editions/server/linux/install.sh
 ```
 
 Verify `memhub-core.service`, `memhub.service`, and `memhub-stack.target`. The origin MCP is `http://127.0.0.1:3001/mcp`. Validate origin before adding Tunnel/Access; the public `/mcp` route should terminate at that same loopback runtime.
 
 ## Server Windows
 
-Fresh installation and upgrading an existing installation are different procedures. Follow the fresh-install steps below only when there is no prior Memhub instance. If state or Memhub Scheduled Tasks already exist, establish their provenance, backup and ownership before changing anything.
+Fresh installation and upgrading an existing installation are different procedures. Follow the fresh-install steps below only when there is no prior LITSAN instance. If state or LITSAN Scheduled Tasks already exist, establish their provenance, backup and ownership before changing anything.
 
 ```powershell
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
 powershell -ExecutionPolicy Bypass -File .\editions\server\windows\install.ps1 -PublicHost memory.example.com
 ```
 
@@ -64,7 +66,7 @@ Keep Gateway on the private origin and publish it through authenticated ingress.
 
 ## Cloudflare Access
 
-Cloudflare authenticates remote clients at the edge. Memhub still maps identity to a stable account and enforces internal roles. OAuth/Access credentials must not be placed in prompts or project memory.
+Cloudflare authenticates remote clients at the edge. LITSAN still maps identity to a stable account and enforces internal roles. OAuth/Access credentials must not be placed in prompts or project memory.
 
 Anonymous `/user` or `/admin` returning 401 can be correct. The security failure would be anonymous access being accepted when the deployment is intended to be protected.
 
@@ -97,7 +99,7 @@ Keep rollback snapshots and durable fingerprints. A rebuildable capture index al
 
 ## Firewall, proxy, and DNS
 
-Local loopback ports normally do not need inbound firewall exposure. Server Memory Core/Gateway origin should not be opened directly to the Internet. DNS should point to your authenticated proxy/Tunnel. If Host validation fails, fix `MEMHUB_PUBLIC_HOST` or proxy forwarding rather than disabling validation.
+Local loopback ports normally do not need inbound firewall exposure. Server Memory Core/Gateway origin should not be opened directly to the Internet. DNS should point to your authenticated proxy/Tunnel. If Host validation fails, fix `LITSAN_PUBLIC_HOST` or proxy forwarding rather than disabling validation.
 
 Corporate proxy configuration should be explicit in the deployment environment. The installer should not rewrite the user's global network settings.
 

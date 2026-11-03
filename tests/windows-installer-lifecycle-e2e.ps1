@@ -69,7 +69,7 @@ try {
   $envPath = Join-Path $StateRoot "memhub.env"
   $before = Get-Content -Raw $configPath
   . (Join-Path $RepoRoot "scripts\windows-memory-credentials.ps1")
-  $token = Resolve-MemhubMemoryToken -ConfigPath $configPath -MemoryDir (Join-Path $StateRoot "memory")
+  $token = Resolve-LitsanMemoryToken -ConfigPath $configPath -MemoryDir (Join-Path $StateRoot "memory")
   Assert-True ($token -match '^[a-f0-9]{64}$') "fresh Core token invalid"
   $environment = Get-Content -Raw $envPath
   Assert-True ($environment.Contains("MEMHUB_MEMORY_TOKEN=" + $token)) "Gateway and Core credentials mismatch"
@@ -136,7 +136,7 @@ try {
   # testing live stop/restart. Real cross-version package acceptance is separate.
   foreach ($phase in @("reinstall", "upgrade", "rollback")) {
     Install-Edition
-    Assert-True ((Resolve-MemhubMemoryToken -ConfigPath $configPath -MemoryDir (Join-Path $StateRoot "memory")) -eq $token) ("Core credential changed on " + $phase)
+    Assert-True ((Resolve-LitsanMemoryToken -ConfigPath $configPath -MemoryDir (Join-Path $StateRoot "memory")) -eq $token) ("Core credential changed on " + $phase)
     Assert-True ((Get-Content -Raw $marker).Trim() -eq "KEEP") ("user data changed on " + $phase)
     Assert-True ((Get-Content -Raw $envPath).Contains("MEMHUB_MEMORY_TOKEN=" + $token)) ("token changed on " + $phase)
     if ($Edition -eq "server") {
@@ -150,7 +150,7 @@ try {
   Assert-True (Test-Path $configPath) "uninstall without purge deleted config"
   Assert-True ((Get-Content -Raw $marker).Trim() -eq "KEEP") "uninstall without purge deleted user data"
   Install-Edition
-  Assert-True ((Resolve-MemhubMemoryToken -ConfigPath $configPath -MemoryDir (Join-Path $StateRoot "memory")) -eq $token) "reinstall after uninstall changed Core credential"
+  Assert-True ((Resolve-LitsanMemoryToken -ConfigPath $configPath -MemoryDir (Join-Path $StateRoot "memory")) -eq $token) "reinstall after uninstall changed Core credential"
   if ($Edition -eq "server") {
     Assert-True ((Get-Content -Raw $envPath).Contains("MEMHUB_PUBLIC_HOST=memhub-e2e.invalid")) "reinstall after uninstall removed public host"
   }

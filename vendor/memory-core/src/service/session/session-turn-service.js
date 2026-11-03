@@ -5,7 +5,7 @@ import { MemoryServiceError } from "../../utils/error.js";
 import { newId, stableHash, stableStringify } from "../../utils/id.js";
 import { isRecord } from "../../utils/json.js";
 import { memoryCaptureQaHash, normalizeMemoryCaptureSource } from "../../utils/memory-capture-claim.js";
-import { isMemmyRecallToolName } from "../../utils/memmy-context-tags.js";
+import { isLitsanRecallToolName } from "../../utils/litsan-context-tags.js";
 import { clip } from "../../utils/text.js";
 import { nowIso } from "../../utils/time.js";
 import { isDynamicCurrentFactQuery, isPersonalFactQuestion, isPurePersonalFactStatement, isQuestionLike, isTaskLinkedUserFeedback } from "../capture/capture-heuristics.js";
@@ -189,7 +189,7 @@ function rawTurnIsExcludedFromL1(rawTurn) {
         return true;
     const taskLinkedFeedback = isTaskLinkedUserFeedback(rawTurn.userText ?? "");
     const hasOnlyRecalledMemoryEvidence = rawTurn.sourceMemoryIds.length > 0 && ((rawTurn.toolCalls.length === 0 && rawTurn.toolResults.length === 0) ||
-        (rawTurn.toolCalls.length > 0 && rawTurn.toolCalls.every((call) => isToolCallPayload(call) && isMemmyRecallToolName(call.name))));
+        (rawTurn.toolCalls.length > 0 && rawTurn.toolCalls.every((call) => isToolCallPayload(call) && isLitsanRecallToolName(call.name))));
     if (!taskLinkedFeedback &&
         hasOnlyRecalledMemoryEvidence)
         return true;

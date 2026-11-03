@@ -22,7 +22,7 @@ export function renderSetupResult(value, options = {}) {
     }
     appendLine(lines, style, "Shell completion", "Skipped (disabled during init)");
     lines.push("");
-    lines.push(`${style.bold("Try running:")} ${style.cyan("memmy-memory health")}`);
+    lines.push(`${style.bold("Try running:")} ${style.cyan("litsan-memory health")}`);
     return trimTrailingBlankLines(lines).join("\n");
 }
 function renderTitle(result, style) {

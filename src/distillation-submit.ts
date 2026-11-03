@@ -1,11 +1,19 @@
+import { completeBranchJobWithEvents, validateBranchEvents } from "./branch-drafts.js";
+import type { AccountId, UserId, SourceContext } from "./contracts/identity.js";
+import type { ProjectReader, ProjectWriter } from "./core/ports/projects.js";
+import type { MemoryViewerReader, MemoryDistiller } from "./core/ports/memory.js";
+import type { ArchitectureReader, ArchitectureWriter } from "./core/ports/architecture.js";
 import { createHash, randomUUID } from "node:crypto";
 import commitFs, { mkdir, readFile, readdir, stat, unlink } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { withFileMutationLock } from "./file-mutation-lock.js";
 import { MemoryCoreHttpError, withCoreMemoryReconciliation } from "./local-memory-client.js";
-import { DISTILLATION_CONTRACT_VERSION, validateDistillationCandidate } from "./distillation-contract.js";
+import { DISTILLATION_CONTRACT_VERSION, validateBilingualDistillationContent, validateDistillationCandidate } from "./distillation-contract.js";
+import { assertL2RestructureCandidate, latestCanonicalL2 } from "./core/lifecycle/l2-restructure.js";
 import {
+  getDistillationConfig,
   assertActiveDistillationLease,
+  completeDistillationLocalArtifact,
   completeDistillationJobAfterCoreCommit,
   enqueueDerivedDistillationJob,
   failDistillationJobForLeaseGeneration,
@@ -17,18 +25,37 @@ import {
   type DistillationEvidenceItem,
   type DistillationJob
 } from "./distillation-jobs.js";
-import type { MemhubRuntime } from "./runtime.js";
+import { globalStateArtifactId, globalStateEvidenceRef, GLOBAL_STATE_TITLE } from "./global-state.js";
+
 import { assertSkillVersion } from "./skill-version.js";
+import { parseDistillationClaimTraces, recordDistillationTrace, validateDistillationTraceSpans } from "./distillation-trace.js";
+import { extractDistilledFactMetadata, factMetadataSummary, filterFactMetadataEvidence, verifiedFactEvidenceRefs } from "./fact-metadata.js";
+import {
+  buildArchitectureCognitiveMap,
+  parseArchitectureCognitiveMapCandidate,
+  type ArchitectureCognitiveMap,
+  type ArchitectureCognitiveMapCandidate
+} from "./architecture-cognitive-map.js";
+
+export interface DistillationSubmitDeps {
+  accountId: AccountId;
+  projects: ProjectReader & Pick<ProjectWriter, "updateDistilledDescription">;
+  memoryClient: MemoryViewerReader;
+  architecture: Pick<ArchitectureReader, "inspectProjectCognitiveMap"> & Pick<ArchitectureWriter, "writeProjectCognitiveMap">;
+  userId: UserId;
+  source: SourceContext;
+  memory: MemoryDistiller;
+}
 
 export async function submitDistillationControl(input: {
   args: Record<string, unknown>;
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: DistillationSubmitDeps;
   sourceHarness: string;
   leaseToken?: string;
   enqueueDerived?: typeof enqueueDerivedDistillationJob;
-  resolveToolScope: (runtime: MemhubRuntime, input: { scope: string; project?: string; workspaceProject?: string; conversationId?: string }) => Promise<{ projectId: string | null; conversationId?: string; resolutionSource: string }>;
-  validateDistillationEvidenceChain: (input: { stateRoot: string; runtime: MemhubRuntime; kind: "l2" | "l3" | "l4" | "skill"; projectId: string | null; evidenceRefs: string[]; job?: DistillationJob }) => Promise<DistillationEvidenceItem[]>;
+  resolveToolScope: (runtime: DistillationSubmitDeps, input: { scope: string; project?: string; workspaceProject?: string; conversationId?: string }) => Promise<{ projectId: string | null; conversationId?: string; resolutionSource: string }>;
+  validateDistillationEvidenceChain: (input: { stateRoot: string; runtime: DistillationSubmitDeps; kind: "l2" | "l3" | "l4" | "global_state" | "skill"; projectId: string | null; evidenceRefs: string[]; job?: DistillationJob }) => Promise<DistillationEvidenceItem[]>;
 }): Promise<Record<string, unknown>> {
   const { args, stateRoot, runtime, sourceHarness, leaseToken, resolveToolScope, validateDistillationEvidenceChain } = input;
     const jobId = optionalString(args.job_id);
@@ -37,9 +64,13 @@ export async function submitDistillationControl(input: {
       ? jobs.find((item) => item.job_id === jobId)
       : undefined;
     if (jobId && !job) throw new Error("distillation job not found for account");
-    const kind = (optionalString(args.kind) ?? job?.target) as "l2" | "l3" | "l4" | "skill" | undefined;
-    if (!kind || !["l2", "l3", "l4", "skill"].includes(kind)) {
-      throw new TypeError("kind must be l2, l3, l4, or skill");
+    if (job?.branch_id && job.l2_restructure) throw new Error("restructure_job_not_branch");
+    if (job?.l2_restructure && args.operator_confirmation !== `restructure:${job.l2_restructure.base_ref}`) {
+      throw new Error(`L2 restructure requires explicit operator_confirmation: restructure:${job.l2_restructure.base_ref}`);
+    }
+    const kind = (optionalString(args.kind) ?? job?.target) as "l2" | "l3" | "l4" | "global_state" | "skill" | undefined;
+    if (!kind || !["l2", "l3", "l4", "global_state", "skill"].includes(kind)) {
+      throw new TypeError("kind must be l2, l3, l4, global_state, or skill");
     }
     if (job && job.target !== kind) throw new Error(`distillation target mismatch: job expects ${job.target}`);
     const scope = optionalString(args.scope) ?? job?.scope;
@@ -49,6 +80,7 @@ export async function submitDistillationControl(input: {
       throw new TypeError(`${kind.toUpperCase()} requires project scope`);
     }
     if (kind === "l4" && scope !== "account") throw new TypeError("L4 requires account scope");
+    if (kind === "global_state" && scope !== "account") throw new TypeError("Global State requires account scope");
     const title = optionalString(args.title);
     const artifactId = optionalString(args.artifact_id);
     const version = optionalString(args.version);
@@ -65,6 +97,7 @@ export async function submitDistillationControl(input: {
       conversationId: optionalString(args.conversation_id) ?? job?.conversation_id
     });
     if (kind === "l4" && projectId !== null) throw new Error("L4 cannot be project-scoped");
+    if (kind === "global_state" && projectId !== null) throw new Error("Global State cannot be project-scoped");
     const canonicalJobProjectId = job?.project_id
       ? await runtime.projects.resolve(runtime.accountId, job.project_id)
       : job?.project_id ?? null;
@@ -75,16 +108,59 @@ export async function submitDistillationControl(input: {
     if (job && explicitEvidenceRefs.some((ref) => !job!.evidence_refs.includes(ref))) {
       throw new Error("job-backed distillation cannot add evidence outside the leased job");
     }
-    const evidenceRefs = uniqueStrings(job ? job.evidence_refs : explicitEvidenceRefs);
+    const evidenceRefs = uniqueStrings(job && !job.l2_restructure ? job.evidence_refs : explicitEvidenceRefs) ?? [];
+    const claimTraces = parseDistillationClaimTraces(args.claim_traces, evidenceRefs);
     const sourceConversations = uniqueStrings([
       ...(job?.conversation_id ? [job.conversation_id] : []),
       ...(stringArray(args.source_conversations) ?? [])
     ]);
     const confidence = optionalNumber(args.confidence);
-    const content = requiredString(args.content, "content");
+    if (job?.branch_id && (args.content !== undefined || args.events === undefined)) throw new Error("branch_job_requires_events");
+    if (!job?.branch_id && args.events !== undefined) throw new Error("events_only_for_branch_jobs");
+    const content = job?.branch_id ? "" : requiredString(args.content, "content");
     const projectDescription = optionalString(args.project_description);
     if (projectDescription && kind !== "l2") throw new TypeError("project_description is only valid for L2 distillation");
     if (projectDescription && projectDescription.length > 1200) throw new TypeError("project_description must be at most 1200 characters");
+    const architectureMapBaseFingerprint = optionalString(args.architecture_map_base_fingerprint);
+    const architectureMapCandidate: ArchitectureCognitiveMapCandidate | undefined = args.architecture_map === undefined
+      ? undefined
+      : parseArchitectureCognitiveMapCandidate(args.architecture_map);
+    if (architectureMapCandidate && kind !== "l2") throw new TypeError("architecture_map is only valid for L2 distillation");
+    if (architectureMapBaseFingerprint && kind !== "l2") throw new TypeError("architecture_map_base_fingerprint is only valid for L2 distillation");
+    if (architectureMapCandidate && !architectureMapBaseFingerprint) {
+      throw new TypeError("architecture_map requires architecture_map_base_fingerprint from action=next");
+    }
+    if (!architectureMapCandidate && architectureMapBaseFingerprint) {
+      throw new TypeError("architecture_map_base_fingerprint requires architecture_map");
+    }
+    if (job?.branch_id) {
+      const events = validateBranchEvents(args.events, job.evidence_refs);
+      if (job.status === "completed" && job.result_kind === "branch_draft") {
+        return { ok: true, job_id: job.job_id, ...await completeBranchJobWithEvents({ stateRoot, accountId: runtime.accountId,
+          jobId: job.job_id, leaseOwner: sourceHarness, leaseToken, events, projects: runtime.projects }) };
+      }
+      assertActiveDistillationLease(job, sourceHarness, leaseToken);
+      const resolvedEvidence = await validateDistillationEvidenceChain({ stateRoot, runtime, kind, projectId, evidenceRefs, job });
+      let architectureMapResult: unknown, architectureMapError: string | undefined;
+      if (architectureMapCandidate && projectId) {
+        const current = await runtime.architecture.inspectProjectCognitiveMap({ accountId: runtime.accountId, projectId });
+        if (current.fingerprint !== architectureMapBaseFingerprint) throw new Error("Project Architecture Cognitive Map changed after action=next; reload the latest architecture_context and submit a fresh full map");
+        const map = buildArchitectureCognitiveMap({ projectId, candidate: architectureMapCandidate,
+          sourceEvidenceRefs: resolvedEvidence.map(e => e.ref), previousMap: current.map });
+        if (args.dry_run !== true) try {
+          const write = await runtime.architecture.writeProjectCognitiveMap({ accountId: runtime.accountId, projectId,
+            expectedFingerprint: architectureMapBaseFingerprint!, map });
+          architectureMapResult = { fingerprint: write.after.fingerprint, generated_at: write.after.map!.generated_at,
+            nodes: write.after.map!.nodes.length, edges: write.after.map!.edges.length, timeline_links: write.after.map!.timeline_links.length };
+        } catch (error) { architectureMapError = error instanceof Error ? error.message : String(error); }
+      }
+      if (args.dry_run === true) return { ok: true, dryRun: true, job_id: job.job_id, events };
+      const completed = await completeBranchJobWithEvents({ stateRoot, accountId: runtime.accountId, jobId: job.job_id,
+        leaseOwner: sourceHarness, leaseToken, events, projects: runtime.projects });
+      return { ok: true, job_id: job.job_id, ...completed,
+        ...(architectureMapResult ? { architecture_map: architectureMapResult } : {}),
+        ...(architectureMapError ? { architecture_map_error: architectureMapError } : {}) };
+    }
     const canonicalArtifactId = artifactId ??
       (kind === "l2"
         ? `project-timeline:${projectId}`
@@ -92,6 +168,8 @@ export async function submitDistillationControl(input: {
           ? `project-profile:${projectId}`
           : kind === "l4"
             ? `user-profile:${runtime.accountId}`
+            : kind === "global_state"
+              ? globalStateArtifactId(runtime.accountId)
             : undefined);
     const canonicalTitle = title ??
       (kind === "l2"
@@ -100,12 +178,83 @@ export async function submitDistillationControl(input: {
           ? `Project Rules & Experience · ${projectId}`
           : kind === "l4"
             ? "Cross-project User Profile"
+            : kind === "global_state"
+              ? GLOBAL_STATE_TITLE
             : undefined);
+
+    if (kind === "global_state") {
+      if (!jobId || !job) throw new Error("Global State submission requires a leased discovery job");
+      if (claimTraces.length > 0) throw new TypeError("claim_traces are not yet supported for Global State");
+      if (job.status === "completed") {
+        if (job.result_kind !== "global_state" || job.result_id !== canonicalArtifactId || job.result_content !== content) {
+          throw new Error("completed Global State job cannot be replaced by a different candidate");
+        }
+        return {
+          ok: true,
+          kind,
+          scope,
+          project: null,
+          sourceHarness,
+          contract: DISTILLATION_CONTRACT_VERSION,
+          job_id: job.job_id,
+          artifact: { id: job.result_id, title: canonicalTitle, content: job.result_content },
+          result_evidence_ref: globalStateEvidenceRef(job)
+        };
+      }
+      assertActiveDistillationLease(job, sourceHarness, leaseToken);
+      validateDistillationCandidate({ kind, content, evidence: { evidenceRefs, sourceConversations, confidence } });
+      const resolvedEvidence = await validateDistillationEvidenceChain({
+        stateRoot,
+        runtime,
+        kind,
+        projectId: null,
+        evidenceRefs,
+        job
+      });
+      if (args.dry_run === true) {
+        return {
+          ok: true,
+          dryRun: true,
+          kind,
+          scope,
+          project: null,
+          sourceHarness,
+          contract: DISTILLATION_CONTRACT_VERSION,
+          evidenceRefs: resolvedEvidence.map((item) => item.ref),
+          artifact_id: canonicalArtifactId
+        };
+      }
+      const completed = await completeDistillationLocalArtifact(
+        stateRoot,
+        runtime.accountId,
+        job.job_id,
+        { kind: "global_state", resultId: canonicalArtifactId!, content },
+        sourceHarness,
+        leaseToken
+      );
+      return {
+        ok: true,
+        kind,
+        scope,
+        project: null,
+        sourceHarness,
+        nativeEvolution: false,
+        contract: DISTILLATION_CONTRACT_VERSION,
+        job_id: completed.job_id,
+        artifact: {
+          id: completed.result_id,
+          title: canonicalTitle,
+          content: completed.result_content,
+          updatedAt: completed.result_committed_at
+        },
+        result_evidence_ref: globalStateEvidenceRef(completed)
+      };
+    }
     const commitPath = join(resolve(stateRoot), "distillation", "commits", hashJson([runtime.accountId, kind, projectId, canonicalArtifactId]) + ".json");
     const response = await withArtifactCommitLock(commitPath, async () => {
     const candidateHash = hashJson({ jobId, kind, projectId, conversationId, content, title: canonicalTitle,
       artifactId: canonicalArtifactId, version, evidenceRefs, sourceConversations, confidence,
-      tags: stringArray(args.tags), projectDescription, sourceHarness });
+      tags: stringArray(args.tags), projectDescription, architectureMapCandidate, architectureMapBaseFingerprint, sourceHarness });
     let commit: ArtifactCommit | undefined;
     try { commit = JSON.parse(await readFile(commitPath, "utf8")) as ArtifactCommit; }
     catch (error) { if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error; }
@@ -113,6 +262,16 @@ export async function submitDistillationControl(input: {
     job = jobId ? jobs.find((item) => item.job_id === jobId) : undefined;
     if (jobId && !job) throw new Error("distillation job not found for account");
     const replay = commit?.candidateHash === candidateHash && !commit.rejected;
+    if (job?.l2_restructure && projectId) {
+      const base = latestCanonicalL2(jobs, projectId, job.project_id);
+      // A retry of the exact committed operation must remain idempotent.
+      // An exact replay of an already-committed restructure stays idempotent even if a newer L2 landed since.
+      if (!(replay && commit?.coreResult) &&
+          (!base || `l2:${base.result_id}:${base.job_id}` !== job.l2_restructure.base_ref)) {
+        throw new Error("L2 restructure base changed; re-run restructure_l2");
+      }
+      assertL2RestructureCandidate(job, content, evidenceRefs);
+    }
     if (replay && commit?.response && args.dry_run !== true) {
       const resultId = memoryResultId(commit.coreResult);
       const retired = (await listDistillationJobs(stateRoot, runtime.accountId, true))
@@ -146,7 +305,48 @@ export async function submitDistillationControl(input: {
       evidenceRefs: evidenceRefs ?? [],
       job
     });
-    if (kind === "l2" && projectId && job) {
+    if (!Array.isArray(resolvedEvidence)) throw new Error("distillation evidence validation returned no evidence list");
+    validateDistillationTraceSpans(claimTraces, resolvedEvidence);
+    if (!replay && (kind === "l3" || kind === "l4")) validateBilingualDistillationContent(content, kind);
+    // Promotion is a candidate, never implied consent. Preserve exact sources and reuse the existing human-governed writer.
+    if ((kind === "l3" || kind === "l4") && !(replay && commit?.coreResult) &&
+      (await getDistillationConfig(stateRoot)).promotion_review_accounts?.includes(runtime.accountId)) {
+      const current = jobs.filter(j => j.status === "completed" && j.result_kind === kind && j.project_id === projectId &&
+        j.result_id && j.result_content && !j.result_retirement).sort((a, b) =>
+        Date.parse(b.result_committed_at ?? b.completed_at ?? "") - Date.parse(a.result_committed_at ?? a.completed_at ?? ""))[0];
+      const baseRef = current ? `${kind}:${current.result_id}:${current.job_id}` : undefined;
+      return { ok: true, status: "awaiting_user_review", written: false, kind, scope, project: projectId, job_id: jobId,
+        notification: "晋升候选待人工审核；尚未写入长期记忆。请展示候选、来源和变化，用户明确确认后才执行。",
+        review: { current_evidence_ref: baseRef ?? null, proposed_content: content, proposed_sha256: hashJson(content),
+          evidence_refs: resolvedEvidence.map(item => item.ref),
+          criteria: kind === "l3" ? ["Exact same-project L2 evidence", "Durable project rule or repeated experience", "Preserve current truth; resolve conflicts and supersession"]
+            : ["Exact L3 evidence from multiple projects", "Stable cross-project principle, not one incident", "Do not globalize project-local facts"],
+          next_action: { tool: "litsan_memory", action: "plan", kind, ...(projectId ? { project: projectId } : {}),
+            content, ...(baseRef ? { base_evidence_ref: baseRef } : {}), note: `Promotion candidate from ${jobId ?? "manual distillation"}; sources: ${resolvedEvidence.map(item => item.ref).join(", ")}` },
+          instructions: ["Prepare the governed plan and show its full proposed_content to the user.",
+            "Only a later explicit human confirmation permits litsan_memory execute with its one-time authorization_id and confirmation_evidence_ref.",
+            "Keep this source job pending until approval and canonical readback are reconciled; do not mark it successful or skip it to hide review backlog."] } };
+    }
+    const factStorageIds = kind === "l2" && projectId && typeof runtime.projects.storageIds === "function"
+      ? await runtime.projects.storageIds(runtime.accountId, projectId)
+      : projectId ? [projectId] : [];
+    let preparedArchitectureMap: ArchitectureCognitiveMap | undefined;
+    if (architectureMapCandidate && projectId) {
+      const currentArchitectureMap = await runtime.architecture.inspectProjectCognitiveMap({
+        accountId: runtime.accountId,
+        projectId
+      });
+      if (currentArchitectureMap.fingerprint !== architectureMapBaseFingerprint) {
+        throw new Error("Project Architecture Cognitive Map changed after action=next; reload the latest architecture_context and submit a fresh full map");
+      }
+      preparedArchitectureMap = buildArchitectureCognitiveMap({
+        projectId,
+        candidate: architectureMapCandidate,
+        sourceEvidenceRefs: resolvedEvidence.map((item) => item.ref),
+        previousMap: currentArchitectureMap.map
+      });
+    }
+    if (kind === "l2" && projectId && job && !job.l2_restructure) {
       assertRoutineL2PreservesCanonicalTimeline({
         jobs,
         projectId,
@@ -165,7 +365,16 @@ export async function submitDistillationControl(input: {
         contract: DISTILLATION_CONTRACT_VERSION,
         evidenceRefs,
         sourceConversations,
-        confidence
+        confidence,
+        ...(preparedArchitectureMap ? {
+          architecture_map: {
+            valid: true,
+            base_fingerprint: architectureMapBaseFingerprint,
+            nodes: preparedArchitectureMap.nodes.length,
+            edges: preparedArchitectureMap.edges.length,
+            timeline_links: preparedArchitectureMap.timeline_links.length
+          }
+        } : {})
       };
     }
     // Evidence validation can take time; fence enough remaining lease budget
@@ -193,7 +402,8 @@ export async function submitDistillationControl(input: {
         projectId,
         conversationId,
         title: canonicalTitle,
-        tags: uniqueStrings(["memory-v2", `layer:${kind}`, `commit-operation:${operation.generation}`, ...(stringArray(args.tags) ?? [])]),
+        tags: uniqueStrings(["memory-v2", `layer:${kind}`, `commit-operation:${operation.generation}`, ...(stringArray(args.tags) ?? []),
+          ...(job?.l2_restructure ? ["l2-restructure", `restructure-base:${job.l2_restructure.base_ref}`] : [])]),
         sourceHarness,
         artifactId: canonicalArtifactId,
         version,
@@ -265,7 +475,14 @@ export async function submitDistillationControl(input: {
     }
     const committedContent = result && typeof result === "object" && typeof (result as { body?: unknown }).body === "string"
       ? (result as { body: string }).body : content;
+    const factMetadata = filterFactMetadataEvidence(
+      extractDistilledFactMetadata(kind, committedContent, kind === "l3" ? resolvedEvidence.map((item) => item.ref) : []),
+      verifiedFactEvidenceRefs({ kind, accountId: runtime.accountId, projectId, projectStorageIds: factStorageIds,
+        evidence: resolvedEvidence, jobs, asOf: coreCommittedAt ?? "" })
+    );
     let projectDescriptionError: string | undefined;
+    let architectureMapResult: { fingerprint: string; generated_at: string; nodes: number; edges: number; timeline_links: number } | undefined;
+    let architectureMapError: string | undefined;
     let queuedNext: unknown;
     let nextLayerEnqueueError: string | undefined;
     let completedRevision: DistillationJob | undefined;
@@ -275,7 +492,8 @@ export async function submitDistillationControl(input: {
         resultId,
         content: committedContent,
         committedAt: coreCommittedAt!,
-        coreBody: result && typeof result === "object" && typeof (result as { body?: unknown }).body === "string" ? committedContent : undefined
+        coreBody: result && typeof result === "object" && typeof (result as { body?: unknown }).body === "string" ? committedContent : undefined,
+        ...(factMetadata ? { factMetadata } : {})
       }, sourceHarness, leaseToken);
       try {
       if (kind === "l2" && projectId) {
@@ -320,7 +538,7 @@ export async function submitDistillationControl(input: {
         // Upstream L2/L3 and the completed job are durable. Queue failure
         // is a separate recoverable condition, not permission to replay Core.
         nextLayerEnqueueError = error instanceof Error ? error.message : String(error);
-        console.error("[memhub] next-layer distillation enqueue failed:", nextLayerEnqueueError);
+        console.error("[litsan] next-layer distillation enqueue failed:", nextLayerEnqueueError);
       }
     } else if (kind !== "skill") {
       try {
@@ -335,7 +553,8 @@ export async function submitDistillationControl(input: {
           content: committedContent,
           committedAt: coreCommittedAt!,
           operationId: operation.generation,
-          coreBody: result && typeof result === "object" && typeof (result as { body?: unknown }).body === "string" ? committedContent : undefined
+          coreBody: result && typeof result === "object" && typeof (result as { body?: unknown }).body === "string" ? committedContent : undefined,
+          ...(factMetadata ? { factMetadata } : {})
         });
       } catch (error) {
         throw new Error(
@@ -365,12 +584,55 @@ export async function submitDistillationControl(input: {
         // failure must remain recoverable through reconcile_derived and must
         // never cause the L2 Core write to be replayed.
         nextLayerEnqueueError = error instanceof Error ? error.message : String(error);
-        console.error("[memhub] next-layer distillation enqueue failed:", nextLayerEnqueueError);
+        console.error("[litsan] next-layer distillation enqueue failed:", nextLayerEnqueueError);
+      }
+    }
+    if (kind === "l2" && projectId && preparedArchitectureMap) {
+      try {
+        const write = await runtime.architecture.writeProjectCognitiveMap({
+          accountId: runtime.accountId,
+          projectId,
+          expectedFingerprint: architectureMapBaseFingerprint!,
+          map: preparedArchitectureMap
+        });
+        architectureMapResult = {
+          fingerprint: write.after.fingerprint,
+          generated_at: write.after.map!.generated_at,
+          nodes: write.after.map!.nodes.length,
+          edges: write.after.map!.edges.length,
+          timeline_links: write.after.map!.timeline_links.length
+        };
+      } catch (error) {
+        // L2 is already durable. Architecture Cognitive Map is a separate
+        // derived Project Architecture artifact and cannot retroactively turn
+        // a successful L2 write into a failed memory commit.
+        architectureMapError = error instanceof Error ? error.message : String(error);
+        console.error("[litsan] architecture cognitive map update failed:", architectureMapError);
       }
     }
     const resultEvidenceRef = completedRevision && kind !== "skill"
       ? `${kind}:${resultId}:${completedRevision.job_id}`
       : undefined;
+    let distillationTrace: Awaited<ReturnType<typeof recordDistillationTrace>> | undefined;
+    let distillationTraceError: string | undefined;
+    if (claimTraces.length > 0) {
+      try {
+        distillationTrace = await recordDistillationTrace({
+          stateRoot,
+          accountId: runtime.accountId,
+          jobId,
+          targetLayer: kind,
+          projectId,
+          commitRevision: resultEvidenceRef,
+          claims: claimTraces
+        });
+      } catch (error) {
+        // The canonical Memory/ledger commit already succeeded. Audit telemetry
+        // must not turn that durable success into an ambiguous write/retry path.
+        distillationTraceError = error instanceof Error ? error.message : String(error);
+        console.error("[litsan] distillation trace:", distillationTraceError);
+      }
+    }
     if (kind === "l2" && projectId && projectDescription) {
       // Complete the source job before optional routing metadata: a slow or
       // failed secondary update must not hold a live distillation lease open
@@ -384,7 +646,7 @@ export async function submitDistillationControl(input: {
         );
       } catch (error) {
         projectDescriptionError = error instanceof Error ? error.message : String(error);
-        console.error("[memhub] distilled project description update failed:", projectDescriptionError);
+        console.error("[litsan] distilled project description update failed:", projectDescriptionError);
       }
     }
     const response = {
@@ -398,7 +660,12 @@ export async function submitDistillationControl(input: {
       job_id: jobId,
       memory: result,
       ...(resultEvidenceRef ? { result_evidence_ref: resultEvidenceRef } : {}),
+      ...(factMetadata ? { fact_metadata: factMetadataSummary(factMetadata) } : {}),
+      ...(distillationTrace ? { distillation_trace: distillationTrace } : {}),
+      ...(distillationTraceError ? { distillation_trace_error: distillationTraceError } : {}),
       ...(projectDescriptionError ? { project_description_error: projectDescriptionError } : {}),
+      ...(architectureMapResult ? { architecture_map: architectureMapResult } : {}),
+      ...(architectureMapError ? { architecture_map_error: architectureMapError } : {}),
       ...(nextLayerEnqueueError ? { next_layer_enqueue_error: nextLayerEnqueueError } : {}),
       ...(queuedNext ? { next_layer_job: queuedNext } : {})
     };
@@ -449,18 +716,7 @@ function assertRoutineL2PreservesCanonicalTimeline(input: {
   jobProjectId: string | null;
   content: string;
 }): void {
-  const projectIds = new Set([input.projectId, input.jobProjectId].filter((value): value is string => Boolean(value)));
-  const base = input.jobs
-    .filter((item) =>
-      item.status === "completed" &&
-      item.target === "l2" &&
-      item.result_kind === "l2" &&
-      Boolean(item.result_id) &&
-      Boolean(item.result_content?.trim()) &&
-      Boolean(item.project_id && projectIds.has(item.project_id))
-    )
-    .sort((left, right) => completedRevisionAt(left).localeCompare(completedRevisionAt(right)) || left.job_id.localeCompare(right.job_id))
-    .at(-1);
+  const base = latestCanonicalL2(input.jobs, input.projectId, input.jobProjectId, { includeRetired: true });
   if (!base?.result_content?.trim() || !base.result_id) return;
 
   const baseHeadings = timelineHeadingKeys(base.result_content);
@@ -487,10 +743,6 @@ function timelineHeadingKeys(content: string): string[] {
 
 function normalizeTimelineHeading(value: string): string {
   return value.normalize("NFKC").replace(/\s+/g, " ").trim().toLocaleLowerCase("en-US");
-}
-
-function completedRevisionAt(job: DistillationJob): string {
-  return job.result_committed_at ?? job.completed_at ?? job.updated_at;
 }
 
 function memoryResultId(value: unknown): string | undefined {
@@ -524,7 +776,7 @@ export interface ArtifactCommit {
   operatorResolution?: { reason: string; at: string };
   candidateHash: string;
   generation: string;
-  payload?: Parameters<MemhubRuntime["memory"]["distill"]>[0];
+  payload?: Parameters<DistillationSubmitDeps["memory"]["distill"]>[0];
   coreResult?: unknown;
   committedAt?: string;
   rejected?: boolean;
@@ -604,7 +856,7 @@ export async function pruneDistillationCommitRecords(stateRoot: string, accountI
 }
 
 export async function reconcileDistillationCommit(input: {
-  stateRoot: string; runtime: MemhubRuntime; commitId?: string;
+  stateRoot: string; runtime: DistillationSubmitDeps; commitId?: string;
   mode: "inspect" | "reconcile" | "abandon"; generation?: string; confirmation?: string; reason?: string;
 }): Promise<Record<string, unknown>> {
   const directory = join(resolve(input.stateRoot), "distillation", "commits");

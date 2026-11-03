@@ -22,15 +22,15 @@ try {
       `public page ${page} must not expose a self-hosted console entry`);
     assert.doesNotMatch(html, /[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}|\/home\/z\/|C:\\Users\\Administrator\\/i,
       `public page ${page} contains an email or operator home path`);
-    for (const match of html.matchAll(/(?:href|src)="(\/Memhub(?:\/[^"#?]*)?)/g)) {
-      const route = match[1].replace(/^\/Memhub\/?/, "");
+    for (const match of html.matchAll(/(?:href|src)="(\/LITSAN(?:\/[^"#?]*)?)/g)) {
+      const route = match[1].replace(/^\/LITSAN\/?/, "");
       const file = /\.(?:png|svg|jpg|webp)$/i.test(route)
         ? join(root, route)
         : join(root, route, "index.html");
       assert.ok((await stat(file)).isFile(), `broken public link: ${match[1]} from ${page || "/"}`);
     }
     if (!page) {
-      assert.match(html, /href="\/Memhub\/docs\/install" data-zh="安装 Memhub"/);
+      assert.match(html, /href="\/LITSAN\/docs\/install" data-zh="安装 LITSAN"/);
       assert.match(html, /EXAMPLE PROJECT/);
       assert.match(html, /Atlas Demo/);
     }

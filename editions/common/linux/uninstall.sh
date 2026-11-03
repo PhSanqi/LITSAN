@@ -19,4 +19,4 @@ if [[ "${1:-}" == "--purge-data" ]]; then
   fi
   rm -rf "$STATE_ROOT"
 fi
-echo "Memhub services removed. Data kept unless --purge-data was supplied."
+echo "LITSAN services removed. Data kept unless --purge-data was supplied."

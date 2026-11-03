@@ -1,5 +1,5 @@
 [Unit]
-Description=Memhub Embedded Memory Core
+Description=LITSAN Embedded Memory Core
 After=network.target
 PartOf=memhub-stack.target
 StartLimitIntervalSec=120

@@ -84,6 +84,6 @@ const CONTENT_TYPES = {
     ".woff2": "font/woff2"
 };
 function viewerBuildMissingHtml() {
-    return "<!doctype html><html><head><meta charset=\"utf-8\"><title>Memmy Memory</title></head>" +
-        "<body><main><h1>Memmy Memory Viewer</h1><p>Viewer assets are not built. Run npm run viewer:build in Memory.</p></main></body></html>";
+    return "<!doctype html><html><head><meta charset=\"utf-8\"><title>LITSAN Memory</title></head>" +
+        "<body><main><h1>LITSAN Memory Viewer</h1><p>Viewer assets are not built. Run npm run viewer:build in Memory.</p></main></body></html>";
 }

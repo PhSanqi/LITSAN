@@ -39,7 +39,7 @@ export async function createTestRoot(prefix) {
 }
 
 export function testEnvironment(stateRoot, architectureRoot, overrides = {}, inherited = process.env) {
-  const env = Object.fromEntries(Object.entries(inherited).filter(([key]) => !key.toUpperCase().startsWith("MEMHUB_")));
+  const env = Object.fromEntries(Object.entries(inherited).filter(([key]) => !/^(?:LITSAN|MEMHUB|MEMMY)_/i.test(key)));
   Object.assign(env, {
     TMPDIR: tempRoot, TMP: tempRoot, TEMP: tempRoot,
     MEMHUB_STATE_ROOT: resolve(stateRoot),
@@ -63,7 +63,7 @@ export function testEnvironment(stateRoot, architectureRoot, overrides = {}, inh
 export function isolateTestEnvironment(stateRoot, architectureRoot) {
   const env = testEnvironment(stateRoot, architectureRoot);
   for (const key of Object.keys(process.env)) {
-    if (key.toUpperCase().startsWith("MEMHUB_")) delete process.env[key];
+    if (/^(?:LITSAN|MEMHUB|MEMMY)_/i.test(key)) delete process.env[key];
   }
   Object.assign(process.env, env);
 }

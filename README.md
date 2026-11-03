@@ -1,26 +1,30 @@
-# Memhub
+# LITSAN
+
+LITSAN (formerly Memhub) — Let Information Take Shape As Needed.
+
+Legacy `MEMHUB_*` / `MEMMY_*` environment variables still work.
 
 [简体中文](README.zh-CN.md)
 
-![Release](https://img.shields.io/github/v/release/PhSanqi/Memhub?display_name=tag)
+![Release](https://img.shields.io/github/v/release/PhSanqi/LITSAN?display_name=tag)
 ![Node.js](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js&logoColor=white)
 ![Platforms](https://img.shields.io/badge/Linux%20%7C%20Windows-5b67d6)
 ![MCP](https://img.shields.io/badge/MCP-ready-7c3aed)
-![License](https://img.shields.io/github/license/PhSanqi/Memhub)
+![License](https://img.shields.io/github/license/PhSanqi/LITSAN)
 
 **Project-aware long-term memory for AI agents.**
 
-Memhub gives ChatGPT, Codex, MCP clients, and other AI harnesses a durable memory layer that survives individual chats and devices without collapsing unrelated projects into one context.
+LITSAN gives ChatGPT, Codex, MCP clients, and other AI harnesses a durable memory layer that survives individual chats and devices without collapsing unrelated projects into one context.
 
 It keeps original conversation evidence, builds a chronological project history, distills durable project knowledge, maintains a carefully scoped cross-project profile, and exposes reusable Skills, project Todos, retrieval, provenance, and a browser workspace from one self-hosted runtime.
 
 - **Current release:** v1.0.0
-- **Public documentation:** https://phsanqi.github.io/Memhub/
-- **GitHub Pages (public, static mirror):** https://phsanqi.github.io/Memhub/
-- **Downloads:** https://github.com/PhSanqi/Memhub/releases
+- **Public documentation:** https://phsanqi.github.io/LITSAN/
+- **GitHub Pages (public, static mirror):** https://phsanqi.github.io/LITSAN/
+- **Downloads:** https://github.com/PhSanqi/LITSAN/releases
 
 **Start with [installation](docs/site/install.en.md), not someone else's
-workspace.** Memhub is self-hosted: each person or team runs their own Local
+workspace.** LITSAN is self-hosted: each person or team runs their own Local
 or Server Edition and accesses their own authenticated workspace. The public
 website and GitHub Pages mirror are product documentation, not a shared
 memory-hosting service. All workspace previews on public pages are synthetic
@@ -28,9 +32,9 @@ examples; no personal account or project data is published there.
 
 ---
 
-## Why Memhub
+## Why LITSAN
 
-Most AI memory systems answer “what should I remember?” Memhub also answers:
+Most AI memory systems answer “what should I remember?” LITSAN also answers:
 
 - **Whose memory is this?** One stable account represents one person; devices and harnesses are provenance, not separate users.
 - **Which project may use it?** Project boundaries are resolved before retrieval. Unrelated project memory is not mixed into the current task.
@@ -73,7 +77,7 @@ Project **Todos** live in the Project Registry. **Branches** are project-local w
 AI Harness / MCP
           │
           ▼
-      Memhub Gateway
+      LITSAN Gateway
           │
    ┌──────┼───────────────┐
    ▼      ▼               ▼
@@ -91,7 +95,7 @@ Identity  Project Router  Skill Router
 Capture → L1 → evidence-bounded distillation → L2 → L3 → L4
 ```
 
-Memhub owns identity, project scope, evidence boundaries, canonical artifact IDs, retrieval, job lifecycle, provenance, and durable commit. The connected model/harness owns semantic synthesis; the server does not silently invoke an LLM subscription.
+LITSAN owns identity, project scope, evidence boundaries, canonical artifact IDs, retrieval, job lifecycle, provenance, and durable commit. The connected model/harness owns semantic synthesis; the server does not silently invoke an LLM subscription.
 
 ## Editions
 
@@ -104,7 +108,7 @@ Both editions support Linux and Windows.
 
 ### Quick install
 
-Download the matching package from the [latest GitHub Release](https://github.com/PhSanqi/Memhub/releases).
+Download the matching package from the [latest GitHub Release](https://github.com/PhSanqi/LITSAN/releases).
 
 Complete Linux:
 
@@ -125,13 +129,13 @@ powershell -ExecutionPolicy Bypass -File .\install-complete.ps1 -Edition server 
 Source install:
 
 ```bash
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
 bash editions/local/linux/install.sh
 ```
 
 The Linux Local/Server edition installers are **fresh-install only**. They
-refuse an existing StateRoot or Memhub systemd unit before changing credentials,
+refuse an existing StateRoot or LITSAN systemd unit before changing credentials,
 data, or services. Do not rerun them to upgrade an existing deployment; preserve
 the current state and use a separately reviewed migration procedure.
 
@@ -139,13 +143,13 @@ See [Documentation](docs/README.md) for Server deployment, Windows, authenticati
 
 ## Connect
 
-Local Edition exposes the Memhub MCP runtime directly on loopback:
+Local Edition exposes the LITSAN MCP runtime directly on loopback:
 
 ```text
 http://127.0.0.1:3001/mcp
 ```
 
-Server Edition runs the same MCP runtime on loopback and publishes that endpoint through the configured authenticated reverse proxy, such as Cloudflare Access/Tunnel. Local and remote clients therefore use one tool schema and one Memhub state; both paths terminate at the same runtime.
+Server Edition runs the same MCP runtime on loopback and publishes that endpoint through the configured authenticated reverse proxy, such as Cloudflare Access/Tunnel. Local and remote clients therefore use one tool schema and one LITSAN state; both paths terminate at the same runtime.
 
 ## Everyday workflows
 
@@ -156,20 +160,20 @@ Server Edition runs the same MCP runtime on loopback and publishes that endpoint
 “Show the evidence behind this project rule.”
 “Replace this project's Architecture with this complete version; show me the full text before writing it.”
 “Add this durable project rule to L3; show me the complete resulting L3 and wait for my confirmation.”
-“Use the same Memhub account on my other machine.”
+“Use the same LITSAN account on my other machine.”
 ```
 
 The model-facing MCP surface includes:
 
-- `memmy_context` — bounded account/project recall and Skill candidates;
-- `memmy_turn` — L1 turn lifecycle;
-- `memhub_memory` — exact L1/L2/L3/L4 hydration plus explicitly authorized L3/L4 replacement;
-- `memmy_project`, `memmy_project_list`, `memmy_project_manage` — project resolution, lifecycle, and governed Project Architecture;
-- `memhub_todo` — first-class project Todos;
-- `memhub_branch` — project-local workstream context;
-- `memhub_skill` — Skill load, telemetry, revision and retirement;
-- `memhub_distill` — evidence-bounded L2/L3/L4/Skill distillation;
-- `memhub_result` — progressive transport for unusually large MCP results.
+- `litsan_context` — bounded account/project recall and Skill candidates;
+- `litsan_turn` — L1 turn lifecycle;
+- `litsan_memory` — exact L1/L2/L3/L4 hydration plus explicitly authorized L3/L4 replacement;
+- `litsan_project`, `litsan_project_list`, `litsan_project_manage` — project resolution, lifecycle, and governed Project Architecture;
+- `litsan_todo` — first-class project Todos;
+- `litsan_branch` — project-local workstream context;
+- `litsan_skill` — Skill load, telemetry, revision and retirement;
+- `litsan_distill` — evidence-bounded L2/L3/L4/Skill distillation;
+- `litsan_result` — progressive transport for unusually large MCP results.
 
 ## Browser workspace
 
@@ -188,12 +192,12 @@ Project State is derived from canonical L2 plus its exact revision ledger. The b
 
 Project Architecture is separate from project memory. It is reserved for stable structure, ownership, source-of-truth declarations, interfaces, and hard constraints. Project history stays in L2, durable project working rules stay in L3, cross-project user rules/profile stay in L4, and unfinished work stays in Project Todo.
 
-Architecture replacement is deliberately fail-closed: `memmy_project architecture_plan` returns the complete proposed canonical document, the model must show that full text to the user, and `architecture_execute` is allowed only after explicit approval of that exact plan. Memhub stores the writable canonical copy inside its private state root; repository Architecture files and legacy `normify-*` documents remain read-only discovery/migration sources. Architecture history is auditable and rollback is performed as a new reviewed replacement rather than an invisible rewind.
+Architecture replacement is deliberately fail-closed: `litsan_project architecture_plan` returns the complete proposed canonical document, the model must show that full text to the user, and `architecture_execute` is allowed only after explicit approval of that exact plan. LITSAN stores the writable canonical copy inside its private state root; repository Architecture files and legacy `normify-*` documents remain read-only discovery/migration sources. Architecture history is auditable and rollback is performed as a new reviewed replacement rather than an invisible rewind.
 
-Explicit user-authored L3/L4 changes use the same review principle. `memhub_memory plan` prepares the complete resulting L3 or L4 body. The model must show it in full, then wait for a new explicit confirmation turn. That confirmation is captured as L1 evidence before `memhub_memory execute` can commit the replacement. Existing L3/L4 state is fenced by an exact revision reference, so a stale approval cannot overwrite a newer concurrent update. This direct-authority path does not auto-promote L3 into L4.
+Explicit user-authored L3/L4 changes use the same review principle. `litsan_memory plan` prepares the complete resulting L3 or L4 body. The model must show it in full, then wait for a new explicit confirmation turn. That confirmation is captured as L1 evidence before `litsan_memory execute` can commit the replacement. Existing L3/L4 state is fenced by an exact revision reference, so a stale approval cannot overwrite a newer concurrent update. This direct-authority path does not auto-promote L3 into L4.
 
-The [public documentation mirror](https://phsanqi.github.io/Memhub/) and
-[GitHub Pages mirror](https://phsanqi.github.io/Memhub/) document the
+The [public documentation mirror](https://phsanqi.github.io/LITSAN/) and
+[GitHub Pages mirror](https://phsanqi.github.io/LITSAN/) document the
 product; neither provides a public login to another person's memory.
 Access the workspace of **your own installation** after configuring its
 authentication boundary.
@@ -245,7 +249,7 @@ Superseded repair plans and migration-era design notes are kept in Git history i
 
 ## Project status
 
-Memhub is under active development. Memory Core is vendored from the open-source Memmy lineage and maintained as part of the runtime. See [Changelog](CHANGELOG.md) and [Upstream attribution](docs/maintainers/upstream.md).
+LITSAN is under active development. Memory Core is vendored from the open-source Memmy lineage and maintained as part of the runtime. See [Changelog](CHANGELOG.md) and [Upstream attribution](docs/maintainers/upstream.md).
 
 ## License
 

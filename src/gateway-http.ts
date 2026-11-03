@@ -1,7 +1,10 @@
+import { brand, env, publicHosts } from "./brand.mjs";
+import type { unfinishedDistillationJobsForProject } from "./project-governance.js";
 import { createHash, randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
-import { createServer, type IncomingMessage } from "node:http";
+import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { fileURLToPath } from "node:url";
+import { errors as joseErrors } from "jose";
 import {
   hostHeaderValidation,
   localhostHostValidation,
@@ -17,15 +20,17 @@ import {
   verifyLocalAdminToken
 } from "./auth.js";
 import { resolveCloudflareAccessIssuer, verifyCloudflareAccessJwt } from "./cloudflare.js";
-import type { DistillationJob } from "./distillation-jobs.js";
+import { handleHttpTools, toolResponse } from "./shell/http-tools/route.js";
+import type { SourceContext } from "./contracts/identity.js";
 import { asHttpJsonBodyError } from "./http-json.js";
 import { LocalMemoryRestClient } from "./local-memory-client.js";
 import { handleMemoryControlAction } from "./memory-control-actions.js";
 import { handleMemoryControlRead } from "./memory-control-http.js";
 import type { ProjectDescriptor } from "./project-registry.js";
-import { createMemhubRuntime, resolveLocalAccountId, type MemhubRuntime, type MemhubRuntimeOptions } from "./runtime.js";
+import { createLitsanRuntime, resolveLocalAccountId, type LitsanRuntime, type LitsanRuntimeOptions } from "./runtime.js";
 import {
   buildIdentitiesMatch,
+  parseBuildIdentity,
   readLocalBuildIdentity,
   type ServiceHealthProbe
 } from "./service-readiness.js";
@@ -47,12 +52,20 @@ export function webPath(basePath: string, suffix = ""): string {
 
 export function webRoutePath(pathname: string, basePath: string, mcpPath: string): string {
   if (pathname.replace(/\/$/, "") === mcpPath) return mcpPath;
-  const base = normalizeBasePath(basePath);
-  if (base === "/") return pathname === "/" ? "/memhub" : `/memhub${pathname}`;
-  // A bookmarked `<base>/` is the console root, not an unknown `/memhub/` route.
-  if (pathname === base || pathname === `${base}/`) return "/memhub";
-  if (pathname.startsWith(`${base}/`)) return `/memhub${pathname.slice(base.length)}`;
+  for (const base of basePathAliases(basePath)) {
+    if (pathname === base || pathname === `${base}/`) return "/memhub";
+    if (base !== "/" && pathname.startsWith(`${base}/`)) return `/memhub${pathname.slice(base.length)}`;
+  }
+  if (normalizeBasePath(basePath) === "/") return pathname === "/" ? "/memhub" : `/memhub${pathname}`;
   return pathname === "/" ? "/" : "";
+}
+
+export function basePathAliases(basePath: string): string[] {
+  const primary = normalizeBasePath(basePath);
+  // Only the product paths alias each other; a custom base path stays exclusive.
+  const branded = [brand.basePath, ...brand.legacyBasePaths];
+  const aliases = primary === "/" || branded.includes(primary) ? [primary, ...branded] : [primary];
+  return [...new Set(aliases)].sort((a, b) => b.length - a.length);
 }
 
 export function webSecurityHeaders(html?: string): Record<string, string> {
@@ -98,18 +111,14 @@ export function isLocalControlRequest(request: IncomingMessage): boolean {
 }
 
 export interface ServeHttpDependencies {
-  createServerForRuntime: (runtime: MemhubRuntime, stateRoot: string) => McpServer;
+  createServerForRuntime: (runtime: LitsanRuntime, stateRoot: string) => McpServer;
   queueIdleDistillation: (
     stateRoot: string,
-    runtimeForAccount: (accountId: string) => MemhubRuntime
+    runtimeForAccount: (accountId: string) => LitsanRuntime
   ) => Promise<void>;
-  unfinishedDistillationJobsForProject: (
-    stateRoot: string,
-    runtime: MemhubRuntime,
-    projectId: string
-  ) => Promise<DistillationJob[]>;
-  assertManagedMemory: (runtime: MemhubRuntime, memoryId: string) => Promise<void>;
-  knownProjectRecords: (runtime: MemhubRuntime) => Promise<ProjectDescriptor[]>;
+  unfinishedDistillationJobsForProject: typeof unfinishedDistillationJobsForProject;
+  assertManagedMemory: Parameters<typeof handleMemoryControlAction>[0]["assertManagedMemory"];
+  knownProjectRecords: (runtime: LitsanRuntime) => Promise<ProjectDescriptor[]>;
 }
 
 const WEB_ASSETS = {
@@ -118,33 +127,36 @@ const WEB_ASSETS = {
 } as const;
 
 export async function serveHttp(
-  runtimeOptions: MemhubRuntimeOptions,
-  options: { stateRoot: string; port: number; path: string; basePath: string; publicHost?: string; allowJit: boolean },
+  runtimeOptions: LitsanRuntimeOptions,
+  options: { stateRoot: string; port: number; path: string; basePath: string; publicHost?: string; publicHosts?: string[]; allowJit: boolean },
   deps: ServeHttpDependencies
-): Promise<void> {
+): Promise<ReturnType<typeof createServer>> {
   await ensureLocalAdminToken(options.stateRoot);
   const handlers = new Map<string, ReturnType<typeof toNodeHandler>>();
-  const runtimes = new Map<string, MemhubRuntime>();
-  const validateHost = options.publicHost === undefined
-    ? localhostHostValidation()
-    : hostHeaderValidation(["localhost", "127.0.0.1", "[::1]", options.publicHost]);
-  const validateOrigin = options.publicHost === undefined
-    ? localhostOriginValidation()
-    : originValidation(["localhost", "127.0.0.1", "[::1]", options.publicHost]);
-  const healthPath = options.basePath === "/" ? "/health" : `${options.basePath}/health`;
+  const runtimes = new Map<string, LitsanRuntime>();
+  const hosts = (options.publicHosts ?? (options.publicHost ? [options.publicHost] : publicHosts()))
+    .map(host => host.toLowerCase());
+  const publicHost = hosts[0];
+  const requestPublicHost = (request: IncomingMessage) => {
+    const host = singleHeader(request.headers.host)?.split(":", 1)[0]?.toLowerCase();
+    return host && hosts.includes(host) ? host : publicHost;
+  };
+  const allowedHosts = ["localhost", "127.0.0.1", "[::1]", ...hosts];
+  const validateHost = publicHost === undefined ? localhostHostValidation() : hostHeaderValidation(allowedHosts);
+  const validateOrigin = publicHost === undefined ? localhostOriginValidation() : originValidation(allowedHosts);
   // Read once at start: the gateway's own build identity, plus a client used
   // only to summarize Core health on /health.
   const gatewayBuild = readLocalBuildIdentity();
   const coreHealthClient = createCoreHealthClient(runtimeOptions);
 
-  const runtimeFor = (accountId: string, source = runtimeOptions.source): MemhubRuntime => {
+  const runtimeFor = (accountId: string, source = runtimeOptions.source): LitsanRuntime => {
     const sourceKey = source
       ? [source.platform, source.transport, source.principalId ?? "", source.connectionId ?? "", source.authenticatedAccount ?? ""].join("|")
       : "default";
     const runtimeKey = `${accountId}|${sourceKey}`;
     let runtime = runtimes.get(runtimeKey);
     if (!runtime) {
-      runtime = createMemhubRuntime({ ...runtimeOptions, accountId, source });
+      runtime = createLitsanRuntime({ ...runtimeOptions, accountId, source });
       runtimes.set(runtimeKey, runtime);
     }
     return runtime;
@@ -159,15 +171,57 @@ export async function serveHttp(
     if (handler) return handler;
     handler = toNodeHandler(
       createMcpHandler(() => deps.createServerForRuntime(runtimeFor(accountId, source), options.stateRoot)),
-      { onerror: (error) => console.error("[memhub] MCP HTTP error:", error.message) }
+      { onerror: (error) => console.error("[litsan] MCP HTTP error:", error.message) }
     );
     handlers.set(handlerKey, handler);
     return handler;
   };
 
+  const toolIdentity = async (request: IncomingMessage, response: ServerResponse, transport: "mcp" | "http-tools"):
+    Promise<{ accountId: string; source: SourceContext | undefined } | undefined> => {
+    const reject = (status: number, code: string, message: string) => {
+      if (transport === "http-tools") toolResponse(response, status, { ok: false, error: { code, message } });
+      else if (response.headersSent) response.end();
+      else {
+        response.writeHead(status, { "content-type": "application/json", "cache-control": "no-store" });
+        response.end(JSON.stringify({ error: code, ...(status === 403 ? { message } : {}) }));
+      }
+    };
+    if (publicHost === undefined || isLocalControlRequest(request)) {
+      return { accountId: resolveLocalAccountId(runtimeOptions), source: transport === "http-tools"
+        ? { platform: "local-cli", transport: "http-tools" } : runtimeOptions.source };
+    }
+    const assertion = request.headers["cf-access-jwt-assertion"];
+    if (typeof assertion !== "string" || !assertion) {
+      reject(401, "missing_cloudflare_access_jwt", "Cloudflare Access authentication required");
+      return;
+    }
+    try {
+      const identity = await verifyCloudflareAccessJwt(options.stateRoot, requestPublicHost(request)!, assertion);
+      const account = await resolveCloudflareAccount(options.stateRoot, identity, { allowJit: options.allowJit });
+      return { accountId: account.account_id, source: {
+        platform: transport === "http-tools" ? "remote-cli" : "remote-mcp",
+        transport,
+        principalId: identity.sub ? `cloudflare:${identity.sub}` : `cloudflare-email:${identity.email}`,
+        connectionId: transport === "http-tools" ? "cloudflare-access" : "cloudflare-managed-oauth",
+        authenticatedAccount: identity.email
+      } };
+    } catch (error) {
+      console.error(`[litsan] HTTP identity error ${response.getHeader("x-memhub-request-id")}:`, error);
+      if (error instanceof joseErrors.JWKSTimeout) {
+        response.setHeader("retry-after", "1");
+        reject(503, "identity_provider_unavailable", "Cloudflare Access temporarily unavailable");
+      } else {
+        reject(403, "identity_rejected", error instanceof Error ? error.message : String(error));
+      }
+      return;
+    }
+  };
+
   const http = createServer((request, response) => {
     const requestId = randomUUID();
     const startedAt = Date.now();
+    response.setHeader(`${brand.headerPrefix}request-id`, requestId);
     response.setHeader("x-memhub-request-id", requestId);
     response.setHeader("x-content-type-options", "nosniff");
     response.setHeader("cache-control", "no-store");
@@ -184,32 +238,34 @@ export async function serveHttp(
       if (!validateHost(request, response) || !validateOrigin(request, response)) return;
       const forwardedProto = singleHeader(request.headers["x-forwarded-proto"])?.split(",", 1)[0]?.trim().toLowerCase();
       const requestHost = singleHeader(request.headers.host)?.split(":", 1)[0]?.toLowerCase();
-      if (options.publicHost && requestHost === options.publicHost.toLowerCase() && forwardedProto === "http") {
+      if (requestHost && hosts.includes(requestHost) && forwardedProto === "http") {
         response.writeHead(308, {
-          location: `https://${options.publicHost}${request.url ?? "/"}`,
+          location: `https://${requestHost}${request.url ?? "/"}`,
           "cache-control": "no-store"
         }).end();
         return;
       }
       response.setHeader("strict-transport-security", "max-age=3600");
-      if (options.publicHost && isOAuthProtectedResourceMetadataPath(url.pathname, options.path)) {
+      if (publicHost && isOAuthProtectedResourceMetadataPath(url.pathname, options.path)) {
         if (request.method !== "GET" && request.method !== "HEAD") {
           response.writeHead(405, { allow: "GET, HEAD", "cache-control": "no-store" }).end();
           return;
         }
-        const authorizationServer = await resolveCloudflareAccessIssuer(options.stateRoot, options.publicHost);
+        const authorizationServer = await resolveCloudflareAccessIssuer(options.stateRoot, requestPublicHost(request)!);
         response.writeHead(200, {
           "content-type": "application/json; charset=utf-8",
           "cache-control": "no-store",
           ...webSecurityHeaders()
         });
         response.end(request.method === "HEAD" ? undefined : JSON.stringify({
-          resource: `https://${options.publicHost}${options.path}`,
+          resource: `https://${requestPublicHost(request)}${options.path}`,
           authorization_servers: [authorizationServer]
         }));
         return;
       }
-      if (url.pathname === healthPath) {
+      const basePath = basePathAliases(options.basePath).find(base => url.pathname === base || url.pathname.startsWith(`${base}/`)) ?? options.basePath;
+      url.pathname = webRoutePath(url.pathname, options.basePath, options.path) || "/__not_found__";
+      if (url.pathname === "/memhub/health") {
         if (request.method !== "GET" && request.method !== "HEAD") {
           response.writeHead(405, { allow: "GET, HEAD" }).end();
           return;
@@ -230,9 +286,8 @@ export async function serveHttp(
         }));
         return;
       }
-      url.pathname = webRoutePath(url.pathname, options.basePath, options.path) || "/__not_found__";
       if (url.pathname === "/") {
-        response.writeHead(302, { location: webPath(options.basePath), "cache-control": "no-store" }).end();
+        response.writeHead(302, { location: webPath(basePath), "cache-control": "no-store" }).end();
         return;
       }
       if (url.pathname === "/memhub") {
@@ -240,7 +295,7 @@ export async function serveHttp(
           response.writeHead(405, { allow: "GET, HEAD" }).end();
           return;
         }
-        const html = renderLanding(options.basePath);
+        const html = renderLanding(basePath);
         response.writeHead(200, {
           "content-type": "text/html; charset=utf-8",
           "cache-control": "public, max-age=300",
@@ -273,7 +328,7 @@ export async function serveHttp(
           response.writeHead(405, { allow: "GET, HEAD" }).end();
           return;
         }
-        const html = renderDocs(url.pathname, options.basePath);
+        const html = renderDocs(url.pathname, basePath);
         response.writeHead(200, {
           "content-type": "text/html; charset=utf-8",
           "cache-control": "public, max-age=300",
@@ -292,16 +347,16 @@ export async function serveHttp(
             response.writeHead(401, {
               "content-type": "text/plain; charset=utf-8",
               "cache-control": "no-store",
-              "www-authenticate": 'Basic realm="Memhub local admin", charset="UTF-8"'
+              "www-authenticate": 'Basic realm="LITSAN local admin", charset="UTF-8"'
             }).end("Local administrator token required");
             return;
           }
           summary = localAdminAccount(
             accounts,
-            runtimeOptions.accountId ?? process.env.MEMHUB_LOCAL_ADMIN_ACCOUNT ?? process.env.MEMHUB_OWNER_ACCOUNT_ID
+            runtimeOptions.accountId ?? env("LOCAL_ADMIN_ACCOUNT") ?? env("OWNER_ACCOUNT_ID")
           );
         } else {
-          if (options.publicHost === undefined) {
+          if (publicHost === undefined) {
             response.writeHead(404).end();
             return;
           }
@@ -310,15 +365,15 @@ export async function serveHttp(
             response.writeHead(401, { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" }).end("Cloudflare Access authentication required");
             return;
           }
-          const identity = await verifyCloudflareAccessJwt(options.stateRoot, options.publicHost, assertion);
+          const identity = await verifyCloudflareAccessJwt(options.stateRoot, requestPublicHost(request)!, assertion);
           let account;
           try {
             account = await resolveCloudflareAccount(options.stateRoot, identity, { allowJit: options.allowJit });
             if (account.created) accounts = await listAccounts(options.stateRoot);
           } catch (error) {
             const message = error instanceof Error ? error.message : String(error);
-            if (!options.allowJit && message.includes("未加入 Memhub 本地允许列表")) {
-              const html = renderUnprovisionedAccount(identity.email, options.basePath);
+            if (!options.allowJit && message.includes("未加入 LITSAN 本地允许列表")) {
+              const html = renderUnprovisionedAccount(identity.email, basePath);
               response.writeHead(403, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...webSecurityHeaders(html) });
               response.end(html);
               return;
@@ -372,9 +427,15 @@ export async function serveHttp(
         }
         const projects = await deps.knownProjectRecords(runtime);
         const visibleAccounts = isAdmin && adminView ? accounts : [];
-        const html = renderConsole({ account: summary, projects, accounts: visibleAccounts, adminView, localControl, selectedAccountId: selectedAccount.account_id, basePath: options.basePath });
+        const html = renderConsole({ account: summary, projects, accounts: visibleAccounts, adminView, localControl, selectedAccountId: selectedAccount.account_id, basePath });
         response.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store", ...webSecurityHeaders(html) });
         response.end(html);
+        return;
+      }
+      if (url.pathname === "/memhub/api/tools" || url.pathname.startsWith("/memhub/api/tools/")) {
+        const identity = await toolIdentity(request, response, "http-tools");
+        if (identity) await handleHttpTools(request, response, url.pathname,
+          runtimeFor(identity.accountId, identity.source), options.stateRoot);
         return;
       }
       // OAuth-capable MCP clients may canonicalize the resource URI with a
@@ -388,50 +449,21 @@ export async function serveHttp(
         return;
       }
 
-      if (options.publicHost === undefined || isLocalControlRequest(request)) {
-        handlerFor(resolveLocalAccountId(runtimeOptions))(request, response);
-        return;
-      }
-
-      const assertion = request.headers["cf-access-jwt-assertion"];
-      if (typeof assertion !== "string" || !assertion) {
-        response.writeHead(401, { "content-type": "application/json", "cache-control": "no-store" });
-        response.end(JSON.stringify({ error: "missing_cloudflare_access_jwt" }));
-        return;
-      }
-      try {
-        const identity = await verifyCloudflareAccessJwt(options.stateRoot, options.publicHost, assertion);
-        const account = await resolveCloudflareAccount(options.stateRoot, identity, { allowJit: options.allowJit });
-        handlerFor(account.account_id, {
-          platform: "remote-mcp",
-          transport: "mcp",
-          principalId: identity.sub ? `cloudflare:${identity.sub}` : `cloudflare-email:${identity.email}`,
-          connectionId: "cloudflare-managed-oauth",
-          authenticatedAccount: identity.email
-        })(request, response);
-      } catch (error) {
-        console.error("[memhub] HTTP identity error:", error);
-        if (!response.headersSent) {
-          response.writeHead(403, { "content-type": "application/json", "cache-control": "no-store" });
-          response.end(JSON.stringify({
-            error: "identity_rejected",
-            message: error instanceof Error ? error.message : String(error)
-          }));
-        } else {
-          response.end();
-        }
-      }
+      const identity = await toolIdentity(request, response, "mcp");
+      if (identity) handlerFor(identity.accountId, identity.source)(request, response);
     })().catch((error) => {
       const bodyError = asHttpJsonBodyError(error);
-      const status = bodyError?.statusCode ?? (error instanceof TypeError ? 400 : 500);
-      const code = bodyError?.code ?? (error instanceof TypeError ? "invalid_request" : "request_failed");
+      const identityUnavailable = error instanceof joseErrors.JWKSTimeout;
+      const status = identityUnavailable ? 503 : bodyError?.statusCode ?? (error instanceof TypeError ? 400 : 500);
+      const code = identityUnavailable ? "identity_provider_unavailable" : bodyError?.code ?? (error instanceof TypeError ? "invalid_request" : "request_failed");
       const errorId = requestId.slice(0, 8);
-      console.error(`[memhub] HTTP request error ${errorId}:`, error);
+      console.error(`[litsan] HTTP request error ${errorId}:`, error);
       if (!response.headersSent) {
+        if (identityUnavailable) response.setHeader("retry-after", "1");
         response.writeHead(status, { "content-type": "application/json", "cache-control": "no-store" });
         response.end(JSON.stringify({
           error: code,
-          message: status === 500 ? "Internal server error" : error instanceof Error ? error.message : String(error),
+          message: identityUnavailable ? "Cloudflare Access temporarily unavailable" : status === 500 ? "Internal server error" : error instanceof Error ? error.message : String(error),
           ...(status === 500 ? { error_id: errorId } : {})
         }));
       } else {
@@ -449,9 +481,9 @@ export async function serveHttp(
   });
   const address = http.address();
   const actualPort = typeof address === "object" && address !== null ? address.port : options.port;
-  console.error(`[memhub] listening on http://127.0.0.1:${actualPort}${options.path}`);
-  if (options.publicHost) {
-    console.error(`[memhub] Cloudflare Access allowlist enabled for https://${options.publicHost}${options.path}`);
+  console.error(`[litsan] listening on http://127.0.0.1:${actualPort}${options.path}`);
+  if (publicHost) {
+    console.error(`[litsan] Cloudflare Access allowlist enabled for https://${hosts.join(",")}${options.path}`);
   }
 
   // The durable ingested marker is the reconciliation source after a
@@ -462,7 +494,7 @@ export async function serveHttp(
     if (!inFlightDiscovery) {
       const current = deps.queueIdleDistillation(options.stateRoot, runtimeFor)
         .catch((error) => {
-          console.error("[memhub] idle distillation scheduler:", error instanceof Error ? error.message : String(error));
+          console.error("[litsan] idle distillation scheduler:", error instanceof Error ? error.message : String(error));
         })
         .finally(() => {
           if (inFlightDiscovery === current) inFlightDiscovery = null;
@@ -480,6 +512,7 @@ export async function serveHttp(
       for (const runtime of runtimes.values()) runtime.dispose();
     });
   });
+  return http;
 }
 
 export function isOAuthProtectedResourceMetadataPath(pathname: string, resourcePath: string): boolean {
@@ -499,8 +532,8 @@ export function localAdminAccount(
     throw new Error(`configured local admin account is not an administrator: ${preferred}`);
   }
   if (admins.length === 1) return admins[0]!;
-  if (admins.length === 0) throw new Error("local control plane requires at least one Memhub administrator account");
-  throw new Error("multiple administrator accounts exist; set MEMHUB_LOCAL_ADMIN_ACCOUNT to select the local control-plane identity");
+  if (admins.length === 0) throw new Error("local control plane requires at least one LITSAN administrator account");
+  throw new Error("multiple administrator accounts exist; set LITSAN_LOCAL_ADMIN_ACCOUNT to select the local control-plane identity");
 }
 
 function optionalString(value: unknown): string | undefined {
@@ -509,11 +542,11 @@ function optionalString(value: unknown): string | undefined {
   return normalized ? normalized : undefined;
 }
 
-function createCoreHealthClient(runtimeOptions: MemhubRuntimeOptions): LocalMemoryRestClient | undefined {
+function createCoreHealthClient(runtimeOptions: LitsanRuntimeOptions): LocalMemoryRestClient | undefined {
   try {
     return new LocalMemoryRestClient({
-      endpoint: runtimeOptions.memoryEndpoint ?? process.env.MEMHUB_MEMORY_URL ?? "http://127.0.0.1:18960",
-      token: runtimeOptions.memoryToken ?? process.env.MEMHUB_MEMORY_TOKEN
+      endpoint: runtimeOptions.memoryEndpoint ?? env("MEMORY_URL") ?? "http://127.0.0.1:18960",
+      token: runtimeOptions.memoryToken ?? env("MEMORY_TOKEN")
     });
   } catch {
     return undefined;
@@ -537,14 +570,7 @@ async function readCoreHealthBrief(
     const degraded = Array.isArray(object.degraded)
       ? object.degraded.filter((item): item is string => typeof item === "string")
       : [];
-    const buildValue = object.build;
-    const candidate = buildValue && typeof buildValue === "object" && !Array.isArray(buildValue)
-      ? buildValue as Record<string, unknown>
-      : undefined;
-    const build = candidate && typeof candidate.vendorSha256 === "string" &&
-      typeof candidate.memhubVersion === "string"
-      ? { vendorSha256: candidate.vendorSha256, memhubVersion: candidate.memhubVersion }
-      : undefined;
+    const build = parseBuildIdentity(object.build);
     return { degraded, ...(build ? { build } : {}) };
   } catch {
     return { degraded: ["core_unreachable"] };

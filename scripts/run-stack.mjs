@@ -24,7 +24,7 @@ const port = (flag, fallback) => {
 };
 const corePort = port("--core-port", 18960);
 const gatewayPort = port("--gateway-port", 3001);
-if (corePort === gatewayPort) throw new Error("Memhub stack ports must be distinct");
+if (corePort === gatewayPort) throw new Error("LITSAN stack ports must be distinct");
 const homeFlag = value("--home", undefined);
 const home = resolve(homeFlag ?? resolveHome());
 const action = value("--action", "serve");
@@ -32,12 +32,12 @@ const lockPath = join(home, ".memhub-stack.lock");
 const stopRequestPath = `${lockPath}.stop`;
 
 if (action === "preflight") {
-  if (existsSync(lockPath)) throw new Error("Memhub stack lock remains; refusing to replace an unverified owner");
+  if (existsSync(lockPath)) throw new Error("LITSAN stack lock remains; refusing to replace an unverified owner");
   for (const [name, port] of [["core", corePort], ["gateway", gatewayPort]]) {
     await new Promise((resolveProbe, rejectProbe) => {
       const probe = createServer();
       probe.once("error", (error) => {
-        rejectProbe(new Error(`Memhub ${name} port ${port} is occupied or unavailable; refusing to stop unrelated processes: ${error.message}`));
+        rejectProbe(new Error(`LITSAN ${name} port ${port} is occupied or unavailable; refusing to stop unrelated processes: ${error.message}`));
       });
       probe.listen({ host: "127.0.0.1", port, exclusive: true }, () => probe.close(resolveProbe));
     });
@@ -97,14 +97,14 @@ const coreEntry = join(repoRoot, "vendor", "memory-core", "src", "server", "inde
 const gatewayEntry = join(repoRoot, "dist", "mcp.js");
 const required = [envPath, configPath, coreEntry, gatewayEntry];
 for (const path of required) {
-  if (!existsSync(path)) throw new Error(`Memhub stack preflight: missing ${path}`);
+  if (!existsSync(path)) throw new Error(`LITSAN stack preflight: missing ${path}`);
 }
 const env = Object.fromEntries((await readFile(envPath, "utf8")).replace(/^\uFEFF/, "").split(/\r?\n/)
   .filter((line) => line && !line.trimStart().startsWith("#"))
   .map((line) => {
     const index = line.indexOf("=");
     if (index <= 0 || !/^MEMHUB_[A-Z0-9_]+$/.test(line.slice(0, index))) {
-      throw new Error("invalid Memhub environment file");
+      throw new Error("invalid LITSAN environment file");
     }
     return [line.slice(0, index), line.slice(index + 1)];
   }));
@@ -224,7 +224,7 @@ async function acquireLock(path, owner) {
     // EEXIST is authoritative: no PID check can safely establish that a
     // stale-looking lock is ours to unlink (PID reuse and concurrent owner
     // replacement are both possible). Never auto-reclaim during serve.
-    throw new Error("Memhub stack lock exists; refusing automatic takeover or stale-lock deletion");
+    throw new Error("LITSAN stack lock exists; refusing automatic takeover or stale-lock deletion");
   }
 }
 

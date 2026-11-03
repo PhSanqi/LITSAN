@@ -1,11 +1,25 @@
+import type { WorkstreamHint } from "./contracts/branches.js";
+import { deriveWorkstreamKey, parseWorkstreamHint } from "./core/workstream/binding.js";
+import { buildInFlightBlock } from "./core/workstream/in-flight.js";
+import { isWorkstreamEnabled } from "./workstream-config.js";
+import type { ProjectReader } from "./core/ports/projects.js";
+import type { AccountId } from "./contracts/identity.js";
 import { buildContextCapsule, utf8Prefix, type ContextCapsule } from "./context-capsule.js";
-import { resolveProjectScope, type ProjectScopeResolution } from "./project-scope.js";
+import {
+  buildRetrievalScopeEnvelope,
+  resolveProjectScope,
+  type ProjectScopeResolution
+} from "./project-scope.js";
 import { NullProjectArchitectureSource, type ProjectArchitectureSource } from "./architecture-source.js";
 import type { JsonProjectBranchStore, ProjectBranch } from "./branch-store.js";
 import type { ContextMemorySource } from "./memory-source.js";
 import type { JsonProjectRegistry, ProjectDescriptor, ProjectTodo } from "./project-registry.js";
 import { tokenizeRetrievalText } from "./retrieval-ranker.js";
-import type { MemhubRuntime } from "./runtime.js";
+
+export interface ContextRouterDeps {
+  projects: Pick<ProjectReader, "list" | "resolve" | "suggest">;
+  accountId: AccountId;
+}
 
 export interface ContextRouterInput {
   accountId: string;
@@ -19,6 +33,7 @@ export interface ContextRouterInput {
   knownProjectIds?: string[];
   reusableSkillProjectIds?: string[];
   branchId?: string;
+  workstream?: unknown;
   limit?: number;
   detail?: "brief" | "full";
   maxContentBytes?: number;
@@ -35,7 +50,8 @@ export class ContextRouter {
     memory: ContextMemorySource,
     architecture: ProjectArchitectureSource = new NullProjectArchitectureSource(),
     projects?: JsonProjectRegistry,
-    branches?: JsonProjectBranchStore
+    branches?: JsonProjectBranchStore,
+    private readonly stateRoot?: string
   ) {
     this.memory = memory;
     this.architecture = architecture;
@@ -96,12 +112,15 @@ export class ContextRouter {
           semanticProjectIds
         });
 
+    const enabled = Boolean(this.stateRoot && resolution.projectId &&
+      await isWorkstreamEnabled(this.stateRoot, accountId, resolution.projectId));
     const branchContext = await this.resolveBranchContext({
       accountId,
       projectId: resolution.projectId,
-      branchRef: normalizeOptional(input.branchId)
+      branchRef: normalizeOptional(input.branchId),
+      workstream: enabled ? parseWorkstreamHint(input.workstream) : undefined
     });
-    const retrievalQuery = branchContext
+    const retrievalQuery = branchContext?.source === "explicit"
       ? `${query}\n\n[project branch]\nname: ${branchContext.branch.name}\ngoal: ${branchContext.branch.goal}`
       : query;
     const limit = Math.min(50, Math.max(1, Math.trunc(input.limit ?? 6)));
@@ -114,15 +133,23 @@ export class ContextRouter {
           this.projects!.storageIds(accountId, projectId)
         ))).flat())
       : canonicalReusableSkillProjectIds;
+    const retrievalScope = buildRetrievalScopeEnvelope({
+      accountId,
+      resolution,
+      workspaceProjectId,
+      branchId: branchContext?.branch.branchId,
+      projectStorageIds,
+      reusableSkillProjectIds,
+      crossProjectSkillAllowed: reusableSkillProjectIds.length > 0
+    });
     const recalled = await this.memory.recall({
       accountId,
       userId,
       query: retrievalQuery,
-      projectId: resolution.projectId,
-      projectStorageIds,
+      scope: retrievalScope,
       continuityId,
-      limit,
-      reusableSkillProjectIds
+      ...(enabled && branchContext ? { workstreamBranchId: branchContext.branch.branchId } : {}),
+      limit
     });
     if (this.projects && recalled.reusableSkills.length > 0) {
       recalled.reusableSkills = await Promise.all(recalled.reusableSkills.map(async (item) => ({
@@ -135,12 +162,20 @@ export class ContextRouter {
     const projectArchitecture = resolution.projectId
       ? await this.projectArchitectureFromStorageIds(accountId, resolution.projectId, projectStorageIds, retrievalQuery)
       : [];
+    const cognitive = enabled && resolution.projectId
+      ? await this.architecture.inspectProjectCognitiveMap({ accountId, projectId: resolution.projectId }) : undefined;
+    const inFlight = cognitive && this.branches && resolution.projectId
+      ? buildInFlightBlock({ branches: await this.branches.list(accountId, resolution.projectId),
+          currentBranchId: branchContext?.branch.branchId ?? "main", map: cognitive.map,
+          currentMapFingerprint: cognitive.fingerprint, now: new Date().toISOString() }) : undefined;
     return buildContextCapsule({
       accountId,
       conversationId,
       continuityId,
       resolution,
+      retrievalScope,
       globalMemory: recalled.globalMemory,
+      globalState: recalled.globalState,
       projectMemory: recalled.projectMemory,
       reusableSkills: recalled.reusableSkills,
       projectArchitecture,
@@ -149,8 +184,10 @@ export class ContextRouter {
         branchId: branchContext.branch.branchId,
         name: branchContext.branch.name,
         goal: branchContext.branch.goal,
-        source: branchContext.source
+        source: branchContext.source,
+        ...(cognitive ? { base_stale: branchContext.branch.base_map_fingerprint !== cognitive.fingerprint } : {})
       } : null,
+      ...(inFlight?.branches.length ? { inFlight } : {}),
       detail: input.detail,
       maxContentBytes: input.maxContentBytes,
       maxItemContentBytes: input.maxItemContentBytes,
@@ -162,7 +199,8 @@ export class ContextRouter {
     accountId: string;
     projectId: string | null;
     branchRef?: string;
-  }): Promise<{ branch: ProjectBranch; source: "explicit" } | null> {
+    workstream?: WorkstreamHint;
+  }): Promise<{ branch: ProjectBranch; source: "explicit" | "workstream" } | null> {
     if (!this.branches) return null;
     if (input.branchRef && !input.projectId) {
       throw new Error("branch requires one resolved project");
@@ -171,6 +209,13 @@ export class ContextRouter {
       const branch = await this.branches.resolve(input.accountId, input.projectId, input.branchRef);
       if (!branch) throw new Error(`unknown active branch for project ${input.projectId}: ${input.branchRef}`);
       return { branch, source: "explicit" };
+    }
+    if (input.projectId && input.workstream) {
+      const derived = deriveWorkstreamKey(input.workstream);
+      if (derived.key) {
+        const branch = await this.branches.findActiveByKey(input.accountId, input.projectId, derived.key);
+        if (branch) return { branch, source: "workstream" };
+      }
     }
     return null;
   }
@@ -296,7 +341,7 @@ function uniqueProjectIds(values: readonly (string | undefined)[]): string[] {
 }
 
 export async function resolveToolScope(
-  runtime: MemhubRuntime,
+  runtime: ContextRouterDeps,
   input: { scope: string; project?: string; workspaceProject?: string }
 ): Promise<{ projectId: string | null; resolutionSource: string }> {
   if (input.scope !== "global" && input.scope !== "project") {
@@ -324,7 +369,7 @@ export async function resolveToolScope(
 }
 
 export async function resolveExplicitProjectEvidence(
-  runtime: MemhubRuntime,
+  runtime: ContextRouterDeps,
   input: { project?: string; workspaceProject?: string }
 ): Promise<{ projectId: string | null; resolutionSource: string | null }> {
   const projectRef = input.project?.trim() || undefined;
@@ -336,7 +381,7 @@ export async function resolveExplicitProjectEvidence(
     const canonical = await runtime.projects.resolve(runtime.accountId, reference);
     if (canonical) return canonical;
     const candidates = await runtime.projects.suggest(runtime.accountId, reference, 5);
-    throw new Error(`unknown ${field} "${reference}". Use memmy_project_list before project-scoped operations. Similar: ${candidates.map((item) => item.projectId).join(", ") || "none"}`);
+    throw new Error(`unknown ${field} "${reference}". Use litsan_project_list before project-scoped operations. Similar: ${candidates.map((item) => item.projectId).join(", ") || "none"}`);
   };
 
   const explicit = projectRef ? await resolveOne(projectRef, "project") : null;

@@ -1,19 +1,34 @@
+import type { AccountId, UserId } from "./contracts/identity.js";
+import type { ProjectReader, ProjectWriter } from "./core/ports/projects.js";
+import type { MemoryViewerReader, MemoryViewerWriter } from "./core/ports/memory.js";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { setAccountRole, type listAccounts } from "./auth.js";
 import { setDistillationConfig, retryDistillationJob, retireDistillationMemory, listDistillationJobs, type DistillationJob } from "./distillation-jobs.js";
+import { createHash } from "node:crypto";
+import type { NodeFlagsArtifact } from "./contracts/project-model.js";
+import { markRequested, queueStatus, type MaintenanceDeps } from "./maintenance-control.js";
+import { withMaintenanceStore } from "./maintenance-store.js";
+import { setMaintenanceConfig } from "./maintenance-store.js";
 import { readJsonBody } from "./http-json.js";
-import type { MemhubRuntime } from "./runtime.js";
+
 import { assignCaptureProjects } from "./capture-project-assignments.js";
+
+export interface MemoryControlActionsDeps {
+  accountId: AccountId;
+  projects: Pick<ProjectReader, "resolve"> & Pick<ProjectWriter, "create" | "update" | "delete" | "merge" | "addTodo" | "setTodoStatus">;
+  memoryClient: MemoryViewerReader & MemoryViewerWriter;
+  userId: UserId;
+}
 
 type Account = Awaited<ReturnType<typeof listAccounts>>[number];
 
 /** Authenticated console mutations. Gateway has already verified the caller and selected account. */
 export async function handleMemoryControlAction(input: {
   request: IncomingMessage; response: ServerResponse; stateRoot: string;
-  runtime: MemhubRuntime; accounts: Account[]; selectedAccount: Account; adminView: boolean;
+  runtime: MemoryControlActionsDeps & MaintenanceDeps["runtime"]; accounts: Account[]; selectedAccount: Account; adminView: boolean;
   callerAccountId?: string;
-  unfinishedDistillationJobsForProject: (stateRoot: string, runtime: MemhubRuntime, projectId: string) => Promise<DistillationJob[]>;
-  assertManagedMemory: (runtime: MemhubRuntime, memoryId: string) => Promise<void>;
+  unfinishedDistillationJobsForProject: (stateRoot: string, runtime: MemoryControlActionsDeps, projectId: string) => Promise<DistillationJob[]>;
+  assertManagedMemory: (runtime: MemoryControlActionsDeps, memoryId: string) => Promise<void>;
 }): Promise<void> {
   const { request, response, stateRoot, runtime, accounts, selectedAccount, adminView, unfinishedDistillationJobsForProject, assertManagedMemory } = input;
           response.setHeader("x-content-type-options", "nosniff");
@@ -27,6 +42,59 @@ export async function handleMemoryControlAction(input: {
           const action = optionalString(body.action);
           const id = optionalString(body.id);
           if (!action) { response.writeHead(400).end(); return; }
+          if (["map-link-unmapped", "map-flag-node", "map-clear-flag"].includes(action)) {
+            if (!input.callerAccountId || input.callerAccountId !== runtime.accountId ||
+                selectedAccount.account_id !== input.callerAccountId ||
+                (body.account_id !== undefined && body.account_id !== input.callerAccountId)) {
+              response.writeHead(403).end(); return;
+            }
+            const projectRef = optionalString(body.project);
+            if (!projectRef) { response.writeHead(400).end(); return; }
+            const project = await runtime.projects.resolve(runtime.accountId, projectRef);
+            if (!project) { response.writeHead(404).end(); return; }
+            const projectId = project;
+            if (action === "map-link-unmapped") {
+              const requested = await markRequested({ stateRoot, runtime, projectId, kinds: ["arch_link"] });
+              const status = await queueStatus({ stateRoot, runtime, projectId, dry: true });
+              response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ ok: true,
+                open_arch_link_count: (status.kinds.arch_link?.pending ?? 0) + (status.kinds.arch_link?.leased ?? 0), requested }));
+              return;
+            }
+            const nodeId = optionalString(body.node_id), flagId = optionalString(body.flag_id);
+            if (!nodeId || (action === "map-clear-flag" && !flagId) ||
+                (action === "map-flag-node" && (typeof body.reason !== "string" || !["wrong", "unclear", "outdated", "missing_part"].includes(body.reason) ||
+                  typeof body.note !== "string" || body.note.length > 300))) {
+              response.writeHead(400).end(); return;
+            }
+            const now = Date.now(), created_at = new Date(now).toISOString();
+            const result = await withMaintenanceStore(stateRoot, runtime.accountId, now, async store => {
+              const current = await runtime.architecture.inspectProjectCognitiveMap({ accountId: runtime.accountId, projectId });
+              if (!current.map || current.map.project_id !== projectId || !current.map.nodes.some(node => node.id === nodeId)) {
+                return null;
+              }
+              const key = JSON.stringify([projectId, "node_flags"]);
+              const artifact = (store.artifacts?.[key] as NodeFlagsArtifact | undefined) ?? { version: 1, flags: {} };
+              // Own keys only: node ids can legally equal JavaScript prototype property names.
+              const flags = Object.hasOwn(artifact.flags, nodeId) ? artifact.flags[nodeId]! : [];
+              if (action === "map-clear-flag") {
+                const flag = flags.find(flag => flag.id === flagId);
+                if (!flag) return null;
+                flag.cleared_at ??= created_at;
+              } else {
+                flags.push({ id: createHash("sha256").update(nodeId + created_at + body.note).digest("hex").slice(0, 16),
+                  reason: body.reason as NodeFlagsArtifact["flags"][string][number]["reason"], note: body.note as string,
+                  created_at, by: input.callerAccountId! });
+              }
+              Object.defineProperty(artifact.flags, nodeId, { value: flags, enumerable: true, writable: true, configurable: true });
+              (store.artifacts ??= {})[key] = artifact;
+              // Direct store writes don't reset the generation marker; do it so arch_review sees the flag change now.
+              if (store.generation) delete store.generation[projectId];
+              return artifact;
+            });
+            if (!result) { response.writeHead(404).end(); return; }
+            response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ ok: true, node_flags: result }));
+            return;
+          }
           if (action === "assign-captures") {
             if (!adminView || !input.callerAccountId || input.callerAccountId !== runtime.accountId ||
                 selectedAccount.account_id !== runtime.accountId ||
@@ -43,6 +111,12 @@ export async function handleMemoryControlAction(input: {
               response.writeHead(error.message === "capture not found for account/continuity" ? 404 : 400,
                 { "content-type": "application/json" }).end(JSON.stringify({ error: error.message }));
             }
+            return;
+          }
+          if (action === "set-maintenance-config") {
+            if (!adminView) { response.writeHead(403).end(); return; }
+            const config = await setMaintenanceConfig(stateRoot, body);
+            response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify({ ok: true, config }));
             return;
           }
           if (action === "set-distillation-config") {

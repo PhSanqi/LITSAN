@@ -1,6 +1,6 @@
 import { createTestRoot, isolateTestEnvironment } from '../tests/test-isolation.mjs';
-import { createMemhubRuntime } from '../dist/runtime.js';
-import { createMemhubMcpServerForRuntime } from '../dist/mcp.js';
+import { createLitsanRuntime } from '../dist/runtime.js';
+import { createLitsanMcpServerForRuntime } from '../dist/mcp.js';
 import { ContextRouter } from '../dist/context-router.js';
 import { MemoryRestContextSource } from '../dist/memory-source.js';
 import { Client } from '@modelcontextprotocol/client';
@@ -15,7 +15,7 @@ export async function measureContextBytes() {
   const archDocsDir = join(projectDir, 'docs', 'architecture');
   await mkdir(archDocsDir, { recursive: true });
   await writeFile(join(projectDir, 'package.json'), '{}');
-  await writeFile(join(projectDir, 'ARCHITECTURE.md'), '# Memhub Architecture Overview\n\nHigh-level architectural design.');
+  await writeFile(join(projectDir, 'ARCHITECTURE.md'), '# LITSAN Architecture Overview\n\nHigh-level architectural design.');
 
   // 4 large architecture docs (~6-8 KB each) with markdown headings and sections
   for (let i = 1; i <= 4; i++) {
@@ -31,7 +31,7 @@ export async function measureContextBytes() {
     await writeFile(join(archDocsDir, `module-${i}.md`), `# Architecture Module ${i}\n\n${headings}`);
   }
 
-  const runtime = createMemhubRuntime({
+  const runtime = createLitsanRuntime({
     controlRoot: root,
     architectureRoot: join(root, 'architecture')
   });
@@ -53,8 +53,8 @@ export async function measureContextBytes() {
                 kind: "decision",
                 memoryLayer: "L2",
                 status: "activated",
-                title: "Memhub L2 Chronology",
-                snippet: "# Memhub L2 Chronology\n\n- Milestone 1: SQLite vector indexing.\n- Milestone 2: Distillation pipeline.\n- Milestone 3: MCP tools.",
+                title: "LITSAN L2 Chronology",
+                snippet: "# LITSAN L2 Chronology\n\n- Milestone 1: SQLite vector indexing.\n- Milestone 2: Distillation pipeline.\n- Milestone 3: MCP tools.",
                 score: 0.9,
                 tags: ["l2", `project:${project}`],
                 source: "search",
@@ -65,8 +65,8 @@ export async function measureContextBytes() {
                 kind: "profile",
                 memoryLayer: "L3",
                 status: "activated",
-                title: "Memhub L3 Current Truth",
-                snippet: "# Memhub L3 Current Truth\n\n- Rule 1: Always resolve project from explicit evidence; never guess.\n- Rule 2: Plan -> user approval -> execute for mutations.\n- Rule 3: EvidenceRef must pass through.",
+                title: "LITSAN L3 Current Truth",
+                snippet: "# LITSAN L3 Current Truth\n\n- Rule 1: Always resolve project from explicit evidence; never guess.\n- Rule 2: Plan -> user approval -> execute for mutations.\n- Rule 3: EvidenceRef must pass through.",
                 score: 0.95,
                 tags: ["l3", `project:${project}`, "current_truth"],
                 source: "search",
@@ -83,7 +83,7 @@ export async function measureContextBytes() {
   const memorySource = new MemoryRestContextSource(mockClient);
   runtime.router = new ContextRouter(memorySource, runtime.architecture, runtime.projects, runtime.branches);
 
-  const server = createMemhubMcpServerForRuntime(runtime, root);
+  const server = createLitsanMcpServerForRuntime(runtime, root);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'measure-client', version: '1.0' });
   await server.server.connect(serverTransport);
@@ -93,7 +93,7 @@ export async function measureContextBytes() {
     // Register project
     await runtime.projects.create(runtime.accountId, {
       projectId: 'memhub',
-      name: 'Memhub Runtime',
+      name: 'LITSAN Runtime',
       description: 'Private account/project-scoped long-term memory system with provenance and temporal continuity.'
     });
 

@@ -2,13 +2,13 @@
 
 **For first-time users:** choose Local or Server and install it on your own device or server before connecting an AI client. This public site and the GitHub Pages mirror explain the product; they do not provide a shared memory account. Your workspace lives only in your own authenticated installation. The homepage preview is fictional.
 
-This page takes the shortest path from a clean machine to one verified continuity loop. Choose Local or Server Edition, start Memhub, connect an MCP-capable harness, produce real project evidence, then open a new chat or device and confirm that project scope, follow-up, chronology, and evidence remain available.
+This page takes the shortest path from a clean machine to one verified continuity loop. Choose Local or Server Edition, start LITSAN, connect an MCP-capable harness, produce real project evidence, then open a new chat or device and confirm that project scope, follow-up, chronology, and evidence remain available.
 
 ## Choose Local or Server
 
-Use Local Edition when one workstation is enough and you want the entire runtime on that machine. Memory Core and the Memhub MCP runtime stay on loopback; MCP clients connect directly to `http://127.0.0.1:3001/mcp`. Local is the best first installation because it removes the reverse-proxy and remote-auth layers from the initial problem.
+Use Local Edition when one workstation is enough and you want the entire runtime on that machine. Memory Core and the LITSAN MCP runtime stay on loopback; MCP clients connect directly to `http://127.0.0.1:3001/mcp`. Local is the best first installation because it removes the reverse-proxy and remote-auth layers from the initial problem.
 
-Use Server Edition when several devices or hosted MCP clients need one durable source of truth. Memory Core and the same MCP runtime still run on server loopback. Publish `/mcp` only through an authenticated reverse proxy such as Cloudflare Access/Tunnel. Cloudflare is an identity/transport boundary, not a second Memhub implementation.
+Use Server Edition when several devices or hosted MCP clients need one durable source of truth. Memory Core and the same MCP runtime still run on server loopback. Publish `/mcp` only through an authenticated reverse proxy such as Cloudflare Access/Tunnel. Cloudflare is an identity/transport boundary, not a second LITSAN implementation.
 
 Release builds provide two installation paths. **Complete** packages bundle Node.js, production dependencies, and prebuilt output for one target OS, so Node/npm do not need to be preinstalled. The repository `install.sh` / `install.ps1` scripts remain the **convenience/source** path and may install dependencies or build on the target host.
 
@@ -17,7 +17,7 @@ Complete Linux:
 ```bash
 bash editions/complete/linux/install.sh --mode local
 # or
-MEMHUB_PUBLIC_HOST=memory.example.com bash editions/complete/linux/install.sh --mode server
+LITSAN_PUBLIC_HOST=memory.example.com bash editions/complete/linux/install.sh --mode server
 ```
 
 Complete Windows:
@@ -33,16 +33,16 @@ powershell -ExecutionPolicy Bypass -File .\editions\complete\windows\install.ps1
 Linux:
 
 ```bash
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
 bash editions/local/linux/install.sh
 ```
 
 Windows PowerShell:
 
 ```powershell
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
 powershell -ExecutionPolicy Bypass -File .\editions\local\windows\install.ps1
 ```
 
@@ -53,16 +53,16 @@ On Linux, verify `memhub-core.service`, `memhub.service`, and `memhub-stack.targ
 Linux:
 
 ```bash
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
-MEMHUB_PUBLIC_HOST=memory.example.com bash editions/server/linux/install.sh
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
+LITSAN_PUBLIC_HOST=memory.example.com bash editions/server/linux/install.sh
 ```
 
 Windows:
 
 ```powershell
-git clone https://github.com/PhSanqi/Memhub.git
-cd Memhub
+git clone https://github.com/PhSanqi/LITSAN.git
+cd LITSAN
 powershell -ExecutionPolicy Bypass -File .\editions\server\windows\install.ps1 -PublicHost memory.example.com
 ```
 
@@ -76,7 +76,7 @@ When Project Scope is “All projects,” the workspace should show a portfolio 
 
 ## Connect an AI harness
 
-Connect an MCP-capable client directly to the appropriate endpoint. Clients use the MCP endpoint directly. The model-facing contract is simple: at the start of each Memhub turn call `memmy_context` with the current request and explicit `project`/`workspace_project` evidence, then call `memmy_turn action=open`; before the final answer call `memmy_turn action=commit`. Host conversation/session IDs are optional provenance, not routing keys. Start with a small real project and a few turns before importing a large history.
+Connect an MCP-capable client directly to the appropriate endpoint. Clients use the MCP endpoint directly. The model-facing contract is simple: at the start of each LITSAN turn call `litsan_context` with the current request and explicit `project`/`workspace_project` evidence, then call `litsan_turn action=open`; before the final answer call `litsan_turn action=commit`. Host conversation/session IDs are optional provenance, not routing keys. Start with a small real project and a few turns before importing a large history.
 
 ## Verify project routing
 
@@ -109,7 +109,7 @@ This is the real acceptance test. A 200 response from the web UI alone does not 
 
 ## Common failures
 
-A 401 on protected Server pages may be expected for anonymous requests. Diagnose identity before weakening access control. Wrong project context usually requires checking current project/workspace evidence and aliases/descriptions—not deleting all memory. Missing L1 usually means the Agent did not execute the `memmy_turn open/commit` contract; L1 present with no L2/L3 points to Processing.
+A 401 on protected Server pages may be expected for anonymous requests. Diagnose identity before weakening access control. Wrong project context usually requires checking current project/workspace evidence and aliases/descriptions—not deleting all memory. Missing L1 usually means the Agent did not execute the `litsan_turn open/commit` contract; L1 present with no L2/L3 points to Processing.
 
 Before a schema-changing upgrade, use the migration preflight/verify/preserved flow rather than copying only a rebuildable index.
 
@@ -123,7 +123,7 @@ Spend five minutes checking services and ports, ten minutes doing real work in o
 No. Prove the current capture/scope/continuity path with a small clean project first, then migrate history.
 
 ### Why not put all history in every prompt?
-That destroys project boundaries and time-state semantics. Memhub recalls the most relevant durable context and keeps L1 available for evidence tracing.
+That destroys project boundaries and time-state semantics. LITSAN recalls the most relevant durable context and keeps L1 available for evidence tracing.
 
 ### Is Skill L5?
 No. Skill is an orthogonal reusable capability channel, not the next step in L1→L4 distillation.

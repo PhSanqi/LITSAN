@@ -4,8 +4,8 @@ import { rm, writeFile, mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/client';
 import { InMemoryTransport } from '@modelcontextprotocol/client';
-import { createMemhubRuntime } from '../dist/runtime.js';
-import { createMemhubMcpServerForRuntime } from '../dist/mcp.js';
+import { createLitsanRuntime } from '../dist/runtime.js';
+import { createLitsanMcpServerForRuntime } from '../dist/mcp.js';
 import { ContextRouter } from '../dist/context-router.js';
 import { MemoryRestContextSource } from '../dist/memory-source.js';
 import { buildContextCapsule } from '../dist/context-capsule.js';
@@ -17,7 +17,7 @@ async function runContextDietTests() {
   const archDocsDir = join(projectDir, 'docs', 'architecture');
   await mkdir(archDocsDir, { recursive: true });
   await writeFile(join(projectDir, 'package.json'), '{}');
-  await writeFile(join(projectDir, 'ARCHITECTURE.md'), '# Memhub Architecture Overview\n\nHigh-level architectural design.');
+  await writeFile(join(projectDir, 'ARCHITECTURE.md'), '# LITSAN Architecture Overview\n\nHigh-level architectural design.');
 
   // Create 4 large architecture docs (~6-8 KB each) with markdown headings and sections
   for (let i = 1; i <= 4; i++) {
@@ -33,7 +33,7 @@ async function runContextDietTests() {
     await writeFile(join(archDocsDir, `module-${i}.md`), `# Architecture Module ${i}\n\n${headings}`);
   }
 
-  const runtime = createMemhubRuntime({
+  const runtime = createLitsanRuntime({
     controlRoot: root,
     architectureRoot: join(root, 'architecture')
   });
@@ -55,8 +55,8 @@ async function runContextDietTests() {
                 kind: 'decision',
                 memoryLayer: 'L2',
                 status: 'activated',
-                title: 'Memhub L2 Chronology',
-                snippet: '# Memhub L2 Chronology\n\n- Milestone 1: SQLite vector indexing.\n- Milestone 2: Distillation pipeline.\n- Milestone 3: MCP tools.',
+                title: 'LITSAN L2 Chronology',
+                snippet: '# LITSAN L2 Chronology\n\n- Milestone 1: SQLite vector indexing.\n- Milestone 2: Distillation pipeline.\n- Milestone 3: MCP tools.',
                 score: 0.9,
                 tags: ['l2', `project:${project}`],
                 source: 'search',
@@ -67,8 +67,8 @@ async function runContextDietTests() {
                 kind: 'profile',
                 memoryLayer: 'L3',
                 status: 'activated',
-                title: 'Memhub L3 Current Truth',
-                snippet: '# Memhub L3 Current Truth\n\n- Rule 1: Always resolve project from explicit evidence; never guess.\n- Rule 2: Plan -> user approval -> execute for mutations.\n- Rule 3: EvidenceRef must pass through.',
+                title: 'LITSAN L3 Current Truth',
+                snippet: '# LITSAN L3 Current Truth\n\n- Rule 1: Always resolve project from explicit evidence; never guess.\n- Rule 2: Plan -> user approval -> execute for mutations.\n- Rule 3: EvidenceRef must pass through.',
                 score: 0.95,
                 tags: ['l3', `project:${project}`, 'current_truth'],
                 source: 'search',
@@ -85,7 +85,7 @@ async function runContextDietTests() {
   const memorySource = new MemoryRestContextSource(mockClient);
   runtime.router = new ContextRouter(memorySource, runtime.architecture, runtime.projects, runtime.branches);
 
-  const server = createMemhubMcpServerForRuntime(runtime, root);
+  const server = createLitsanMcpServerForRuntime(runtime, root);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: 'diet-test-client', version: '1.0' });
   await server.server.connect(serverTransport);
@@ -95,7 +95,7 @@ async function runContextDietTests() {
     // Register project and add sample todos
     await runtime.projects.create(runtime.accountId, {
       projectId: 'memhub',
-      name: 'Memhub Runtime',
+      name: 'LITSAN Runtime',
       description: 'Private account/project-scoped long-term memory system with provenance and temporal continuity.'
     });
     await runtime.projects.addTodo(runtime.accountId, 'memhub', 'Verify context diet footprint under 10000 bytes');
@@ -107,14 +107,14 @@ async function runContextDietTests() {
     console.log('Testing tool descriptions and parameter limits...');
     const toolsResult = await client.listTools();
     const tools = toolsResult.tools;
-    assert.equal(tools.length, 11, 'Expected 11 MCP tools');
+    assert.equal(tools.length, 12, 'Expected 12 MCP tools');
 
     let fullToolsText = '';
 
     for (const tool of tools) {
       const desc = tool.description ?? '';
       fullToolsText += ' ' + desc;
-      if (tool.name === 'memmy_context' || tool.name === 'memmy_turn') {
+      if (tool.name === 'litsan_context' || tool.name === 'litsan_turn') {
         assert(
           desc.length <= 600,
           `Tool ${tool.name} description exceeded 600 chars: length is ${desc.length}`
@@ -152,9 +152,9 @@ async function runContextDietTests() {
     // -------------------------------------------------------------
     // Test 2: Brief Mode (Default) Response Footprint <= 10,000 Bytes
     // -------------------------------------------------------------
-    console.log('Testing memmy_context brief mode footprint and structure...');
+    console.log('Testing litsan_context brief mode footprint and structure...');
     const briefRes = await client.callTool({
-      name: 'memmy_context',
+      name: 'litsan_context',
       arguments: {
         query: 'architecture contracts and runtime safety constraints',
         project: 'memhub'
@@ -283,9 +283,9 @@ async function runContextDietTests() {
     // -------------------------------------------------------------
     // Test 4: Full Mode Unchanged Semantics
     // -------------------------------------------------------------
-    console.log('Testing memmy_context full mode semantics...');
+    console.log('Testing litsan_context full mode semantics...');
     const fullRes = await client.callTool({
-      name: 'memmy_context',
+      name: 'litsan_context',
       arguments: {
         query: 'architecture contracts and runtime safety constraints',
         project: 'memhub',
@@ -324,16 +324,16 @@ async function runContextDietTests() {
     console.log('✓ Full mode semantics pass');
 
     // -------------------------------------------------------------
-    // Test 5: memmy_turn Ack Contains None of Submitted Texts
+    // Test 5: litsan_turn Ack Contains None of Submitted Texts
     // -------------------------------------------------------------
-    console.log('Testing memmy_turn small ack without text echoes...');
+    console.log('Testing litsan_turn small ack without text echoes...');
     const userSecret = 'USER_SECRET_QUERY_98765';
     const assistantSecret = 'ASSISTANT_SECRET_ANSWER_43210';
     const reasoningSecret = 'REASONING_SECRET_STEP_13579';
     const toolSecret = 'TOOL_SECRET_CALL_24680';
 
     const turnRes = await client.callTool({
-      name: 'memmy_turn',
+      name: 'litsan_turn',
       arguments: {
         action: 'open',
         conversation_id: 'conv-diet-1',
@@ -346,20 +346,20 @@ async function runContextDietTests() {
     });
 
     const turnJsonText = turnRes.content[0].text;
-    assert(!turnJsonText.includes(userSecret), 'memmy_turn ack must not contain user_text');
-    assert(!turnJsonText.includes(assistantSecret), 'memmy_turn ack must not contain assistant_text');
-    assert(!turnJsonText.includes(reasoningSecret), 'memmy_turn ack must not contain reasoning_summary');
-    assert(!turnJsonText.includes(toolSecret), 'memmy_turn ack must not contain tool_summary');
+    assert(!turnJsonText.includes(userSecret), 'litsan_turn ack must not contain user_text');
+    assert(!turnJsonText.includes(assistantSecret), 'litsan_turn ack must not contain assistant_text');
+    assert(!turnJsonText.includes(reasoningSecret), 'litsan_turn ack must not contain reasoning_summary');
+    assert(!turnJsonText.includes(toolSecret), 'litsan_turn ack must not contain tool_summary');
 
     const turnData = JSON.parse(turnJsonText);
-    assert.equal(turnData.ok, true, 'memmy_turn ack ok must be true');
-    assert.equal(turnData.action, 'open', 'memmy_turn ack action must be open');
-    assert(turnData.event_id, 'memmy_turn ack must contain event_id');
-    assert(turnData.status, 'memmy_turn ack must contain status');
+    assert.equal(turnData.ok, true, 'litsan_turn ack ok must be true');
+    assert.equal(turnData.action, 'open', 'litsan_turn ack action must be open');
+    assert(turnData.event_id, 'litsan_turn ack must contain event_id');
+    assert(turnData.status, 'litsan_turn ack must contain status');
 
     // Test checkpoint ack
     const cpRes = await client.callTool({
-      name: 'memmy_turn',
+      name: 'litsan_turn',
       arguments: {
         action: 'checkpoint',
         event_id: turnData.event_id,
@@ -379,7 +379,7 @@ async function runContextDietTests() {
 
     // Test commit ack
     const commitRes = await client.callTool({
-      name: 'memmy_turn',
+      name: 'litsan_turn',
       arguments: {
         action: 'commit',
         event_id: turnData.event_id,
@@ -397,7 +397,7 @@ async function runContextDietTests() {
 
     // Test resume DOES return content
     const resumeRes = await client.callTool({
-      name: 'memmy_turn',
+      name: 'litsan_turn',
       arguments: {
         action: 'resume',
         conversation_id: 'conv-diet-1'
@@ -406,7 +406,7 @@ async function runContextDietTests() {
     const resumeData = JSON.parse(resumeRes.content[0].text);
     assert(Array.isArray(resumeData.turns), 'resume must return turns array');
     assert(resumeData.turns.length > 0, 'resume turns must not be empty');
-    console.log('✓ memmy_turn ack privacy and resume pass');
+    console.log('✓ litsan_turn ack privacy and resume pass');
 
     console.log('\nAll context diet e2e assertions passed successfully!');
   } finally {

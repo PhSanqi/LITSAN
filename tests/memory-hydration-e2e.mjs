@@ -20,10 +20,10 @@ try {
       layer: "L1",
       timestamp: "2026-10-09T00:00:00.000Z",
       project_id: "memhub",
-      content: "user: Keep Memhub simple because extra services add unnecessary overhead."
+      content: "user: Keep LITSAN simple because extra services add unnecessary overhead."
     }],
     resultId: "timeline-a",
-    content: "# Memhub Timeline\n\n## 2026-10-09\nProgressive disclosure shipped.",
+    content: "# LITSAN Timeline\n\n## 2026-10-09\nProgressive disclosure shipped.",
     committedAt: "2026-10-09T00:01:00.000Z"
   });
   const ref = `l2:timeline-a:${job.job_id}`;
@@ -49,14 +49,14 @@ try {
       content: hydrated.content
     }],
     resultId: "profile-a",
-    content: "# Memhub Rules\n\nKeep the memory system minimal and avoid unnecessary service layers.",
+    content: "# LITSAN Rules\n\nKeep the memory system minimal and avoid unnecessary service layers.",
     committedAt: "2026-10-09T00:02:00.000Z"
   });
   const why = await explainMemoryWhy({
     stateRoot: root,
     accountId,
     evidenceRef: `l3:profile-a:${l3Job.job_id}`,
-    query: "why keep Memhub simple extra services overhead",
+    query: "why keep LITSAN simple extra services overhead",
     maxSources: 4
   });
   assert.equal(why.persistence, "none");

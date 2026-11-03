@@ -1,10 +1,25 @@
+import { filterBranchL1Hits, listFreshBranchEvidence } from "./workstream-retrieval.js";
+import type { DistilledArtifactKind } from "./contracts/memory.js";
+export type { DistilledArtifactKind } from "./contracts/memory.js";
 import { createHash } from "node:crypto";
 import type { ContextItem } from "./context-capsule.js";
-import { listFreshCaptureEvidence } from "./capture.js";
+import { listExplicitGlobalCaptureEvents, listFreshCaptureEvidence } from "./capture.js";
 import { captureCoreRawTurnId, captureTurnId } from "./capture-ingest.js";
+import { latestCompletedL3ByProject, listDistillationJobs, type DistillationJob } from "./distillation-jobs.js";
 import type { LocalMemoryRestClient, RecallHit, RuntimeNamespace } from "./local-memory-client.js";
-import { rankRecallHits, tokenizeRetrievalText, type RankedRecallHit, type RetrievalRankDiagnostics } from "./retrieval-ranker.js";
+import { latestCanonicalL2 } from "./core/lifecycle/l2-restructure.js";
+import { selectLitsanCoreHits } from "./litsan-core.js";
+import {
+  rankRecallHits,
+  tokenizeRetrievalText,
+  type RankedRecallHit,
+  type RetrievalCandidateDecision,
+  type RetrievalRankDiagnostics
+} from "./retrieval-ranker.js";
 import { compactSkillContextItem } from "./skill-router.js";
+import { buildRetrievalScopeEnvelope, type RetrievalScopeEnvelope } from "./project-scope.js";
+import { globalStateAdmission, globalStateContextItem, latestCompletedGlobalState } from "./global-state.js";
+import { distillationExclusion } from "./core/lifecycle/distillation-eligibility.js";
 
 interface SearchResponseLike {
   hits?: RecallHit[];
@@ -16,64 +31,61 @@ interface SearchResponseLike {
 }
 
 export interface ContextMemorySource {
-  recall(input: {
-    accountId: string;
-    userId: string;
-    query: string;
-    projectId: string | null;
-    projectStorageIds?: readonly string[];
-    conversationId?: string;
-    continuityId?: string;
-    limit: number;
-    reusableSkillProjectIds?: readonly string[];
-  }): Promise<{
+  recall(input: ContextRecallInput): Promise<{
     globalMemory: ContextItem[];
+    globalState: ContextItem[];
     projectMemory: ContextItem[];
     reusableSkills: ContextItem[];
     diagnostics?: ContextRecallDiagnostics;
   }>;
 }
 
-export interface ContextRecallDiagnostics {
-  version: "retrieval-v1";
-  requestedLimit: number;
-  finalLimit: number;
-  candidateLimit: number;
-  coreStatus?: string[];
-  lanes: {
-    global: RetrievalRankDiagnostics;
-    project: RetrievalRankDiagnostics;
-    skills: RetrievalRankDiagnostics;
-  };
+export interface ContextRecallInput {
+    accountId: string;
+    userId: string;
+    query: string;
+    scope?: RetrievalScopeEnvelope;
+    /** @deprecated compatibility adapter; production routing supplies scope. */
+    projectId?: string | null;
+    /** @deprecated compatibility adapter; production routing supplies scope. */
+    projectStorageIds?: readonly string[];
+    conversationId?: string;
+    continuityId?: string;
+    workstreamBranchId?: string;
+    limit: number;
+    /** @deprecated compatibility adapter; production routing supplies scope. */
+    reusableSkillProjectIds?: readonly string[];
 }
 
-export type DistilledArtifactKind = "l2" | "l3" | "l4" | "skill";
+import type { ContextRecallDiagnostics, RetrievalRankingMode } from "./contracts/retrieval.js";
+export type { ContextRecallDiagnostics, RetrievalRankingMode } from "./contracts/retrieval.js";
 
 export const FRESH_L1_MAX = 4;
 const FRESH_L1_CHARS = 600;
 
 export class MemoryRestContextSource implements ContextMemorySource {
-  constructor(private readonly client: LocalMemoryRestClient, private readonly stateRoot?: string) {}
+  constructor(
+    private readonly client: LocalMemoryRestClient,
+    private readonly stateRoot?: string,
+    private readonly rankingMode: RetrievalRankingMode = "memhub_v1"
+  ) {}
 
-  async recall(input: {
-    accountId: string;
-    userId: string;
-    query: string;
-    projectId: string | null;
-    projectStorageIds?: readonly string[];
-    conversationId?: string;
-    continuityId?: string;
-    limit: number;
-    reusableSkillProjectIds?: readonly string[];
-  }): Promise<{
+  async recall(input: ContextRecallInput): Promise<{
     globalMemory: ContextItem[];
+    globalState: ContextItem[];
     projectMemory: ContextItem[];
     reusableSkills: ContextItem[];
     diagnostics: ContextRecallDiagnostics;
   }> {
     const requestedLimit = Math.max(1, Math.min(50, input.limit));
     const finalLimit = Math.min(12, requestedLimit);
-    const candidateLimit = Math.min(50, Math.max(12, finalLimit * 4));
+    const unifiedCore = this.rankingMode === "memhub_core";
+    const candidateLimit = unifiedCore
+      ? finalLimit
+      : Math.min(50, Math.max(12, finalLimit * 4));
+    const rankLane = (hits: readonly RecallHit[]) => unifiedCore
+      ? selectLitsanCoreHits(hits, input.query, finalLimit)
+      : rankRecallHits(hits, input.query, finalLimit);
     const coreStatus: string[] = [];
     const search = async (projectId: string | null, filters: {
       layers?: string[];
@@ -82,22 +94,91 @@ export class MemoryRestContextSource implements ContextMemorySource {
       accountWide?: boolean;
       projectIds?: readonly string[];
     } = {}) => {
-      const response = await this.search(input, projectId, filters);
+      const response = await this.search({
+        accountId: input.accountId,
+        userId: input.userId,
+        query: input.query,
+        projectId,
+        conversationId: input.conversationId,
+        limit: input.limit
+      }, projectId, filters);
       coreStatus.push(...statusFromResponse(response));
       return response;
     };
     const globalResponse = await search(null, { layers: ["L4"], limit: candidateLimit });
     const globalHits = hitsFromResponse(globalResponse)
       .filter((hit) => hit.tags.includes("global"));
-    const rankedGlobal = rankRecallHits(globalHits, input.query, finalLimit);
+    const rankedGlobal = rankLane(globalHits);
     const globalIds = new Set(rankedGlobal.hits.map(({ hit }) => hit.id));
     const globalMemory = rankedGlobal.hits.map((ranked) => contextItemFromRankedHit(ranked, "global", undefined, rankedGlobal.diagnostics));
-    const projectStorageIds = input.projectId === null
+    const scope = input.scope ?? buildRetrievalScopeEnvelope({
+      accountId: input.accountId,
+      resolution: input.projectId
+        ? { projectId: input.projectId, source: "deterministic_binding", recallScope: "global_and_project", candidates: [input.projectId], evidence: ["legacy recall adapter"] }
+        : { projectId: null, source: "none", recallScope: "global_only", candidates: [], evidence: ["legacy recall adapter"] },
+      projectStorageIds: input.projectStorageIds,
+      reusableSkillProjectIds: input.reusableSkillProjectIds,
+      crossProjectSkillAllowed: (input.reusableSkillProjectIds?.length ?? 0) > 0
+    });
+    if (scope.accountId !== input.accountId) throw new Error("retrieval scope/account mismatch");
+    const queryTerms = tokenizeRetrievalText(input.query).slice(0, 32);
+    const globalState: ContextItem[] = [];
+    const explicitGlobalIds = new Set<string>();
+    let globalStateDiagnostics = emptyGlobalStateDiagnostics(queryTerms, unifiedCore ? "memhub_core" : "memhub_v1");
+    if (this.stateRoot) {
+      const jobs = await listDistillationJobs(this.stateRoot, input.accountId);
+      const currentGlobalState = latestCompletedGlobalState(jobs);
+      if (currentGlobalState) {
+        const matched = matchedQueryTerms(currentGlobalState.result_content ?? "", queryTerms);
+        globalState.push(globalStateContextItem(currentGlobalState, matched));
+      }
+      if (scope.primaryProject === null) {
+        const claimed = new Set(jobs.filter((job) => job.target === "global_state")
+          .flatMap((job) => job.evidence_refs.filter((ref) => ref.startsWith("l1:"))));
+        const explicitGlobal = await listExplicitGlobalCaptureEvents(this.stateRoot, input.accountId, 200);
+        for (const event of explicitGlobal) explicitGlobalIds.add(event.event_id);
+        const freshGlobal = explicitGlobal
+          .filter((event) => !claimed.has(`l1:${event.event_id}`) && !distillationExclusion(event) &&
+            globalStateAdmission(event) === "admit")
+          .slice(0, 2);
+        for (const event of freshGlobal) {
+          const user = event.user_text?.trim() ?? "";
+          const assistant = event.assistant_text?.trim() ?? "";
+          const userLimit = Math.min(user.length, 290);
+          const assistantLimit = FRESH_L1_CHARS - "User: \nAssistant: ".length - userLimit;
+          const content = `User: ${clipFreshText(user, userLimit)}\nAssistant: ${clipFreshText(assistant, assistantLimit)}`;
+          globalState.push({
+            id: event.event_id,
+            evidenceRef: `l1:${event.event_id}`,
+            content,
+            authority: "evidence",
+            scope: "global",
+            source: "memhub-capture",
+            createdAt: event.timestamp,
+            updatedAt: event.timestamp,
+            provenance: {
+              memoryLayer: "L1",
+              freshness: "undistilled",
+              globalRouting: "explicit_keep_global",
+              continuityId: event.continuity_id,
+              retrievalV1: { matchedTerms: matchedQueryTerms(content, queryTerms) }
+            }
+          });
+        }
+      }
+      globalStateDiagnostics = diagnosticsForGlobalState(globalState, queryTerms, unifiedCore ? "memhub_core" : "memhub_v1");
+    }
+    const projectId = scope.primaryProject;
+    const projectStorageIds = projectId === null
       ? []
-      : unique(input.projectStorageIds?.length ? input.projectStorageIds : [input.projectId]);
+      : unique(scope.projectStorageIds.length ? scope.projectStorageIds : [projectId]);
+    const branchDrops: RetrievalCandidateDecision[] = [];
+    const branchView = this.stateRoot && input.workstreamBranchId && input.workstreamBranchId !== "main"
+      ? input.workstreamBranchId : undefined;
     let projectHits: RecallHit[] = [];
-    if (input.projectId !== null) {
-      const canonicalProjectId = input.projectId;
+    let canonicalFallbackHits: RecallHit[] = [];
+    if (projectId !== null) {
+      const canonicalProjectId = projectId;
       const historicalStorageIds = projectStorageIds.filter((projectId) => projectId !== canonicalProjectId);
       const [canonicalHits, historicalL2Hits] = await Promise.all([
         search(canonicalProjectId, { layers: ["L3", "L2"], limit: candidateLimit })
@@ -117,6 +198,17 @@ export class MemoryRestContextSource implements ContextMemorySource {
       // project. Only canonical L3 participates in project recall; historical
       // namespaces contribute L2 chronology.
       projectHits = dedupeHits([...canonicalHits, ...historicalL2Hits]);
+      if (this.stateRoot) {
+        const presentCanonicalLayers = new Set(canonicalHits.map((hit) => hit.memoryLayer));
+        if (!presentCanonicalLayers.has("L2") || !presentCanonicalLayers.has("L3")) {
+          canonicalFallbackHits = (await canonicalRevisionFallbackHits(
+            this.stateRoot,
+            input.accountId,
+            canonicalProjectId
+          )).filter((hit) => !presentCanonicalLayers.has(hit.memoryLayer));
+          if (canonicalFallbackHits.length > 0) coreStatus.push("canonical_revision_fallback");
+        }
+      }
       // Preserve Core's L1-only fallback for bootstrap projects.
       if (projectHits.length === 0) {
         projectHits = dedupeHits((await Promise.all(projectStorageIds.map(async (storageProjectId) =>
@@ -125,22 +217,52 @@ export class MemoryRestContextSource implements ContextMemorySource {
         ))).flat());
       }
     }
-    const rankedProject = rankRecallHits(projectHits.filter((hit) => !globalIds.has(hit.id)), input.query, finalLimit);
+    if (branchView) projectHits = await filterBranchL1Hits(this.stateRoot!, input.accountId, branchView, projectHits, branchDrops);
+    const rankedProject = rankLane(projectHits.filter((hit) => !globalIds.has(hit.id)));
     let projectMemory = rankedProject.hits
-      .map((ranked) => contextItemFromRankedHit(ranked, "project", input.projectId ?? undefined, rankedProject.diagnostics));
+      .map((ranked) => contextItemFromRankedHit(ranked, "project", projectId ?? undefined, rankedProject.diagnostics));
+    if (projectId !== null && canonicalFallbackHits.length > 0) {
+      const fallbackItems = canonicalFallbackHits.map((hit) => contextItemFromHit(hit, "project", projectId));
+      const fallbackIds = new Set(fallbackItems.map((item) => item.id));
+      projectMemory = [
+        ...projectMemory.filter((item) => item.provenance?.memoryLayer === "L3"),
+        ...fallbackItems.filter((item) => item.provenance?.memoryLayer === "L3"),
+        ...fallbackItems.filter((item) => item.provenance?.memoryLayer === "L2"),
+        ...projectMemory.filter((item) => item.provenance?.memoryLayer !== "L3" && !fallbackIds.has(item.id))
+      ].slice(0, finalLimit);
+      const fallbackDecisions: RetrievalCandidateDecision[] = fallbackItems.map((item) => {
+        const keptRank = projectMemory.findIndex((candidate) => candidate.id === item.id);
+        return {
+          id: item.id,
+          memoryLayer: typeof item.provenance?.memoryLayer === "string" ? item.provenance.memoryLayer : undefined,
+          source: "distillation-ledger-fallback",
+          ...(keptRank >= 0 ? { rank: keptRank + 1 } : {}),
+          matchedTerms: [],
+          result: keptRank >= 0 ? "kept" : "dropped",
+          reason: keptRank >= 0 ? "canonical_revision_fallback" : "top_k"
+        };
+      });
+      rankedProject.diagnostics.decisions.push(...fallbackDecisions);
+      rankedProject.diagnostics.candidateCount += fallbackItems.length;
+      rankedProject.diagnostics.dedupedCount += fallbackItems.length;
+      rankedProject.diagnostics.emittedCount = projectMemory.length;
+    }
 
-    if (this.stateRoot && (input.projectId !== null || input.continuityId?.trim())) {
-      const watermark = projectHits
+    if (this.stateRoot && (projectId !== null || input.continuityId?.trim())) {
+      const watermark = [...projectHits, ...canonicalFallbackHits]
         .filter((hit) => hit.memoryLayer === "L2")
         .map((hit) => Date.parse(hit.updatedAt ?? ""))
         .filter(Number.isFinite)
         .reduce((latest, timestamp) => Math.max(latest, timestamp), Number.NEGATIVE_INFINITY);
-      const captures = await listFreshCaptureEvidence(this.stateRoot, input.accountId, {
-        ...(input.projectId !== null ? { projectIds: projectStorageIds } : { continuityId: input.continuityId }),
+      const freshOptions = {
+        ...(projectId !== null ? { projectIds: projectStorageIds } : { continuityId: input.continuityId }),
         ...(Number.isFinite(watermark) ? { afterTimestamp: new Date(watermark).toISOString() } : {}),
-        limit: input.projectId !== null ? FRESH_L1_MAX : 2
-      });
-      const queryTerms = tokenizeRetrievalText(input.query).slice(0, 32);
+        limit: projectId !== null ? FRESH_L1_MAX : 2
+      };
+      const captures = (branchView
+        ? await listFreshBranchEvidence(this.stateRoot, input.accountId, branchView, freshOptions, branchDrops)
+        : await listFreshCaptureEvidence(this.stateRoot, input.accountId, freshOptions))
+        .filter((event) => projectId !== null || !explicitGlobalIds.has(event.event_id));
       const freshItems = captures.map((event): ContextItem => {
         const user = event.user_text?.trim() ?? "";
         const assistant = event.assistant_text?.trim() ?? "";
@@ -156,7 +278,7 @@ export class MemoryRestContextSource implements ContextMemorySource {
           authority: "evidence",
           scope: "project",
           source: "memhub-capture",
-          ...(input.projectId !== null ? { projectId: input.projectId } : {}),
+          ...(projectId !== null ? { projectId } : {}),
           createdAt: event.timestamp,
           updatedAt: event.timestamp,
           provenance: {
@@ -186,15 +308,39 @@ export class MemoryRestContextSource implements ContextMemorySource {
           ...older.filter((item) => item.provenance?.memoryLayer !== "L3"),
           ...freshItems.filter((item) => !relevant(item))
         ].slice(0, finalLimit);
+        const finalProjectIds = new Set(projectMemory.map((item) => item.id));
+        rankedProject.diagnostics.decisions = rankedProject.diagnostics.decisions.map((decision) =>
+          decision.result === "kept" && !finalProjectIds.has(decision.id)
+            ? { ...decision, result: "dropped", reason: "fresh_l1_merge_limit" }
+            : decision
+        );
+        const freshDecisions: RetrievalCandidateDecision[] = freshItems.map((item) => {
+          const matchedTerms = ((item.provenance?.retrievalV1 as { matchedTerms?: string[] } | undefined)?.matchedTerms ?? []).slice(0, 16);
+          const keptRank = projectMemory.findIndex((candidate) => candidate.id === item.id);
+          return {
+            id: item.id,
+            memoryLayer: "L1",
+            source: "memhub-capture",
+            ...(keptRank >= 0 ? { rank: keptRank + 1 } : {}),
+            matchedTerms,
+            result: keptRank >= 0 ? "kept" : "dropped",
+            reason: keptRank >= 0 ? "fresh_l1_injected" : "fresh_l1_merge_limit"
+          };
+        });
+        rankedProject.diagnostics.decisions.push(...freshDecisions);
         rankedProject.diagnostics.candidateCount += freshItems.length;
         rankedProject.diagnostics.dedupedCount += freshItems.length - replacedCount;
         rankedProject.diagnostics.emittedCount = projectMemory.length;
       }
     }
 
+    if (branchDrops.length) {
+      rankedProject.diagnostics.decisions.push(...branchDrops);
+      rankedProject.diagnostics.candidateCount += branchDrops.length;
+    }
     const reusableSkillProjectIds = unique([
-      ...(input.projectId ? [input.projectId] : []),
-      ...(input.reusableSkillProjectIds ?? [])
+      ...(projectId ? [projectId] : []),
+      ...scope.reusableSkillProjectIds
     ])
       .slice(0, 32);
     const perProjectSkillLimit = candidateLimit;
@@ -225,7 +371,7 @@ export class MemoryRestContextSource implements ContextMemorySource {
       if (!skillProjectById.has(hit.id)) skillProjectById.set(hit.id, projectId);
     }
     const dedupedReusableHits = dedupeHits(reusableHits.map(({ hit }) => hit));
-    const rankedSkills = rankRecallHits(dedupedReusableHits, input.query, finalLimit);
+    const rankedSkills = rankLane(dedupedReusableHits);
     const reusableSkills = rankedSkills.hits
       .map((ranked) => compactSkillContextItem(contextItemFromRankedHit(
           ranked,
@@ -236,16 +382,19 @@ export class MemoryRestContextSource implements ContextMemorySource {
 
     return {
       globalMemory,
+      globalState,
       projectMemory,
       reusableSkills,
       diagnostics: {
         version: "retrieval-v1",
+        rankingMode: unifiedCore ? "memhub_core" : "memhub_v1",
         requestedLimit,
         finalLimit,
         candidateLimit,
         coreStatus: unique(coreStatus),
         lanes: {
           global: rankedGlobal.diagnostics,
+          globalState: globalStateDiagnostics,
           project: rankedProject.diagnostics,
           skills: rankedSkills.diagnostics
         }
@@ -354,12 +503,57 @@ export class MemoryRestContextSource implements ContextMemorySource {
       includeInjectedContext: false,
       // Memory Core's public HTTP contract only exposes structured recall
       // hits under debug.hits when verbose=true. The injected markdown alone
-      // is not enough for Memhub because it must preserve global/project
+      // is not enough for LITSAN because it must preserve global/project
       // provenance and compose a typed Context Capsule.
       verbose: true
     };
     return this.client.search(request);
   }
+}
+
+function emptyGlobalStateDiagnostics(
+  queryTerms: string[],
+  rankingMode: RetrievalRankingMode
+): RetrievalRankDiagnostics {
+  return {
+    version: "retrieval-v1",
+    rankingMode,
+    semanticWeight: 0,
+    lexicalWeight: 1,
+    diversityPenalty: 0,
+    candidateCount: 0,
+    dedupedCount: 0,
+    emittedCount: 0,
+    queryTerms,
+    decisions: []
+  };
+}
+
+function diagnosticsForGlobalState(
+  items: readonly ContextItem[],
+  queryTerms: string[],
+  rankingMode: RetrievalRankingMode
+): RetrievalRankDiagnostics {
+  const diagnostics = emptyGlobalStateDiagnostics(queryTerms, rankingMode);
+  diagnostics.candidateCount = items.length;
+  diagnostics.dedupedCount = items.length;
+  diagnostics.emittedCount = items.length;
+  diagnostics.decisions = items.map((item, index) => ({
+    id: item.id,
+    memoryLayer: typeof item.provenance?.memoryLayer === "string" ? item.provenance.memoryLayer : undefined,
+    source: item.source,
+    rank: index + 1,
+    lexicalScore: matchedQueryTerms(item.content, queryTerms).length,
+    matchedTerms: matchedQueryTerms(item.content, queryTerms),
+    result: "kept" as const,
+    reason: item.provenance?.memoryLayer === "L1" ? "fresh_l1_injected" as const : "ranked" as const
+  }));
+  return diagnostics;
+}
+
+function matchedQueryTerms(content: string, queryTerms: readonly string[]): string[] {
+  const tokens = new Set(tokenizeRetrievalText(content));
+  return queryTerms.filter((term) => tokens.has(term)).slice(0, 32);
 }
 
 export function clipFreshText(value: string, limit: number): string {
@@ -440,6 +634,42 @@ function dedupeHits(hits: readonly RecallHit[]): RecallHit[] {
   });
 }
 
+async function canonicalRevisionFallbackHits(
+  stateRoot: string,
+  accountId: string,
+  projectId: string
+): Promise<RecallHit[]> {
+  const jobs = await listDistillationJobs(stateRoot, accountId);
+  const l3 = latestCompletedL3ByProject(jobs).find((job) => job.project_id === projectId);
+  const l2 = latestCanonicalL2(jobs, projectId);
+  return [l3, l2]
+    .filter((job): job is DistillationJob => Boolean(job))
+    .map((job) => canonicalRevisionFallbackHit(job));
+}
+
+function canonicalRevisionFallbackHit(job: DistillationJob): RecallHit {
+  const layer = job.target.toUpperCase();
+  if (layer !== "L2" && layer !== "L3") {
+    throw new Error(`canonical revision fallback only supports L2/L3, got ${job.target}`);
+  }
+  return {
+    id: job.result_id!,
+    kind: layer === "L3" ? "project_profile" : "project_timeline",
+    memoryLayer: layer,
+    status: "activated",
+    // The ledger fallback is an addressable anchor, not a second copy of the
+    // canonical artifact. Exact content and typed metadata are hydrated later
+    // through the immutable evidence ref, keeping Progressive Disclosure intact.
+    snippet: `Canonical ${layer} revision fallback for project ${job.project_id}. Exact content is available through evidence hydration.`,
+    score: 0,
+    tags: [`artifact:${job.target}`, `project:${job.project_id}`, "canonical-revision-fallback"],
+    createdAt: job.created_at,
+    updatedAt: job.result_committed_at ?? job.completed_at ?? job.updated_at,
+    source: "distillation-ledger-fallback",
+    retrievalRoutes: ["canonical_revision_fallback"]
+  };
+}
+
 function contextItemFromHit(hit: RecallHit, scope: "global" | "project" | "capability", projectId?: string): ContextItem {
   const content = hit.title?.trim() ? `${hit.title.trim()}\n${hit.snippet}` : hit.snippet;
   const tags = hit.tags.slice(0, 32);
@@ -486,9 +716,12 @@ function contextItemFromRankedHit(
         lexicalScore: ranked.lexicalScore,
         fusedScore: ranked.fusedScore,
         diversityPenaltyApplied: ranked.diversityPenaltyApplied,
+        ...(ranked.coreScore !== undefined ? { coreScore: ranked.coreScore } : {}),
         matchedTerms: ranked.matchedTerms,
         candidateCount: diagnostics.candidateCount,
-        dedupedCount: diagnostics.dedupedCount
+        dedupedCount: diagnostics.dedupedCount,
+        ...(diagnostics.rankingMode ? { rankingMode: diagnostics.rankingMode } : {}),
+        ...(diagnostics.engineVersion ? { engineVersion: diagnostics.engineVersion } : {})
       }
     }
   };

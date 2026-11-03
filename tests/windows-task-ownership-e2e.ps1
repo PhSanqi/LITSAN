@@ -20,7 +20,7 @@ function ExpectRefusal([scriptblock]$action, [string]$pattern) {
   if (-not $caught) { throw "Expected fail-closed result: $pattern" }
 }
 $script:fakeTasks = @{}
-function Get-MemhubInstallTask {
+function Get-LitsanInstallTask {
   param([string]$Name)
   return $script:fakeTasks[$Name]
 }
@@ -30,52 +30,52 @@ function schtasks.exe {
 $managedName = "Memhub-Stack"
 $managedLauncher = Join-Path $runtime "stack.cmd"
 $script:fakeTasks[$managedName] = FakeTask $managedName $managedLauncher
-$matched = @(Assert-MemhubInstallTaskSet -StateRoot $state)
+$matched = @(Assert-LitsanInstallTaskSet -StateRoot $state)
 if ($matched.Count -ne 1 -or $matched[0] -cne $managedName) {
   throw "Verified owner was not recognized"
 }
 # Exact path, principal, one action and empty arguments are mandatory.
 $script:fakeTasks[$managedName].Actions[0].Execute = Join-Path $runtime "another.cmd"
-ExpectRefusal { Assert-MemhubInstallTaskSet -StateRoot $state } "another launcher"
+ExpectRefusal { Assert-LitsanInstallTaskSet -StateRoot $state } "another launcher"
 $script:fakeTasks[$managedName] = FakeTask $managedName $managedLauncher
 $script:fakeTasks[$managedName].Actions[0].Arguments = "/c something"
-ExpectRefusal { Assert-MemhubInstallTaskSet -StateRoot $state } "unexpected action"
+ExpectRefusal { Assert-LitsanInstallTaskSet -StateRoot $state } "unexpected action"
 $script:fakeTasks[$managedName] = FakeTask $managedName $managedLauncher "S-1-5-18"
-ExpectRefusal { Assert-MemhubInstallTaskSet -StateRoot $state } "another user"
+ExpectRefusal { Assert-LitsanInstallTaskSet -StateRoot $state } "another user"
 $script:fakeTasks[$managedName] = FakeTask $managedName $managedLauncher
-$script:fakeTasks["Memhub-Server"] = FakeTask "Memhub-Server" (Join-Path $runtime "gateway-server.cmd")
-ExpectRefusal { Assert-MemhubInstallTaskSet -StateRoot $state } "Legacy Memhub tasks"
-$script:fakeTasks.Remove("Memhub-Server")
+$script:fakeTasks["LITSAN-Server"] = FakeTask "LITSAN-Server" (Join-Path $runtime "gateway-server.cmd")
+ExpectRefusal { Assert-LitsanInstallTaskSet -StateRoot $state } "Legacy LITSAN tasks"
+$script:fakeTasks.Remove("LITSAN-Server")
 # Re-read immediately before removal: a modified registration must never be deleted.
 $script:fakeTasks[$managedName].Actions[0].Execute = Join-Path $runtime "changed.cmd"
-ExpectRefusal { Remove-MemhubVerifiedStackTask -Name $managedName -Launcher $managedLauncher } "another launcher"
+ExpectRefusal { Remove-LitsanVerifiedStackTask -Name $managedName -Launcher $managedLauncher } "another launcher"
 $script:fakeTasks[$managedName] = FakeTask $managedName $managedLauncher
 $script:taskCalls = @()
 function schtasks.exe {
   $script:taskCalls += ($args -join " ")
   $global:LASTEXITCODE = 0
 }
-Remove-MemhubVerifiedStackTask -Name $managedName -Launcher $managedLauncher
+Remove-LitsanVerifiedStackTask -Name $managedName -Launcher $managedLauncher
 if ($script:taskCalls.Count -ne 2 -or
     $script:taskCalls[0] -ne "/End /TN $managedName" -or
     $script:taskCalls[1] -ne "/Delete /F /TN $managedName") {
   throw "Verified task removal did not target the exact expected registration"
 }
 $script:fakeTasks.Clear()
-$local = @(Assert-MemhubInstallTaskSet -StateRoot $state)
+$local = @(Assert-LitsanInstallTaskSet -StateRoot $state)
 if ($local.Count -ne 0) { throw "Absent tasks unexpectedly reported as owned" }
 # v0.2.2 Complete uses memory.cmd/gateway.cmd/bridge.cmd for Local, but
 # memory-server.cmd/gateway-server.cmd for Server. Identifying a legitimate
 # legacy registration must report the migration gate, not a foreign action.
 foreach ($entry in @(
-  @{ Name = "Memhub-Memory"; File = "memory.cmd" },
-  @{ Name = "Memhub-Local"; File = "gateway.cmd" },
-  @{ Name = "Memhub-Bridge"; File = "bridge.cmd" }
+  @{ Name = "LITSAN-Memory"; File = "memory.cmd" },
+  @{ Name = "LITSAN-Local"; File = "gateway.cmd" },
+  @{ Name = "LITSAN-Bridge"; File = "bridge.cmd" }
 )) {
   $script:fakeTasks[$entry.Name] = FakeTask $entry.Name (Join-Path $runtime $entry.File)
 }
-ExpectRefusal { Assert-MemhubInstallTaskSet -StateRoot $state } "Legacy Memhub tasks"
-$script:fakeTasks["Memhub-Local"].Actions[0].Execute = Join-Path $runtime "gateway-server.cmd"
-ExpectRefusal { Assert-MemhubInstallTaskSet -StateRoot $state } "another launcher"
+ExpectRefusal { Assert-LitsanInstallTaskSet -StateRoot $state } "Legacy LITSAN tasks"
+$script:fakeTasks["LITSAN-Local"].Actions[0].Execute = Join-Path $runtime "gateway-server.cmd"
+ExpectRefusal { Assert-LitsanInstallTaskSet -StateRoot $state } "another launcher"
 $script:fakeTasks.Clear()
 Write-Output "memhub-windows-task-ownership-e2e: ok (no real scheduler changes)"

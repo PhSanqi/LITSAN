@@ -1,3 +1,4 @@
+import { litsanEnv } from "../utils/litsan-compat.js";
 const LEVEL_PRIORITY = {
     error: 0,
     warn: 1,
@@ -75,7 +76,7 @@ function shouldLog(level) {
     return configured !== "silent" && LEVEL_PRIORITY[level] <= LEVEL_PRIORITY[configured];
 }
 function configuredLogLevel() {
-    const raw = process.env.MEMMY_LOG_LEVEL?.trim().toLowerCase();
+    const raw = litsanEnv("LITSAN_LOG_LEVEL", process.env)?.trim().toLowerCase();
     if (raw === "error" || raw === "warn" || raw === "info" || raw === "debug") {
         return raw;
     }

@@ -1,27 +1,29 @@
+import { migrateOwnedIntegrationFiles } from "../legacy-files.js";
+import { defaultLitsanHome } from "../../../utils/litsan-compat.js";
 /** Target module. */
 import { mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { createNodeHookCommand } from "../hook-command.js";
-import { readMemmyMemoryServiceConfig } from "../memmy-runtime-config.js";
-import { removeMemmySkillDirectory, replaceMemmySkillDirectory } from "../skill-directory.js";
-import { renderMemmyPluginSkillManifest } from "../templates/memmy-plugin.js";
-import { renderMemmyResumeHookScript } from "../templates/memmy-resume-hook.js";
-import { renderMemmySkillBootstrapManifest } from "../templates/memmy-skill-directory.js";
+import { readLitsanMemoryServiceConfig } from "../litsan-runtime-config.js";
+import { removeLitsanSkillDirectory, replaceLitsanSkillDirectory } from "../skill-directory.js";
+import { renderLitsanPluginSkillManifest } from "../templates/litsan-plugin.js";
+import { renderLitsanResumeHookScript } from "../templates/litsan-resume-hook.js";
+import { renderLitsanSkillBootstrapManifest } from "../templates/litsan-skill-directory.js";
 import { resolveClaudeCodeHomeDirectory } from "../../agent-paths.js";
-import { loadMemmyWorkspaceBridgeRuntimeAsset } from "../workspace-bridge/runtime-loader.js";
+import { loadLitsanWorkspaceBridgeRuntimeAsset } from "../workspace-bridge/runtime-loader.js";
 const CLAUDE_CODE_TARGET_ID = "claude_code";
 const CLAUDE_CODE_DISPLAY_NAME = "Claude Code";
 const TARGET_FILE_NAME = "CLAUDE.md";
 const SETTINGS_FILE_NAME = "settings.json";
 const HOOK_DIRECTORY_NAME = "hooks";
-const HOOK_SCRIPT_FILE_NAME = "memmy-resume-hook.mjs";
+const HOOK_SCRIPT_FILE_NAME = "litsan-resume-hook.mjs";
 const LEGACY_HOOK_SCRIPT_FILE_NAME = "memmy-memory-resume-hook.mjs";
-const HOOK_CONFIG_FILE_NAME = "memmy-memory-config.json";
-const WORKSPACE_BRIDGE_FILE_NAME = "memmy-workspace-bridge.mjs";
+const HOOK_CONFIG_FILE_NAME = "litsan-memory-config.json";
+const WORKSPACE_BRIDGE_FILE_NAME = "litsan-workspace-bridge.mjs";
 const HOOK_TIMEOUT_SECONDS = 60;
 const COMMAND_DIRECTORY_NAME = "commands";
-const RESUME_COMMAND_FILE_NAME = "memmy-resume.md";
+const RESUME_COMMAND_FILE_NAME = "litsan-resume.md";
 const LEGACY_TARGET_FILE_NAMES = ["claude.md"];
 const START_MARKER = "<!-- memmy:start v=1 -->";
 const END_MARKER = "<!-- memmy:end v=1 -->";
@@ -30,7 +32,7 @@ const LEGACY_CLI_END_MARKER = "<!-- memmy-memory cli : end -->";
 /** Creates create claude code skill target. */
 export function createClaudeCodeSkillTarget(deps = {}) {
     const rootDirectory = deps.rootDirectory ?? resolveClaudeCodeHomeDirectory();
-    const memmyConfigPath = deps.memmyConfigPath ?? join(homedir(), ".memmy", "config.yaml");
+    const litsanConfigPath = (deps.litsanConfigPath ?? deps.memmyConfigPath) ?? join(defaultLitsanHome(), "config.yaml");
     return {
         targetId: CLAUDE_CODE_TARGET_ID,
         displayName: CLAUDE_CODE_DISPLAY_NAME,
@@ -45,8 +47,8 @@ export function createClaudeCodeSkillTarget(deps = {}) {
             await removeLegacyAgentInstructions(root);
             const filePath = join(root, TARGET_FILE_NAME);
             const existing = removeLegacyMarkerBlock(await readTextFile(filePath));
-            await writeFileAtomically(filePath, upsertMarkerBlock(existing, renderMemmySkillBootstrapManifest(manifest)));
-            await replaceMemmySkillDirectory(root, manifest);
+            await writeFileAtomically(filePath, upsertMarkerBlock(existing, renderLitsanSkillBootstrapManifest(manifest)));
+            await replaceLitsanSkillDirectory(root, manifest);
         },
         async uninstall(_targetId) {
             const root = await this.resolveRootDirectory();
@@ -57,7 +59,7 @@ export function createClaudeCodeSkillTarget(deps = {}) {
             const existing = await readTextFile(filePath);
             await writeFileAtomically(filePath, removeMarkerBlock(removeLegacyMarkerBlock(existing)));
             await removeLegacyAgentInstructions(root);
-            await removeMemmySkillDirectory(root);
+            await removeLitsanSkillDirectory(root);
         },
         async isInstalled(_targetId) {
             const root = await this.resolveRootDirectory();
@@ -71,20 +73,20 @@ export function createClaudeCodeSkillTarget(deps = {}) {
             if (!root) {
                 throw new Error("Claude Code is not installed or its directory is unavailable");
             }
+            await migrateOwnedIntegrationFiles(root);
             const hookDirectory = join(root, HOOK_DIRECTORY_NAME);
             const hookScriptPath = join(hookDirectory, HOOK_SCRIPT_FILE_NAME);
             await mkdir(hookDirectory, { recursive: true });
-            await writeFileAtomically(join(hookDirectory, HOOK_CONFIG_FILE_NAME), `${JSON.stringify({ memmy_config_path: memmyConfigPath, ...(await readMemmyMemoryServiceConfig(memmyConfigPath)) }, null, 2)}\n`);
-            await writeFileAtomically(hookScriptPath, renderMemmyResumeHookScript({ source: CLAUDE_CODE_TARGET_ID, mode: "claude-code" }));
-            await writeFileAtomically(join(hookDirectory, WORKSPACE_BRIDGE_FILE_NAME), await loadMemmyWorkspaceBridgeRuntimeAsset());
+            await writeFileAtomically(join(hookDirectory, HOOK_CONFIG_FILE_NAME), `${JSON.stringify({ litsan_config_path: litsanConfigPath, ...(await readLitsanMemoryServiceConfig(litsanConfigPath)) }, null, 2)}\n`);
+            await writeFileAtomically(hookScriptPath, renderLitsanResumeHookScript({ source: CLAUDE_CODE_TARGET_ID, mode: "claude-code" }));
+            await writeFileAtomically(join(hookDirectory, WORKSPACE_BRIDGE_FILE_NAME), await loadLitsanWorkspaceBridgeRuntimeAsset());
             await writeFileAtomically(join(root, COMMAND_DIRECTORY_NAME, RESUME_COMMAND_FILE_NAME), CLAUDE_CODE_RESUME_COMMAND);
             await upsertClaudeCodeHookSettings(join(root, SETTINGS_FILE_NAME), hookScriptPath);
-            await rm(join(root, HOOK_DIRECTORY_NAME, LEGACY_HOOK_SCRIPT_FILE_NAME), { force: true });
-            const manifest = renderMemmyPluginSkillManifest(_targetId);
+            const manifest = renderLitsanPluginSkillManifest(_targetId);
             const filePath = join(root, TARGET_FILE_NAME);
             await removeLegacyAgentInstructions(root);
-            await writeFileAtomically(filePath, upsertMarkerBlock(await readTextFile(filePath), renderMemmySkillBootstrapManifest(manifest)));
-            await replaceMemmySkillDirectory(root, manifest);
+            await writeFileAtomically(filePath, upsertMarkerBlock(await readTextFile(filePath), renderLitsanSkillBootstrapManifest(manifest)));
+            await replaceLitsanSkillDirectory(root, manifest);
         },
         async uninstallPlugin(_targetId) {
             const root = await this.resolveRootDirectory();
@@ -93,14 +95,13 @@ export function createClaudeCodeSkillTarget(deps = {}) {
             }
             await removeClaudeCodeHookSettings(join(root, SETTINGS_FILE_NAME));
             await rm(join(root, HOOK_DIRECTORY_NAME, HOOK_SCRIPT_FILE_NAME), { force: true });
-            await rm(join(root, HOOK_DIRECTORY_NAME, LEGACY_HOOK_SCRIPT_FILE_NAME), { force: true });
             await rm(join(root, HOOK_DIRECTORY_NAME, HOOK_CONFIG_FILE_NAME), { force: true });
             await rm(join(root, HOOK_DIRECTORY_NAME, WORKSPACE_BRIDGE_FILE_NAME), { force: true });
             await rm(join(root, COMMAND_DIRECTORY_NAME, RESUME_COMMAND_FILE_NAME), { force: true });
             const filePath = join(root, TARGET_FILE_NAME);
             await writeFileAtomically(filePath, removeMarkerBlock(removeLegacyMarkerBlock(await readTextFile(filePath))));
             await removeLegacyAgentInstructions(root);
-            await removeMemmySkillDirectory(root);
+            await removeLitsanSkillDirectory(root);
         }
     };
 }
@@ -265,19 +266,19 @@ function removeClaudeCodeResumeHookEntries(value) {
             continue;
         }
         const hookItems = Array.isArray(item.hooks) ? item.hooks : [];
-        const filteredHooks = hookItems.filter((hook) => !isMemmyResumeHook(hook));
+        const filteredHooks = hookItems.filter((hook) => !isLitsanResumeHook(hook));
         if (filteredHooks.length > 0 || hookItems.length === 0) {
             entries.push(hookItems.length === 0 ? { ...item } : { ...item, hooks: filteredHooks });
         }
     }
     return entries;
 }
-function isMemmyResumeHook(value) {
+function isLitsanResumeHook(value) {
     if (!isRecord(value)) {
         return false;
     }
     return typeof value.command === "string" &&
-        (value.command.includes(HOOK_SCRIPT_FILE_NAME) || value.command.includes(LEGACY_HOOK_SCRIPT_FILE_NAME));
+        (value.command.match(/(?:memmy|litsan)-(?:memory-)?resume-hook\.mjs/u) || value.command.includes(LEGACY_HOOK_SCRIPT_FILE_NAME));
 }
 function renderMarkerBlock(manifest) {
     return `${manifest.marker}\n${manifest.content.trimEnd()}\n${END_MARKER}\n`;
@@ -304,14 +305,14 @@ function isNodeError(error) {
     return error instanceof Error && "code" in error;
 }
 const CLAUDE_CODE_RESUME_COMMAND = `---
-description: Fast Memmy resume lookup handled by the installed hook.
+description: Fast LITSAN resume lookup handled by the installed hook.
 argument-hint: <query | 1-5 | cancel>
 ---
 
-MEMMY_RESUME_COMMAND_ARGUMENTS:
+LITSAN_RESUME_COMMAND_ARGUMENTS:
 $ARGUMENTS
-MEMMY_RESUME_COMMAND_END
+LITSAN_RESUME_COMMAND_END
 
-This slash command is a parser shim for the installed Memmy UserPromptSubmit hook.
-If this text reaches the model, respond only with: Memmy resume hook did not intercept this command; reinstall the Memmy Claude Code hook.
+This slash command is a parser shim for the installed LITSAN UserPromptSubmit hook.
+If this text reaches the model, respond only with: LITSAN resume hook did not intercept this command; reinstall the LITSAN Claude Code hook.
 `;

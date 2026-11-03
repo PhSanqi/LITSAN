@@ -90,9 +90,9 @@ await mkdir(outputRoot, { recursive: true });
 const tempRoot = await mkdtemp(join(tmpdir(), "memhub-complete-"));
 
 try {
-  console.error(`[memhub] complete packaging: Node.js v${NODE_VERSION}`);
+  console.error(`[litsan] complete packaging: Node.js v${NODE_VERSION}`);
 
-  // Build platform-independent Memhub dist once on Linux/host Node.
+  // Build platform-independent LITSAN dist once on Linux/host Node.
   const buildStage = join(tempRoot, "build-stage");
   await exportSource(buildStage, "linux");
   run("npm", ["ci", "--workspaces=false"], {
@@ -142,7 +142,7 @@ try {
     }
     const sha256 = await hashFile(output);
     completeAssets.push({ ...target, filename, sha256, nodeVersion: NODE_VERSION });
-    console.error(`[memhub] complete asset ready: ${filename}`);
+    console.error(`[litsan] complete asset ready: ${filename}`);
 
   }
 
@@ -341,7 +341,7 @@ function commandText(command, args, options = {}) {
 
 function run(command, args, options = {}) {
   const invocation = portableInvocation(command, args);
-  console.error(`[memhub] ${command} ${args.join(" ")}`);
+  console.error(`[litsan] ${command} ${args.join(" ")}`);
   const result = spawnSync(invocation.command, invocation.args, { ...options, stdio: "inherit" });
   if (result.error) throw result.error;
   if (result.status !== 0) throw new Error(`${command} ${args.join(" ")} failed with status ${result.status}`);

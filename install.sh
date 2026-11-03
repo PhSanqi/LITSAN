@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO="PhSanqi/Memhub"
+REPO="PhSanqi/LITSAN"
 EDITION="${MEMHUB_EDITION:-local}"
 VERSION="${MEMHUB_VERSION:-latest}"
 INSTALL_BASE="${MEMHUB_INSTALL_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/memhub}"
@@ -13,7 +13,7 @@ PREPARE_ONLY="${MEMHUB_PREPARE_ONLY:-0}"
 
 usage() {
   cat <<'EOF'
-Memhub bootstrap installer
+LITSAN bootstrap installer
 
 Usage:
   install.sh [--edition local|server] [--version latest|vX.Y.Z]
@@ -22,8 +22,8 @@ Usage:
              [--prepare-only]
 
 Examples:
-  curl -fsSL https://github.com/PhSanqi/Memhub/releases/latest/download/install.sh | bash
-  curl -fsSL https://github.com/PhSanqi/Memhub/releases/latest/download/install.sh | \
+  curl -fsSL https://github.com/PhSanqi/LITSAN/releases/latest/download/install.sh | bash
+  curl -fsSL https://github.com/PhSanqi/LITSAN/releases/latest/download/install.sh | \
     bash -s -- --edition server --public-host memory.example.com
 EOF
 }
@@ -67,16 +67,16 @@ else
   [[ "$TAG" == v* ]] || TAG="v$TAG"
 fi
 
-[[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Could not resolve a stable Memhub release tag: $TAG" >&2; exit 2; }
+[[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "Could not resolve a stable LITSAN release tag: $TAG" >&2; exit 2; }
 
 ASSET="memhub-${TAG}-linux-${EDITION}.tar.gz"
 BASE_URL="https://github.com/$REPO/releases/download/$TAG"
 TMP="$(mktemp -d "${TMPDIR:-/tmp}/memhub-install.XXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
 
-echo "[memhub] release: $TAG"
-echo "[memhub] edition: Linux $EDITION"
-echo "[memhub] downloading: $ASSET"
+echo "[litsan] release: $TAG"
+echo "[litsan] edition: Linux $EDITION"
+echo "[litsan] downloading: $ASSET"
 curl -fL --retry 3 --retry-delay 1 "$BASE_URL/$ASSET" -o "$TMP/$ASSET"
 curl -fL --retry 3 --retry-delay 1 "$BASE_URL/SHA256SUMS.txt" -o "$TMP/SHA256SUMS.txt"
 
@@ -92,7 +92,7 @@ else
   exit 2
 fi
 [[ "${ACTUAL,,}" == "${EXPECTED,,}" ]] || { echo "SHA-256 verification failed for $ASSET" >&2; exit 1; }
-echo "[memhub] SHA-256 verified"
+echo "[litsan] SHA-256 verified"
 
 mkdir -p "$INSTALL_BASE" "$TMP/extract"
 tar -xzf "$TMP/$ASSET" -C "$TMP/extract"
@@ -113,16 +113,16 @@ fi
 
 INSTALLER="$TARGET/editions/$EDITION/linux/install.sh"
 if [[ "$PREPARE_ONLY" == "1" ]]; then
-  echo "[memhub] package prepared and verified: $TARGET"
+  echo "[litsan] package prepared and verified: $TARGET"
   exit 0
 fi
-echo "[memhub] installing from: $TARGET"
+echo "[litsan] installing from: $TARGET"
 bash "$INSTALLER"
 
-echo "[memhub] installation complete"
-echo "[memhub] app files: $TARGET"
+echo "[litsan] installation complete"
+echo "[litsan] app files: $TARGET"
 if [[ "$EDITION" == "local" ]]; then
-  echo "[memhub] MCP: http://127.0.0.1:3001/mcp"
+  echo "[litsan] MCP: http://127.0.0.1:3001/mcp"
 else
-  echo "[memhub] Origin MCP: http://127.0.0.1:3001/mcp"
+  echo "[litsan] Origin MCP: http://127.0.0.1:3001/mcp"
 fi

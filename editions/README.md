@@ -1,6 +1,8 @@
 # Editions
 
-Memhub ships one shared core with two deployment profiles:
+LITSAN (formerly Memhub). Legacy `MEMHUB_*` / `MEMMY_*` environment variables still work.
+
+LITSAN ships one shared core with two deployment profiles:
 
 - `server/`: central multi-device deployment with authenticated remote MCP and capture.
 - `local/`: standalone loopback deployment for users without a server.

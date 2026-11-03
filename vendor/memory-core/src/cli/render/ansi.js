@@ -1,3 +1,4 @@
+import { litsanEnv } from "../../utils/litsan-compat.js";
 export function createCliStyle(options = {}) {
     const color = options.color ?? shouldUseColor();
     const wrap = (code, text) => color ? `\u001b[${code}m${text}\u001b[0m` : text;
@@ -14,7 +15,7 @@ export function createCliStyle(options = {}) {
 function shouldUseColor() {
     if (process.env.NO_COLOR)
         return false;
-    if (process.env.MEMMY_FORCE_COLOR === "1")
+    if (litsanEnv("LITSAN_FORCE_COLOR", process.env) === "1")
         return true;
     return Boolean(process.stdout.isTTY);
 }

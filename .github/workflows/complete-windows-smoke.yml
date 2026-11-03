@@ -21,8 +21,6 @@ jobs:
         run: npm run build
       - name: Verify P3 Core and web regressions
         run: node --test tests/p3-core-web.mjs
-      - name: Verify legacy source lineage
-        run: npm run qa:windows:legacy-source-lineage
       - name: Verify installer lifecycle
         run: npm run qa:windows:installer-lifecycle
 
@@ -43,7 +41,7 @@ jobs:
       - name: Upload Windows Complete
         uses: actions/upload-artifact@v4
         with:
-          name: memhub-windows-complete-smoke
+          name: litsan-windows-complete-smoke
           path: complete-smoke/memhub-*-windows-*-complete.zip
           if-no-files-found: error
           retention-days: 1
@@ -54,7 +52,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-          name: memhub-windows-complete-smoke
+          name: litsan-windows-complete-smoke
           path: ${{ runner.temp }}\memhub-complete-artifact
       - name: Run Complete package with bundled Node only
         shell: powershell
@@ -81,7 +79,7 @@ jobs:
               & cmd.exe /c "schtasks.exe /Delete /F /TN $name >NUL 2>&1" | Out-Null
             }
           }
-          function Stop-TestMemhubProcesses([string]$InstallRoot) {
+          function Stop-TestLitsanProcesses([string]$InstallRoot) {
             $needle = $InstallRoot.ToLowerInvariant()
             Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue | ForEach-Object {
               $commandLine = [string]$_.CommandLine
@@ -139,10 +137,10 @@ jobs:
             if ($localEnv -notmatch '(?m)^MEMHUB_MEMORY_TOKEN=[0-9a-f]{64}\r?$') { throw 'Local memory token is invalid' }
             Wait-Port 18960
             Wait-Port 3001
-            Write-Host '[memhub] Windows Complete Local install smoke PASS'
+            Write-Host '[litsan] Windows Complete Local install smoke PASS'
           } finally {
             Remove-TestTasks @('Memhub-Stack')
-            Stop-TestMemhubProcesses $root.FullName
+            Stop-TestLitsanProcesses $root.FullName
             Wait-PortClosed 3001
             Wait-PortClosed 18960
             Remove-PathWithRetry $localState
@@ -155,10 +153,10 @@ jobs:
             if ($serverEnv -notmatch '(?m)^MEMHUB_MEMORY_TOKEN=[0-9a-f]{64}\r?$') { throw 'Server memory token is invalid' }
             Wait-Port 18960
             Wait-Port 3001
-            Write-Host '[memhub] Windows Complete Server install smoke PASS'
+            Write-Host '[litsan] Windows Complete Server install smoke PASS'
           } finally {
             Remove-TestTasks @('Memhub-Stack')
-            Stop-TestMemhubProcesses $root.FullName
+            Stop-TestLitsanProcesses $root.FullName
             Wait-PortClosed 3001
             Wait-PortClosed 18960
             Remove-PathWithRetry $serverState

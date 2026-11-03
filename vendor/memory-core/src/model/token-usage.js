@@ -1,12 +1,13 @@
+import { defaultLitsanHome, litsanEnv } from "../utils/litsan-compat.js";
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { randomUUID } from "node:crypto";
 const DEFAULT_TIMEOUT_MS = 5_000;
 const EVENT_PATH = "/api/app/byok-token-usage/events";
-const RUNTIME_TOKEN_HEADER = "x-memmy-local-token";
+const RUNTIME_TOKEN_HEADER = "x-litsan-local-token";
 export function resolveDefaultRuntimeConfigPath() {
-    return join(homedir(), ".memmy", "runtime.json");
+    return join(defaultLitsanHome(), "runtime.json");
 }
 export function extractModelTokenUsage(response) {
     const root = asRecord(response);
@@ -34,7 +35,7 @@ export class HttpByokTokenUsageRecorder {
     constructor(options = {}) {
         const env = options.env ?? process.env;
         this.runtimeConfig = options.runtimeConfig;
-        this.runtimeConfigPath = options.runtimeConfigPath ?? env.MEMMY_RUNTIME_CONFIG_PATH ?? resolveDefaultRuntimeConfigPath();
+        this.runtimeConfigPath = options.runtimeConfigPath ?? litsanEnv("LITSAN_RUNTIME_CONFIG_PATH", env) ?? resolveDefaultRuntimeConfigPath();
         this.timeoutMs = options.timeoutMs ?? DEFAULT_TIMEOUT_MS;
         this.fetchImpl = options.fetchImpl ?? fetch;
     }

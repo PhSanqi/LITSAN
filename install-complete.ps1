@@ -11,7 +11,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$Repo = "PhSanqi/Memhub"
+$Repo = "PhSanqi/LITSAN"
 $PackageRoot = $PSScriptRoot
 $BundledNode = Join-Path $PackageRoot "runtime\node\node.exe"
 
@@ -19,7 +19,7 @@ if (Test-Path $BundledNode) {
   if ($PrepareOnly) {
     & $BundledNode (Join-Path $PackageRoot "scripts\complete-runtime-smoke.cjs")
     if ($LASTEXITCODE -ne 0) { throw "Complete runtime smoke failed" }
-    Write-Host "[memhub] complete package verified: $PackageRoot"
+    Write-Host "[litsan] complete package verified: $PackageRoot"
     return
   }
   $env:NODE = $BundledNode
@@ -32,12 +32,12 @@ if (Test-Path $BundledNode) {
 }
 
 if ($Version -eq "latest") {
-  $Release = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers @{ "User-Agent" = "Memhub-Complete-Installer" }
+  $Release = Invoke-RestMethod -Uri "https://api.github.com/repos/$Repo/releases/latest" -Headers @{ "User-Agent" = "LITSAN-Complete-Installer" }
   $Tag = [string]$Release.tag_name
 } else {
   $Tag = if ($Version.StartsWith("v")) { $Version } else { "v$Version" }
 }
-if ($Tag -notmatch '^v\d+\.\d+\.\d+$') { throw "Could not resolve a stable Memhub release tag: $Tag" }
+if ($Tag -notmatch '^v\d+\.\d+\.\d+$') { throw "Could not resolve a stable LITSAN release tag: $Tag" }
 
 $Asset = "memhub-$Tag-windows-x64-complete.zip"
 $BaseUrl = "https://github.com/$Repo/releases/download/$Tag"
@@ -48,8 +48,8 @@ $Extract = Join-Path $Temp "extract"
 
 try {
   New-Item -ItemType Directory -Force -Path $Temp,$Extract,$InstallRoot | Out-Null
-  Write-Host "[memhub] complete release: $Tag"
-  Write-Host "[memhub] downloading: $Asset"
+  Write-Host "[litsan] complete release: $Tag"
+  Write-Host "[litsan] downloading: $Asset"
   Invoke-WebRequest -UseBasicParsing -Uri "$BaseUrl/$Asset" -OutFile $Archive
   Invoke-WebRequest -UseBasicParsing -Uri "$BaseUrl/SHA256SUMS.txt" -OutFile $Sums
   $Line = Get-Content $Sums | Where-Object { $_ -match ("^[0-9a-fA-F]{64}\s\s" + [Regex]::Escape($Asset) + "$") } | Select-Object -First 1

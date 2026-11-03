@@ -1,3 +1,4 @@
+import { defaultLitsanHome, litsanEnv } from "../utils/litsan-compat.js";
 import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -10,23 +11,23 @@ export function loadCliMemoryConfig(configPath) {
     const rootConfig = selectedPath && existsSync(selectedPath)
         ? parseConfigFile(selectedPath)
         : {};
-    const memmyMemory = asRecord(rootConfig.memmyMemory);
-    const storage = asRecord(memmyMemory.storage);
+    const litsanMemory = asRecord((rootConfig.litsanMemory ?? rootConfig.memmyMemory));
+    const storage = asRecord(litsanMemory.storage);
     const app = asRecord(rootConfig.app);
     return {
         config: {
-            endpoint: optionalString(process.env.MEMMY_MEMORY_URL) ??
+            endpoint: optionalString(litsanEnv("LITSAN_MEMORY_URL", process.env)) ??
                 optionalString(process.env.MEMORY_SERVICE_URL) ??
                 optionalString(storage.endpoint) ??
-                optionalString(memmyMemory.endpoint),
-            token: optionalString(process.env.MEMMY_MEMORY_TOKEN) ??
+                optionalString(litsanMemory.endpoint),
+            token: optionalString(litsanEnv("LITSAN_MEMORY_TOKEN", process.env)) ??
                 optionalString(process.env.MEMORY_SERVICE_TOKEN) ??
                 optionalString(storage.token) ??
-                optionalString(memmyMemory.token),
-            userId: optionalString(process.env.MEMMY_MEMORY_USER_ID) ??
-                optionalString(process.env.MEMMY_USER_ID) ??
+                optionalString(litsanMemory.token),
+            userId: optionalString(litsanEnv("LITSAN_MEMORY_USER_ID", process.env)) ??
+                optionalString(litsanEnv("LITSAN_USER_ID", process.env)) ??
                 optionalString(process.env.MEMORY_SERVICE_USER_ID) ??
-                optionalString(memmyMemory.userId) ??
+                optionalString(litsanMemory.userId) ??
                 optionalString(app.userId)
         },
         path: selectedPath
@@ -34,8 +35,8 @@ export function loadCliMemoryConfig(configPath) {
 }
 export function defaultConfigPaths() {
     return [
-        process.env.MEMMY_CONFIG ? resolve(expandHome(process.env.MEMMY_CONFIG)) : undefined,
-        join(homedir(), ".memmy", "config.yaml")
+        litsanEnv("LITSAN_CONFIG", process.env) ? resolve(expandHome(litsanEnv("LITSAN_CONFIG", process.env))) : undefined,
+        join(defaultLitsanHome(), "config.yaml")
     ].filter((value) => Boolean(value));
 }
 export function expandHome(value) {

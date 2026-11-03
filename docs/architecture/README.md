@@ -1,5 +1,7 @@
 # Architecture documents
 
+LITSAN (formerly Memhub). Legacy `MEMHUB_*` / `MEMMY_*` environment variables still work.
+
 - [Overview](overview.md)
 - [Transport and identity](transport-and-identity.md)
 - [Control Plane and distillation](control-plane-and-distillation.md)

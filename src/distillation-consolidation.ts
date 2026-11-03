@@ -1,5 +1,11 @@
+import type { ProjectReader } from "./core/ports/projects.js";
+import type { AccountId } from "./contracts/identity.js";
 import { distillationResultTimestamp, listDistillationJobs } from "./distillation-jobs.js";
-import type { MemhubRuntime } from "./runtime.js";
+
+export interface DistillationConsolidationDeps {
+  projects: Pick<ProjectReader, "resolve" | "storageIds">;
+  accountId: AccountId;
+}
 
 const MIN_CONSOLIDATION_REVISIONS = 8;
 
@@ -26,7 +32,7 @@ export interface DistillationConsolidationPlan {
  */
 export async function planDistillationConsolidation(input: {
   stateRoot: string;
-  runtime: MemhubRuntime;
+  runtime: DistillationConsolidationDeps;
   kind: "l2" | "l3";
   projectId: string;
 }): Promise<DistillationConsolidationPlan> {
@@ -74,7 +80,7 @@ export async function planDistillationConsolidation(input: {
       : targetJobs.length < MIN_CONSOLIDATION_REVISIONS
         ? `At least ${MIN_CONSOLIDATION_REVISIONS} completed historical revisions are required before consolidation is recommended.`
         : "No valid upstream evidence refs are available for a governed replacement revision.",
-    write_contract: "Use the connected model to merge/re-extract a compact replacement, then call memhub_distill action=submit with the returned submit_evidence_refs. The stable canonical artifact id is reused; do not create a new layer or parallel truth."
+    write_contract: "Use the connected model to merge/re-extract a compact replacement, then call litsan_distill action=submit with the returned submit_evidence_refs. The stable canonical artifact id is reused; do not create a new layer or parallel truth."
   };
 }
 

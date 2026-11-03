@@ -21,14 +21,14 @@ EMAIL="${MEMHUB_EMAIL:-}"
 PUBLIC_HOST="${MEMHUB_PUBLIC_HOST:-}"
 
 if [[ -e "$STATE_ROOT" || -L "$STATE_ROOT" ]]; then
-  echo "[memhub] Existing state root; fresh installer refuses to overwrite it. Use the reviewed upgrade path." >&2
+  echo "[litsan] Existing state root; fresh installer refuses to overwrite it. Use the reviewed upgrade path." >&2
   exit 2
 fi
 # Current units plus legacy names are occupancy checks only. Legacy units are
 # never installed by this script.
 for unit in memhub-core.service memhub.service memhub-stack.target memhub-local.service memhub-server.service memhub-bridge.service memhub-local-stack.target memhub-server-stack.target; do
   if [[ -e "$UNIT_DIR/$unit" || -L "$UNIT_DIR/$unit" ]]; then
-    echo "[memhub] Existing Memhub systemd unit ($unit); refusing fresh install." >&2
+    echo "[litsan] Existing LITSAN systemd unit ($unit); refusing fresh install." >&2
     exit 2
   fi
 done
@@ -115,11 +115,11 @@ systemctl --user daemon-reload
 systemctl --user disable memhub-core.service memhub.service >/dev/null 2>&1 || true
 systemctl --user enable --now memhub-stack.target
 
-echo "[memhub] installed"
-echo "[memhub] local MCP: http://127.0.0.1:3001/mcp"
-echo "[memhub] account: $USERNAME"
+echo "[litsan] installed"
+echo "[litsan] local MCP: http://127.0.0.1:3001/mcp"
+echo "[litsan] account: $USERNAME"
 if [[ -n "$PUBLIC_HOST" ]]; then
-  echo "[memhub] remote host enabled: $PUBLIC_HOST"
+  echo "[litsan] remote host enabled: $PUBLIC_HOST"
 else
-  echo "[memhub] remote host disabled; loopback MCP only"
+  echo "[litsan] remote host disabled; loopback MCP only"
 fi

@@ -10,6 +10,7 @@
 // event ids, ISO timestamps, uptime) are normalized so the snapshot stays
 // stable across runs without weakening the schema/description/behaviour check.
 import assert from "node:assert/strict";
+import { isDeepStrictEqual } from "node:util";
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { readFile, rm, writeFile } from "node:fs/promises";
@@ -21,14 +22,14 @@ import { Client } from "@modelcontextprotocol/client";
 import { InMemoryTransport } from "@modelcontextprotocol/server";
 import Database from "better-sqlite3";
 import { addAccount, ensureLocalAdminToken, setAccountRole } from "../dist/auth.js";
-import { createMemhubMcpServer } from "../dist/mcp.js";
+import { createLitsanMcpServer } from "../dist/mcp.js";
 import { JsonProjectRegistry } from "../dist/project-registry.js";
 import { JsonResultTransport } from "../dist/result-transport.js";
 import { setDistillationConfig } from "../dist/distillation-jobs.js";
 import { createTestRoot, testEnvironment } from "./test-isolation.mjs";
 
 const here = resolve(fileURLToPath(new URL(".", import.meta.url)));
-const mcpEntry = resolve(here, "../dist/mcp.js");
+const gatewayFixture = resolve(here, "fixtures/c1-http-gateway.mjs");
 const fixturePath = resolve(here, "fixtures/p6-md-surface.json");
 const updateSnapshot = process.env.P6_MD_UPDATE_SNAPSHOT === "1";
 const ACCOUNT = "acct-surface";
@@ -84,7 +85,7 @@ const memoryServer = createServer(async (request, response) => {
   if (viewerPath === "/health") {
     response.end(JSON.stringify({
       ok: true, degraded: [],
-      build: { vendorSha256: "surface-vendor-sha", memhubVersion: "1.0.0" }
+      build: { vendorSha256: "surface-vendor-sha", litsanVersion: "1.0.0" }
     }));
     return;
   }
@@ -178,7 +179,7 @@ function normalizedJson(text) {
 // In-process MCP surface capture
 // ---------------------------------------------------------------------------
 async function connectInProcess(options) {
-  const server = createMemhubMcpServer(options);
+  const server = createLitsanMcpServer(options);
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
   await server.connect(serverTransport);
   const client = new Client({ name: "p6-md-surface", version: "1.0.0" });
@@ -203,7 +204,7 @@ async function callError(client, name, args) {
 async function captureToolSurface(client) {
   const listed = await client.listTools();
   const tools = normalizedJson(JSON.stringify(listed.tools));
-  assert.equal(tools.length, 11, "the MCP surface must keep exactly 11 tools");
+  assert.equal(tools.length, 12, "the MCP surface must keep exactly 12 tools");
 
   const responses = {};
   const record = (name, kind, body) => {
@@ -213,10 +214,12 @@ async function captureToolSurface(client) {
   const success = (name, body) => record(name, "success", body);
   const failure = (name, body) => record(name, "error", body);
 
-  // memmy_context — global recall only, deterministic fake Core hits.
-  const context = await callJson(client, "memmy_context", { query: "surface snapshot context" });
+  assert.deepEqual(tools.map(tool => tool.name).sort(), ["litsan_branch", "litsan_card", "litsan_distill", "litsan_memory", "litsan_result", "litsan_skill", "litsan_todo", "litsan_context", "litsan_project", "litsan_project_list", "litsan_project_manage", "litsan_turn"].sort());
+
+  // litsan_context — global recall only, deterministic fake Core hits.
+  const context = await callJson(client, "litsan_context", { query: "surface snapshot context" });
   assert.equal(context.isError, false);
-  success("memmy_context", {
+  success("litsan_context", {
     resolvedProjectId: context.body.resolvedProjectId,
     resolutionSource: context.body.resolutionSource,
     recallScope: context.body.recallScope,
@@ -228,97 +231,97 @@ async function captureToolSurface(client) {
     retrievalDiagnostics: context.body.retrievalDiagnostics,
     projectCandidates: context.body.projectCandidates
   });
-  failure("memmy_context", await callError(client, "memmy_context", {}));
+  failure("litsan_context", await callError(client, "litsan_context", {}));
 
-  // memmy_turn — open + commit for a project-scoped turn.
-  const opened = await callJson(client, "memmy_turn", {
+  // litsan_turn — open + commit for a project-scoped turn.
+  const opened = await callJson(client, "litsan_turn", {
     action: "open", project: "alpha", user_text: "Surface snapshot user turn."
   });
   assert.equal(opened.isError, false);
-  success("memmy_turn.open", {
+  success("litsan_turn.open", {
     action: opened.body.action, status: opened.body.status, project_id: opened.body.project_id,
     continuity_id: opened.body.continuity_id, ingested: opened.body.ingested,
     transport_conversation_id: opened.body.transport_conversation_id
   });
-  const committed = await callJson(client, "memmy_turn", {
+  const committed = await callJson(client, "litsan_turn", {
     action: "commit", event_id: opened.raw.event_id, assistant_text: "Surface snapshot assistant turn."
   });
   assert.equal(committed.isError, false, committed.text);
-  success("memmy_turn.commit", {
+  success("litsan_turn.commit", {
     action: committed.body.action, status: committed.body.status, project_id: committed.body.project_id,
     ingested: committed.body.ingested, distillation: committed.body.distillation
   });
-  failure("memmy_turn", await callError(client, "memmy_turn", { action: "commit", event_id: "missing" }));
+  failure("litsan_turn", await callError(client, "litsan_turn", { action: "commit", event_id: "missing" }));
 
-  // memhub_memory — governed L4 plan plus an invalid evidence load.
-  const memoryPlan = await callJson(client, "memhub_memory", {
+  // litsan_memory — governed L4 plan plus an invalid evidence load.
+  const memoryPlan = await callJson(client, "litsan_memory", {
     action: "plan", kind: "l4", content: "# Account profile\n\nSurface snapshot rule.", note: "snapshot"
   });
   assert.equal(memoryPlan.isError, false);
-  success("memhub_memory", {
+  success("litsan_memory", {
     status: memoryPlan.body.status, operation: memoryPlan.body.operation, kind: memoryPlan.body.kind,
     scope: memoryPlan.body.scope, proposed_content: memoryPlan.body.proposed_content,
     proposed_sha256: memoryPlan.body.proposed_sha256, contract: memoryPlan.body.contract
   });
-  failure("memhub_memory", await callError(client, "memhub_memory", { action: "load", evidence_ref: "not-an-evidence-ref" }));
+  failure("litsan_memory", await callError(client, "litsan_memory", { action: "load", evidence_ref: "not-an-evidence-ref" }));
 
-  // memhub_branch — list for a resolved project.
-  const branchList = await callJson(client, "memhub_branch", { action: "list", project: "alpha" });
+  // litsan_branch — list for a resolved project.
+  const branchList = await callJson(client, "litsan_branch", { action: "list", project: "alpha" });
   assert.equal(branchList.isError, false);
-  success("memhub_branch", branchList.body);
-  failure("memhub_branch", await callError(client, "memhub_branch", { action: "create", project: "alpha" }));
+  success("litsan_branch", branchList.body);
+  failure("litsan_branch", await callError(client, "litsan_branch", { action: "create", project: "alpha" }));
 
-  // memhub_skill — status of a deterministic Skill fixture.
-  const skillStatus = await callJson(client, "memhub_skill", { action: "status", skill_id: "skill-surface-1" });
+  // litsan_skill — status of a deterministic Skill fixture.
+  const skillStatus = await callJson(client, "litsan_skill", { action: "status", skill_id: "skill-surface-1" });
   assert.equal(skillStatus.isError, false);
-  success("memhub_skill", skillStatus.body);
-  failure("memhub_skill", await callError(client, "memhub_skill", { action: "status", skill_id: "skill-missing" }));
+  success("litsan_skill", skillStatus.body);
+  failure("litsan_skill", await callError(client, "litsan_skill", { action: "status", skill_id: "skill-missing" }));
 
-  // memhub_distill — contract discovery; unknown action must fail.
-  const contract = await callJson(client, "memhub_distill", { inspect_contract: true });
+  // litsan_distill — contract discovery; unknown action must fail.
+  const contract = await callJson(client, "litsan_distill", { inspect_contract: true });
   assert.equal(contract.isError, false);
-  success("memhub_distill", contract.body);
-  failure("memhub_distill", await callError(client, "memhub_distill", { action: "bogus" }));
+  success("litsan_distill", contract.body);
+  failure("litsan_distill", await callError(client, "litsan_distill", { action: "bogus" }));
 
-  // memmy_project_list — read-only registry summary.
-  const projectList = await callJson(client, "memmy_project_list", {});
+  // litsan_project_list — read-only registry summary.
+  const projectList = await callJson(client, "litsan_project_list", {});
   assert.equal(projectList.isError, false);
-  success("memmy_project_list", projectList.body);
+  success("litsan_project_list", projectList.body);
 
-  // memhub_todo — account-wide list plus a missing-project write.
-  const todoList = await callJson(client, "memhub_todo", { action: "list" });
+  // litsan_todo — account-wide list plus a missing-project write.
+  const todoList = await callJson(client, "litsan_todo", { action: "list" });
   assert.equal(todoList.isError, false);
-  success("memhub_todo", todoList.body);
-  failure("memhub_todo", await callError(client, "memhub_todo", { action: "add", project: "missing-project", text: "x" }));
+  success("litsan_todo", todoList.body);
+  failure("litsan_todo", await callError(client, "litsan_todo", { action: "add", project: "missing-project", text: "x" }));
 
-  // memmy_project_manage — plan only (no mutation) plus an invalid authorization.
-  const managePlan = await callJson(client, "memmy_project_manage", {
+  // litsan_project_manage — plan only (no mutation) plus an invalid authorization.
+  const managePlan = await callJson(client, "litsan_project_manage", {
     action: "plan", operation: "create", project: "beta", description: "Surface snapshot project."
   });
   assert.equal(managePlan.isError, false);
-  success("memmy_project_manage", {
+  success("litsan_project_manage", {
     status: managePlan.body.status, operation: managePlan.body.operation, payload: managePlan.body.payload,
     impact: managePlan.body.impact, instructions: managePlan.body.instructions
   });
-  failure("memmy_project_manage", await callError(client, "memmy_project_manage", {
+  failure("litsan_project_manage", await callError(client, "litsan_project_manage", {
     action: "execute", authorization_id: "missing"
   }));
 
-  // memmy_project — current project plus an unknown action.
-  const current = await callJson(client, "memmy_project", { action: "current", project: "alpha" });
+  // litsan_project — current project plus an unknown action.
+  const current = await callJson(client, "litsan_project", { action: "current", project: "alpha" });
   assert.equal(current.isError, false);
-  success("memmy_project", current.body);
-  failure("memmy_project", await callError(client, "memmy_project", { action: "bogus" }));
+  success("litsan_project", current.body);
+  failure("litsan_project", await callError(client, "litsan_project", { action: "bogus" }));
 
-  // memhub_result — continuation of a deterministic spooled result.
+  // litsan_result — continuation of a deterministic spooled result.
   const spool = new JsonResultTransport(root, ACCOUNT, 1_000);
   const envelope = spool.wrap({ blob: "s".repeat(20_000) }, { readOnly: true });
   const envelopeJson = JSON.parse(JSON.stringify(envelope));
-  const read = await callJson(client, "memhub_result", {
+  const read = await callJson(client, "litsan_result", {
     result_id: envelopeJson.result_transport.result_id, offset: 0, chunk_chars: 10_000
   });
   assert.equal(read.isError, false);
-  success("memhub_result", {
+  success("litsan_result", {
     mode: read.body.result_transport.mode,
     offset: read.body.result_transport.offset,
     next_offset: read.body.result_transport.next_offset,
@@ -328,7 +331,12 @@ async function captureToolSurface(client) {
     expires_in_seconds: read.body.result_transport.expires_in_seconds,
     chunk_sha256: createHash("sha256").update(read.body.result_chunk, "utf8").digest("hex")
   });
-  failure("memhub_result", await callError(client, "memhub_result", { result_id: "missing", offset: 0 }));
+  failure("litsan_result", await callError(client, "litsan_result", { result_id: "missing", offset: 0 }));
+
+  const cardStatus = await callJson(client, "litsan_card", { action: "queue_status", dry: true });
+  assert.equal(cardStatus.isError, false);
+  success("litsan_card", cardStatus.body);
+  failure("litsan_card", await callError(client, "litsan_card", { action: "submit" }));
 
   return { tools, responses };
 }
@@ -363,12 +371,11 @@ async function captureHttpSurface() {
   const account = await addAccount(stateRoot, "surface-admin", "surface@example.com");
   await setAccountRole(stateRoot, account.account_id, "admin");
   const token = await ensureLocalAdminToken(stateRoot);
-  const authorization = `Basic ${Buffer.from(`memhub:${token}`).toString("base64")}`;
+  const authorization = `Basic ${Buffer.from(`litsan:${token}`).toString("base64")}`;
   const port = await freePort();
   const child = spawn(process.execPath, [
-    mcpEntry, "--http", String(port), "--account", account.account_id,
-    "--memory-url", memoryEndpoint, "--state-root", stateRoot,
-    "--public-host", "memhub.example.test"
+    gatewayFixture, JSON.stringify({ stateRoot, port, accountId: account.account_id, memoryEndpoint,
+      publicHost: "litsan.example.test", disableArchitecture: false })
   ], { env: testEnvironment(stateRoot, root), stdio: ["ignore", "pipe", "pipe"] });
   let stderr = "";
   child.stderr.setEncoding("utf8");
@@ -395,7 +402,7 @@ async function captureHttpSurface() {
     });
     const remoteNoJwt = await rawHttp(port, "/mcp", {
       method: "POST",
-      headers: { host: "memhub.example.test", "content-type": "application/json" },
+      headers: { host: "litsan.example.test", "content-type": "application/json" },
       body: "{}"
     });
     const localAdminNoToken = await rawHttp(port, "/memhub/admin", { headers: { host: `127.0.0.1:${port}` } });
@@ -444,24 +451,24 @@ async function assertFactoryRoot() {
     controlRoot: factoryRoot, accountId: ACCOUNT, memoryEndpoint, disableArchitecture: true
   });
   try {
-    const opened = await callJson(client, "memmy_turn", {
+    const opened = await callJson(client, "litsan_turn", {
       action: "open", project: "alpha", user_text: "Factory root user turn."
     });
-    const committed = await callJson(client, "memmy_turn", {
+    const committed = await callJson(client, "litsan_turn", {
       action: "commit", event_id: opened.raw.event_id, assistant_text: "Factory root assistant turn."
     });
     assert.equal(committed.raw.ingested, true);
     // The configured threshold is two turns; the second commit must queue L2.
-    const secondOpen = await callJson(client, "memmy_turn", {
+    const secondOpen = await callJson(client, "litsan_turn", {
       action: "open", project: "alpha", user_text: "Factory root second user turn."
     });
-    const secondCommit = await callJson(client, "memmy_turn", {
+    const secondCommit = await callJson(client, "litsan_turn", {
       action: "commit", event_id: secondOpen.raw.event_id, assistant_text: "Factory root second assistant turn."
     });
     assert.equal(secondCommit.raw.ingested, true);
     assert.equal(secondCommit.raw.distillation?.queued, true,
       `factory root must queue the threshold L2 job: ${JSON.stringify(secondCommit.raw)}`);
-    const assigned = await callJson(client, "memmy_turn", {
+    const assigned = await callJson(client, "litsan_turn", {
       action: "assign", event_ids: [opened.raw.event_id], project: "alpha"
     });
     assert.equal(assigned.isError, false);
@@ -469,7 +476,7 @@ async function assertFactoryRoot() {
     const spool = new JsonResultTransport(factoryRoot, ACCOUNT, 1_000);
     const envelope = spool.wrap({ blob: "f".repeat(20_000) }, { readOnly: false });
     const resultId = envelope.result_transport.result_id;
-    const read = await callJson(client, "memhub_result", { result_id: resultId, offset: 0, chunk_chars: 10_000 });
+    const read = await callJson(client, "litsan_result", { result_id: resultId, offset: 0, chunk_chars: 10_000 });
     assert.equal(read.isError, false);
 
     const spoolDir = join(factoryRoot, "result-spool");
@@ -507,7 +514,7 @@ async function captureCrossAccount() {
     controlRoot: root, accountId: OTHER_ACCOUNT, memoryEndpoint, disableArchitecture: true
   });
   try {
-    const result = await callJson(client, "memhub_skill", { action: "status", skill_id: "skill-surface-1" });
+    const result = await callJson(client, "litsan_skill", { action: "status", skill_id: "skill-surface-1" });
     assert.equal(result.isError, true);
     return { memhub_skill_cross_account: { isError: true, message: result.text } };
   } finally {
@@ -543,7 +550,7 @@ try {
 
   const snapshot = JSON.parse(JSON.stringify({
     generated_by: "tests/p6-md-surface-snapshot.mjs",
-    note: "Generated from the unmodified mcp.ts surface before the P6-MD split. UUIDs, generated event ids, timestamps and uptime are normalized.",
+    note: "LITSAN C1 compatibility surface. UUIDs, generated event ids, timestamps and uptime are normalized.",
     tools: surface.tools,
     responses: surface.responses,
     cross_account: crossAccount,
@@ -551,6 +558,12 @@ try {
   }));
 
   if (updateSnapshot) {
+    // Preserve byte order for unchanged tool entries when the SDK reorders schema keys.
+    const previous = JSON.parse(await readFile(fixturePath, "utf8"));
+    snapshot.tools = snapshot.tools.map(tool => {
+      const prior = previous.tools.find(item => item.name === tool.name);
+      return isDeepStrictEqual(tool, prior) ? prior : tool;
+    });
     const { mkdir } = await import("node:fs/promises");
     await mkdir(resolve(here, "fixtures"), { recursive: true });
     await writeFile(fixturePath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8");

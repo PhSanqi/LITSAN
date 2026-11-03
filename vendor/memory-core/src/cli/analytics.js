@@ -1,3 +1,4 @@
+import { defaultLitsanHome, litsanEnv } from "../utils/litsan-compat.js";
 import { randomUUID } from "node:crypto";
 import { existsSync as nodeExistsSync, mkdirSync as nodeMkdirSync, readFileSync as nodeReadFileSyncFs, writeFileSync as nodeWriteFileSync, } from "node:fs";
 import { homedir as nodeHomedir } from "node:os";
@@ -16,20 +17,20 @@ const CLIENT_ID_FILENAME = "analytics-client-id";
 const INSTALLATION_ID_FILENAME = "installation-id";
 const CLI_ANALYTICS_SOURCE = "memmy-memory";
 export function resolveAnalyticsBaseUrl(env = process.env) {
-    const raw = env.MEMMY_CLOUD_SERVICE?.trim();
+    const raw = litsanEnv("LITSAN_CLOUD_SERVICE", env)?.trim();
     if (!raw)
         return null;
     return raw.replace(/\/+$/, "");
 }
 export function resolveAnalyticsAppEnv(env = process.env) {
-    const explicit = env.MEMMY_APP_ENV?.trim().toLowerCase();
+    const explicit = litsanEnv("LITSAN_APP_ENV", env)?.trim().toLowerCase();
     if (explicit === "dev" || explicit === "prod")
         return explicit;
     return env.NODE_ENV === "production" ? "prod" : "dev";
 }
 export function resolveAnalyticsDebugMode(env = process.env, appEnv = resolveAnalyticsAppEnv(env)) {
-    const explicit = env.MEMMY_GA4_DEBUG === "true" ||
-        env.MEMMY_GA4_DEBUG === "1" ||
+    const explicit = litsanEnv("LITSAN_GA4_DEBUG", env) === "true" ||
+        litsanEnv("LITSAN_GA4_DEBUG", env) === "1" ||
         env.VITE_GA4_DEBUG === "true";
     return appEnv === "dev" || explicit;
 }
@@ -50,8 +51,8 @@ export function compactAnalyticsParams(params = {}) {
     return Object.fromEntries(Object.entries(params).filter(([, value]) => value !== undefined && value !== null && value !== ""));
 }
 export function getAnalyticsClientIdPath(env = process.env, homeDir = nodeHomedir()) {
-    const memmyHome = (env.MEMMY_HOME?.trim() || nodeJoin(homeDir, ".memmy")).replace(/^~(?=$|[/\\])/, homeDir);
-    return nodeJoin(memmyHome, CLIENT_ID_FILENAME);
+    const litsanHome = (litsanEnv("LITSAN_HOME", env)?.trim() || defaultLitsanHome(homeDir)).replace(/^~(?=$|[/\\])/, homeDir);
+    return nodeJoin(litsanHome, CLIENT_ID_FILENAME);
 }
 export function readAnalyticsClientId(options = {}) {
     const filePath = getAnalyticsClientIdPath(options.env, options.homeDir);
@@ -69,8 +70,8 @@ export function readAnalyticsClientId(options = {}) {
 }
 export function getOrCreateInstallationId(options = {}) {
     const homeDir = options.homeDir ?? nodeHomedir();
-    const memmyHome = (options.env?.MEMMY_HOME?.trim() || nodeJoin(homeDir, ".memmy")).replace(/^~(?=$|[/\\])/, homeDir);
-    const filePath = nodeJoin(memmyHome, INSTALLATION_ID_FILENAME);
+    const litsanHome = (litsanEnv("LITSAN_HOME", options.env)?.trim() || defaultLitsanHome(homeDir)).replace(/^~(?=$|[/\\])/, homeDir);
+    const filePath = nodeJoin(litsanHome, INSTALLATION_ID_FILENAME);
     try {
         if (nodeExistsSync(filePath)) {
             const existing = nodeReadFileSyncFs(filePath, "utf8").trim();
@@ -82,7 +83,7 @@ export function getOrCreateInstallationId(options = {}) {
         // Recreate an unreadable or empty identifier below.
     }
     const installationId = randomUUID();
-    nodeMkdirSync(memmyHome, { recursive: true });
+    nodeMkdirSync(litsanHome, { recursive: true });
     nodeWriteFileSync(filePath, `${installationId}\n`, "utf8");
     return installationId;
 }
@@ -131,7 +132,7 @@ export function postAnalyticsEvents(input) {
                 eventName: event.eventName,
                 params: compactAnalyticsParams({
                     engagement_time_msec: DEFAULT_ENGAGEMENT_TIME_MSEC,
-                    source: event.source ?? "memmy-memory",
+                    source: event.source ?? "litsan-memory",
                     ...userModeParams,
                     ...(event.params ?? {}),
                     ...(userId ? { user_id: userId } : {}),
@@ -253,7 +254,7 @@ export function elapsedMs(startedAt, endedAt = Date.now()) {
     return Math.max(0, endedAt - startedAt);
 }
 export function resolveInstallChannel(env = process.env, argvPath = process.argv[1]) {
-    const explicit = env.MEMMY_INSTALL_CHANNEL?.trim();
+    const explicit = litsanEnv("LITSAN_INSTALL_CHANNEL", env)?.trim();
     if (explicit)
         return explicit;
     const normalized = (argvPath ?? "").replace(/\\/g, "/").toLowerCase();
@@ -351,7 +352,7 @@ function normalizeRawPath(path) {
 }
 /** Internal automation (npm worker:run, backend cron) — not user or agent CLI usage. */
 export function isInfrastructureCliInvocation(argv, env = process.env) {
-    if (env.MEMMY_CLI_ANALYTICS_SKIP === "1" || env.MEMMY_CLI_ANALYTICS_SKIP === "true") {
+    if (litsanEnv("LITSAN_CLI_ANALYTICS_SKIP", env) === "1" || litsanEnv("LITSAN_CLI_ANALYTICS_SKIP", env) === "true") {
         return true;
     }
     const parsed = parseArgs(argv);

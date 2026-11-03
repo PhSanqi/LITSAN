@@ -1,21 +1,9 @@
+import type { ProjectBranchStatus, ProjectBranch } from "./contracts/branches.js";
+export type { ProjectBranchStatus, ProjectBranch } from "./contracts/branches.js";
 import { randomUUID } from "node:crypto";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";
 import { withFileMutationLock } from "./file-mutation-lock.js";
-
-export type ProjectBranchStatus = "active" | "closed";
-
-export interface ProjectBranch {
-  accountId: string;
-  projectId: string;
-  branchId: string;
-  name: string;
-  goal: string;
-  status: ProjectBranchStatus;
-  createdAt: string;
-  updatedAt: string;
-  closedAt?: string;
-}
 
 interface BranchFile {
   version: 1;
@@ -23,7 +11,90 @@ interface BranchFile {
 }
 
 export class JsonProjectBranchStore {
-  constructor(private readonly path: string) {}
+  constructor(private readonly path: string, private readonly locked = false, private readonly projectScope?: { accountId: string; projectId: string }) {}
+
+  /** A single lock covers binding, cap eviction and append-only capture assignment.
+   * ponytail: retain the existing file-wide lock; shard the JSON store only if
+   * cross-project write contention warrants separate project locks.
+   */
+  async withProjectLock<T>(accountId: string, projectId: string, run: (store: JsonProjectBranchStore) => Promise<T>): Promise<T> {
+    requireNonEmpty(accountId, "accountId");
+    requireNonEmpty(projectId, "projectId");
+    return this.serialize(() => run(new JsonProjectBranchStore(this.path, true, { accountId, projectId })));
+  }
+
+  async findActiveByKey(accountId: string, projectId: string, key: string): Promise<ProjectBranch | null> {
+    return (await this.list(accountId, projectId)).find(b => b.workstream_key === key) ?? null;
+  }
+
+  async findByKey(accountId: string, projectId: string, key: string, options: { includeClosed: true }): Promise<ProjectBranch | null> {
+    return (await this.list(accountId, projectId, options)).find(b => b.workstream_key === key && b.origin === "auto") ?? null;
+  }
+
+  async createAuto(accountId: string, projectId: string, input: {
+    key: string; name: string; goal: string; base_map_fingerprint: string; base_l2_revision: string | null; now: string;
+  }): Promise<ProjectBranch> {
+    return this.serialize(async () => {
+      const file = await this.read();
+      const active = file.branches.filter(b => b.accountId === accountId && b.projectId === projectId && b.status === "active");
+      const base = requireNonEmpty(input.name, "name");
+      let name = base, suffix = 2;
+      while (active.some(b => normalizeRef(b.name) === normalizeRef(name))) name = `${base}-${suffix++}`;
+      const branch: ProjectBranch = {
+        accountId, projectId, branchId: `${uniqueBranchId(file.branches, accountId, projectId, name)}-${randomUUID().slice(0, 8)}`, name,
+        goal: input.goal, status: "active", createdAt: input.now, updatedAt: input.now,
+        origin: "auto", workstream_key: input.key, last_activity_at: input.now,
+        base_map_fingerprint: input.base_map_fingerprint, base_l2_revision: input.base_l2_revision
+      };
+      file.branches.push(branch);
+      await this.write(file);
+      return { ...branch };
+    });
+  }
+
+  async touch(branchId: string, now: string): Promise<void> {
+    await this.serialize(async () => {
+      const file = await this.read();
+      const branch = file.branches.find(b => b.branchId === branchId && (!this.projectScope || (b.accountId === this.projectScope.accountId && b.projectId === this.projectScope.projectId)));
+      if (!branch || Date.parse(now) - Date.parse(branch.last_activity_at ?? "") < 60_000) return;
+      branch.last_activity_at = now;
+      await this.write(file);
+    });
+  }
+
+  async closeForCap(branchId: string, closing = false): Promise<ProjectBranch> {
+    return this.serialize(async () => {
+      const file = await this.read();
+      const branch = file.branches.find(b => b.branchId === branchId && (!this.projectScope || (b.accountId === this.projectScope.accountId && b.projectId === this.projectScope.projectId)));
+      if (!branch || branch.origin !== "auto" || branch.status !== "active") throw new Error("unknown active auto branch");
+      branch.status = closing ? "closing" : "closed";
+      if (closing) branch.closing_since = new Date().toISOString();
+      branch.closed_reason = "cap";
+      branch.closedAt = branch.updatedAt = new Date().toISOString();
+      await this.write(file);
+      return { ...branch };
+    });
+  }
+
+  async refreshBase(accountId: string, projectId: string, branchId: string, base: {
+    base_map_fingerprint: string; base_l2_revision: string | null;
+  }, now: string): Promise<ProjectBranch> {
+    return this.serialize(async () => {
+      const file = await this.read();
+      const branch = file.branches.find(b => b.accountId === accountId && b.projectId === projectId && b.branchId === branchId);
+      if (!branch) throw new Error("unknown branch");
+      const active = file.branches.filter(b => b.accountId === accountId && b.projectId === projectId && b.status === "active" && b.branchId !== branchId);
+      const originalName = branch.name;
+      let name = originalName, suffix = 2;
+      while (active.some(b => normalizeRef(b.name) === normalizeRef(name))) name = `${originalName}-${suffix++}`;
+      Object.assign(branch, base, { name, status: "active", updatedAt: now, last_activity_at: now });
+      delete branch.closedAt;
+      delete branch.closed_reason;
+      delete branch.closing_since; delete branch.merged_at; delete branch.merge_job_id; delete branch.expired_at;
+      await this.write(file);
+      return { ...branch };
+    });
+  }
 
   async list(accountId: string, projectId: string, options: { includeClosed?: boolean } = {}): Promise<ProjectBranch[]> {
     const account = requireNonEmpty(accountId, "accountId");
@@ -35,7 +106,7 @@ export class JsonProjectBranchStore {
       .sort((left, right) => right.updatedAt.localeCompare(left.updatedAt));
   }
 
-  async create(accountId: string, projectId: string, input: { name: string; goal: string }): Promise<ProjectBranch> {
+  async create(accountId: string, projectId: string, input: { name: string; goal: string; base_map_fingerprint?: string; base_l2_revision?: string | null }): Promise<ProjectBranch> {
     return this.serialize(async () => {
       const account = requireNonEmpty(accountId, "accountId");
       const project = requireNonEmpty(projectId, "projectId");
@@ -49,6 +120,7 @@ export class JsonProjectBranchStore {
         normalizeRef(branch.name) === normalizeRef(name)
       );
       if (same) {
+        if (same.origin === "auto") throw new Error(`active auto branch already uses name: ${name}`);
         if (same.goal !== goal) {
           same.goal = goal;
           same.updatedAt = new Date().toISOString();
@@ -65,7 +137,11 @@ export class JsonProjectBranchStore {
         goal,
         status: "active",
         createdAt: now,
-        updatedAt: now
+        updatedAt: now,
+        ...(input.base_map_fingerprint !== undefined ? {
+          origin: "manual" as const, base_map_fingerprint: input.base_map_fingerprint,
+          base_l2_revision: input.base_l2_revision ?? null
+        } : {})
       };
       file.branches.push(branch);
       await this.write(file);
@@ -94,6 +170,21 @@ export class JsonProjectBranchStore {
     return this.setStatus(accountId, projectId, reference, "active");
   }
 
+  async transition(accountId: string, projectId: string, reference: string,
+    patch: Pick<ProjectBranch, "status"> & Partial<Pick<ProjectBranch, "closing_since" | "closed_reason" | "merged_at" | "merge_job_id" | "expired_at">>,
+    now = new Date().toISOString()): Promise<ProjectBranch> {
+    return this.serialize(async () => {
+      const file = await this.read();
+      const branch = file.branches.find(b => b.accountId === accountId && b.projectId === projectId &&
+        (normalizeRef(b.branchId) === normalizeRef(reference) || normalizeRef(b.name) === normalizeRef(reference)));
+      if (!branch) throw new Error("unknown branch");
+      Object.assign(branch, patch, { updatedAt: now });
+      if (patch.status === "active") { delete branch.closing_since; delete branch.closed_reason; delete branch.closedAt; }
+      await this.write(file);
+      return { ...branch };
+    });
+  }
+
   private async setStatus(accountId: string, projectId: string, reference: string, status: ProjectBranchStatus): Promise<ProjectBranch> {
     return this.serialize(async () => {
       const account = requireNonEmpty(accountId, "accountId");
@@ -109,15 +200,17 @@ export class JsonProjectBranchStore {
       const now = new Date().toISOString();
       branch.status = status;
       branch.updatedAt = now;
-      if (status === "closed") branch.closedAt = now;
-      else delete branch.closedAt;
+      if (status === "closed") {
+        branch.closedAt = now;
+        if (branch.origin) branch.closed_reason = "manual_close";
+      } else { delete branch.closedAt; delete branch.closed_reason; }
       await this.write(file);
       return { ...branch };
     });
   }
 
   private async serialize<T>(operation: () => Promise<T>): Promise<T> {
-    return withFileMutationLock(this.path, operation);
+    return this.locked ? operation() : withFileMutationLock(this.path, operation);
   }
 
   private async read(): Promise<BranchFile> {
@@ -183,7 +276,7 @@ function isBranchFile(value: unknown): value is BranchFile {
       typeof branch.branchId === "string" &&
       typeof branch.name === "string" &&
       typeof branch.goal === "string" &&
-      (branch.status === "active" || branch.status === "closed") &&
+      ["active", "closed", "closing", "merged", "expired"].includes(branch.status as string) &&
       typeof branch.createdAt === "string" &&
       typeof branch.updatedAt === "string";
   });

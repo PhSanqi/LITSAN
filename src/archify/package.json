@@ -1,0 +1,9 @@
+{
+  "name": "@phsanqi/litsan-archify",
+  "private": true,
+  "type": "module",
+  "litsanInternalDependencies": [
+    "@phsanqi/litsan-contracts",
+    "@phsanqi/litsan-core"
+  ]
+}
