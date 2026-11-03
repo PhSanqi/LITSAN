@@ -106,7 +106,13 @@ const defaultPassage = await buildTurnKnowledgePlan({
   capsule: passageCapsule,
   hydrateEvidence: async () => ({ content: longContent })
 });
-assert.equal(defaultPassage.required[0].passages.some((passage) => passage.text.includes("FACT_MATCHED_WINDOW")), false);
+assert.equal(defaultPassage.required[0].passages.some((passage) => passage.text.includes("FACT_MATCHED_WINDOW")), true);
+const headPassage = await buildTurnKnowledgePlan({
+  query, capsule: passageCapsule,
+  hydrateEvidence: async () => ({ content: longContent }),
+  policy: { passageWindow: "head" }
+});
+assert.equal(headPassage.required[0].passages.some((passage) => passage.text.includes("FACT_MATCHED_WINDOW")), false);
 const matchedPassage = await buildTurnKnowledgePlan({
   query,
   capsule: passageCapsule,

@@ -100,7 +100,9 @@ export function optionalBoolean(value: unknown): boolean | undefined {
 
 export const CLIENT_PROFILE_SCHEMA = { type: "object", additionalProperties: false, properties: {
   execution: { type: "string", enum: ["inline", "delegate", "background"] }, max_card_tokens: { type: "integer", minimum: 500, maximum: 8000 },
-  cards_per_turn: { type: "integer", minimum: 1, maximum: 5 }, model: { type: "string", maxLength: 80 }
+  cards_per_turn: { type: "integer", minimum: 0, maximum: 5, description: "Legacy client preference; automatic queue-driven counts are server-controlled." }, model: { type: "string", maxLength: 80 },
+  availability: { type: "string", enum: ["busy", "available", "unknown"], description: "Deprecated compatibility field; ignored by queue-driven automatic allocation." },
+  available_tokens: { type: "integer", minimum: 0, maximum: 24000, description: "Deprecated compatibility field; ignored by queue-driven automatic allocation." }
 } };
 
 export { parseWorkstreamHint } from "../../core/workstream/binding.js";

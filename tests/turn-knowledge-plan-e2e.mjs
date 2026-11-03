@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildTurnKnowledgePlan } from "../dist/turn-knowledge-plan.js";
+import { buildTurnKnowledgePlan, packTurnKnowledgeContext } from "../dist/turn-knowledge-plan.js";
 import { extractDistilledFactMetadata } from "../dist/fact-metadata.js";
 
 const retrieval = (matchedTerms = []) => ({
@@ -362,5 +362,113 @@ const structuredState = await buildTurnKnowledgePlan({
 });
 const structuredStateL2 = structuredState.supporting.find((entry) => entry.id === "l2-structured");
 assert.ok(structuredStateL2?.passages?.some((passage) => /Supersedes: Alex lived in Seattle/.test(passage.text)));
+
+// A derived fact retrieval lane may reorder facts before TKP passage packing.
+// This remains derived metadata on the exact L2 revision, not a new Memory.
+const semanticRankCapsule = {
+  ...structuredCapsule,
+  projectMemory: [{
+    ...structuredCapsule.projectMemory[0],
+    id: "l2-semantic-rank",
+    evidenceRef: "l2:l2-semantic-rank:r1",
+    content: multiDateTimeline,
+    provenance: {
+      ...structuredCapsule.projectMemory[0].provenance,
+      derivedFactRetrieval: {
+        version: "derived-revision-retrieval-v1",
+        mode: "semantic",
+        hits: [
+          { fact_id: multiDateMetadata.facts[2].fact_id, parent_id: multiDateMetadata.facts[2].parent_id, score: 0.91, matched_terms: ["portland"] },
+          { fact_id: multiDateMetadata.facts[1].fact_id, parent_id: multiDateMetadata.facts[1].parent_id, score: 0.84, matched_terms: ["portland"] }
+        ]
+      }
+    }
+  }]
+};
+const semanticRankPlan = await buildTurnKnowledgePlan({
+  query: "What did Alex do in Portland?",
+  capsule: semanticRankCapsule,
+  hydrateEvidence: async () => ({ content: multiDateTimeline, factMetadata: multiDateMetadata })
+});
+const semanticRankL2 = semanticRankPlan.supporting.find((entry) => entry.id === "l2-semantic-rank");
+assert.match(semanticRankL2?.passages?.[0]?.text ?? "", /Portland park/);
+assert.match(semanticRankL2?.passages?.[1]?.text ?? "", /Portland museum/);
+
+const adaptivePlan = await buildTurnKnowledgePlan({
+  query: "What is one of Jolene's favorite dishes?",
+  capsule: semanticRankCapsule,
+  adaptiveEvidence: [{
+    evidence_ref: "l1:lasagna",
+    text: "Jolene: One of my favorite dishes is lasagna!",
+    score: 0.92,
+    matched_terms: ["jolene", "favorite", "dish"]
+  }],
+  hydrateEvidence: async () => ({ content: multiDateTimeline, factMetadata: multiDateMetadata })
+});
+assert.ok(adaptivePlan.supporting.some((entry) => entry.reason === "adaptive_evidence_hydration" && /lasagna/.test(entry.passages?.[0]?.text ?? "")));
+assert.equal(adaptivePlan.evidence_sufficiency?.adaptive_evidence_used, true);
+assert.ok((adaptivePlan.context_packing?.recommended_bytes ?? 0) >= 6000);
+const packed = packTurnKnowledgeContext({
+  query: "What is one of Jolene's favorite dishes?",
+  plan: adaptivePlan,
+  projectMemory: semanticRankCapsule.projectMemory,
+  maxBytes: 3000
+});
+assert.ok(packed.used_bytes <= 3000);
+assert.match(packed.context, /lasagna/);
+assert.ok(packed.sections.some((section) => section.source === "turn_knowledge_plan"));
+
+// Ordinary supporting raw L1 evidence must not outrank a more relevant,
+// evidence-backed L2 fact solely because of its layer. This matters under a
+// tight packing budget where the first large section can consume the rest.
+const packingPriorityPlan = {
+  ...adaptivePlan,
+  required: [],
+  supporting: [{
+    role: "supporting",
+    kind: "L1",
+    id: "generic-l1",
+    reason: "adaptive_evidence_hydration",
+    passages: [{ text: `Generic project discussion. ${"noise ".repeat(180)}`, matched_terms: ["project"], score: 100 }]
+  }, {
+    role: "supporting",
+    kind: "L2",
+    id: "direct-l2",
+    reason: "project_chronology_and_recent_change",
+    passages: [{
+      text: "Atomic fact: Jolene completed an electrical engineering project. | Evidence: l1:electrical-target",
+      matched_terms: ["jolene", "project"],
+      score: 116
+    }]
+  }]
+};
+const priorityPacked = packTurnKnowledgeContext({
+  query: "What kind of project was Jolene working on?",
+  plan: packingPriorityPlan,
+  maxBytes: 1000
+});
+assert.match(priorityPacked.context, /electrical engineering project/);
+assert.equal(priorityPacked.sections[0]?.id, "direct-l2:p0");
+
+const temporalAdaptivePlan = await buildTurnKnowledgePlan({
+  query: "What project did Jolene finish last week?",
+  capsule: semanticRankCapsule,
+  adaptiveEvidence: [{
+    evidence_ref: "l1:electrical-temporal",
+    text: "[Event series temporal normalization: 2023-01-16 to 2023-01-22; source=relative_evidence; confidence=0.94; expression=last week]\nJolene finished an electrical engineering project last week.",
+    score: 0.61,
+    matched_terms: ["jolene", "project", "week"]
+  }],
+  hydrateEvidence: async () => ({ content: multiDateTimeline, factMetadata: multiDateMetadata })
+});
+const temporalAdaptive = temporalAdaptivePlan.supporting.find((entry) => entry.evidence_ref === "l1:electrical-temporal");
+assert.equal(temporalAdaptive?.reason, "adaptive_structural_temporal_evidence");
+const temporalPacked = packTurnKnowledgeContext({
+  query: "What project did Jolene finish last week?",
+  plan: temporalAdaptivePlan,
+  maxBytes: 1000
+});
+assert.match(temporalPacked.context, /2023-01-16 to 2023-01-22/);
+assert.match(temporalPacked.context, /electrical engineering project/);
 
 console.log("turn-knowledge-plan-e2e: ok");

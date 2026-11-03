@@ -16,6 +16,11 @@ function factBody(event: L2ChunkEvent): string {
 }
 export function resolveChunkEvents(events: ChunkEvent[], baseContent: string | null = null): { events: ChunkEvent[]; dropped_duplicates: number; base_continuations: { key: string; event: L2ChunkEvent }[] } {
   const seen = new Set(datedL2Headings(baseContent ?? "").map(h => normalizeL2EventKey(h.date + " " + h.title)));
+  const bodies = new Map<string, string>();
+  for (const section of (baseContent ?? "").split(/(?=^##\s)/m)) {
+    const heading = datedL2Headings(section)[0];
+    if (heading) bodies.set(normalizeL2EventKey(heading.date + " " + heading.title), section);
+  }
   const baseAliases = new Map([...seen].map(key => [key, key]));
   const base_continuations: { key: string; event: L2ChunkEvent }[] = [];
   const roots = new Map<string, ChunkEvent | null>();
@@ -41,7 +46,31 @@ export function resolveChunkEvents(events: ChunkEvent[], baseContent: string | n
       seen.add(key);
       continue;
     }
-    if (seen.has(key)) { if (!roots.has(key)) roots.set(key, null); dropped_duplicates++; continue; }
+    if (seen.has(key)) {
+      const prior = roots.get(key), body = prior
+        ? prior.event.body_en + "\n" + prior.event.body_zh + "\n" + prior.event.evidence_refs.join(", ")
+        : bodies.get(key) ?? "";
+      // A matching heading is not proof that its new facts or citations already exist.
+      const normalizeLine = (line: string) => line.replace(/\s+/gu, " ").trim();
+      const existingLines = new Set(body.split(/\r?\n/u).map(normalizeLine));
+      const refs = new Set(body.split(/[\s,]+/u));
+      if ([event.body_en, event.body_zh].flatMap(part => part.split(/\r?\n/u)).filter(line => line.trim())
+        .every(line => existingLines.has(normalizeLine(line))) && event.evidence_refs.every(ref => refs.has(ref))) {
+        if (!roots.has(key)) roots.set(key, null);
+        dropped_duplicates++; continue;
+      }
+      if (prior) {
+        prior.event.body_en += "\n\n" + event.body_en;
+        prior.event.body_zh += "\n\n" + event.body_zh;
+        prior.event.evidence_refs = [...new Set([...prior.event.evidence_refs, ...event.evidence_refs])];
+      } else {
+        roots.set(key, null);
+        const target = baseAliases.get(key) ?? key;
+        base_continuations.push({ key: target, event });
+        bodies.set(key, body + "\n" + event.body_en + "\n" + event.body_zh);
+      }
+      continue;
+    }
     seen.add(key); roots.set(key, { ...row, event });
   }
   return { events: [...new Set(roots.values())].filter((row): row is ChunkEvent => row !== null)

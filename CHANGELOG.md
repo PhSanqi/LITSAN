@@ -1,5 +1,16 @@
 # Changelog
 
+## Maintenance quality, governance and memory-repair updates
+
+- L3/L4 governance: `litsan_memory plan` now accepts only the current canonical L3/L4 revision as its base, and an `execute` refused before writing keeps its single-use authorization for a retry with fresh confirmation.
+- L3/L4 治理：`litsan_memory plan` 只接受当前 canonical L3/L4 修订作为 base；在写入前被拒绝的 `execute` 保留其一次性授权，可在重新确认后重试。
+- Maintenance cards: server-side queue-driven allocation (1–3 cards per turn, an eligible first card always reserved), backlog statistics, and a quality stage with quoted fact ledgers and a separate review before L2 merge.
+- 维护卡：服务端按队列分配（每轮 1–3 张，可处理的首张始终保留）、积压统计，以及带逐字事实账本、在 L2 合并前独立复核的质量阶段。
+- Memory repair (opt-in, off by default): event-series and derived-fact temporal retrieval, structured progressive follow-up queries, and evaluation/judge tooling under `scripts/`.
+- 记忆修复（需显式开启，默认关闭）：事件序列与派生事实的时间检索、结构化渐进补查，以及 `scripts/` 下的评测与判分工具。
+- Fixes: LITSAN labels on the docs sidebar and landing page; the public-tree sync keeps a local review proxy out of the repository.
+- 修复：文档侧栏与首页的 LITSAN 标签；公开树同步不再带入本地评审代理。
+
 ## Renamed to LITSAN (formerly Memhub)
 
 - Renamed our code, user-facing text, documentation and entry files to LITSAN; legacy aliases and stored formats remain compatible.

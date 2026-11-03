@@ -1,10 +1,13 @@
 import { toolName } from "../../brand.mjs";
+import { env } from "../../brand.mjs";
 import { jsonResult, type ToolDefinition } from "./shared.js";
 import { maintenanceWaiting } from "../../maintenance-control.js";
 import { branchDraftContext } from "../../workstream-retrieval.js";
 import { WORKSTREAM_SCHEMA } from "./shared.js";
 import { randomUUID } from "node:crypto";
-import { attachExactEvidenceRefsToContext, hydrateMemoryEvidence } from "../../memory-hydration.js";
+import { attachExactEvidenceRefsToContext, hydrateMemoryEvidence, type HydratedMemoryEvidence } from "../../memory-hydration.js";
+import { retrieveDerivedRevisionEvidence } from "../../derived-fact-retrieval.js";
+import { queryNeedsEventSeries, queryNeedsPointTemporalEvidence, queryNeedsRelativeTemporalEvidence, queryNeedsSeriesExpansion } from "../../event-series.js";
 import { relevantProjectTodos } from "../../context-router.js";
 import { utf8Prefix, compactContextMetadata } from "../../context-capsule.js";
 import { projectClarification } from "../../capture-project-assignments.js";
@@ -112,13 +115,116 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
             : item;
         }));
       }
+
+      const hydrationCache = new Map<string, HydratedMemoryEvidence>();
+      const hydrateExact = async (evidenceRef: string): Promise<HydratedMemoryEvidence> => {
+        const cached = hydrationCache.get(evidenceRef);
+        if (cached) return cached;
+        const item = await hydrateMemoryEvidence({
+          stateRoot,
+          accountId: runtime.accountId,
+          evidenceRef,
+          projects: runtime.projects
+        });
+        hydrationCache.set(evidenceRef, item);
+        return item;
+      };
+      const exactProjectRevisions: HydratedMemoryEvidence[] = [];
+      for (const item of capsule.projectMemory) {
+        const layer = item.provenance?.memoryLayer;
+        if ((layer !== "L2" && layer !== "L3") || !item.evidenceRef) continue;
+        try {
+          exactProjectRevisions.push(await hydrateExact(item.evidenceRef));
+        } catch {
+          // The normal TKP hydration path records the failure. Derived fact
+          // retrieval is an optimization and must fail closed to base recall.
+        }
+      }
+      const derivedModeRaw = env("DERIVED_FACT_RETRIEVAL")?.trim().toLocaleLowerCase();
+      const derivedMode = derivedModeRaw === "semantic" || derivedModeRaw === "lexical" ? derivedModeRaw : null;
+      const eventSeriesRaw = env("EVENT_SERIES_TEMPORAL")?.trim().toLocaleLowerCase();
+      const eventSeriesEnabled = eventSeriesRaw === "1" || eventSeriesRaw === "true" || eventSeriesRaw === "on";
+      const temporalQuery = eventSeriesEnabled && queryNeedsEventSeries(query);
+      let adaptiveEvidence: Array<{ evidence_ref: string; text: string; score: number; matched_terms: string[] }> = [];
+      if (derivedMode) {
+        const baseDerived = await retrieveDerivedRevisionEvidence({
+          stateRoot,
+          accountId: runtime.accountId,
+          query,
+          revisions: exactProjectRevisions,
+          mode: derivedMode,
+          maxFacts: 12
+        });
+        const explicitSeriesQuery = temporalQuery && queryNeedsSeriesExpansion(query);
+        const pointTemporalQuery = temporalQuery && queryNeedsPointTemporalEvidence(query);
+        const relativeTemporalQuery = temporalQuery && queryNeedsRelativeTemporalEvidence(query);
+        const pointTemporalNeedsRaw = pointTemporalQuery &&
+          !baseDerived.facts.slice(0, 4).some((fact) => fact.canonical_time?.precision === "date");
+        const seriesExpansionNeeded = temporalQuery &&
+          (explicitSeriesQuery || baseDerived.evidence_sufficiency.status === "insufficient");
+        const needsRawEvidence = seriesExpansionNeeded || pointTemporalNeedsRaw || relativeTemporalQuery ||
+          baseDerived.evidence_sufficiency.status !== "sufficient";
+        const derived = needsRawEvidence
+          ? await retrieveDerivedRevisionEvidence({
+              stateRoot,
+              accountId: runtime.accountId,
+              query,
+              revisions: exactProjectRevisions,
+              mode: derivedMode,
+              maxFacts: 12,
+              includeRawEvidence: true,
+              maxRawEvidence: seriesExpansionNeeded ? 8 : pointTemporalNeedsRaw || relativeTemporalQuery ? 4 : 6,
+              ...(temporalQuery ? { annotateTemporalEvidence: true } : {}),
+              ...(pointTemporalQuery ? { bindEventIdentity: true } : {}),
+              ...((pointTemporalNeedsRaw || relativeTemporalQuery) && baseDerived.evidence_sufficiency.status === "sufficient" && !seriesExpansionNeeded
+                ? { temporalEvidenceOnly: true }
+                : {}),
+              ...(seriesExpansionNeeded ? { expandEventSeries: true, maxSeriesFacts: 6 } : {})
+            })
+          : baseDerived;
+        for (const item of capsule.projectMemory) {
+          const hits = derived.facts.filter((fact) => fact.memory_id === item.id);
+          if (hits.length === 0) continue;
+          item.provenance = {
+            ...(item.provenance ?? {}),
+            derivedFactRetrieval: {
+              version: derived.version,
+              mode: derived.mode,
+              hits: hits.map((hit) => ({
+                fact_id: hit.fact_id,
+                parent_id: hit.parent_id,
+                score: hit.score,
+                semantic_score: hit.semantic_score,
+                lexical_score: hit.lexical_score,
+                matched_terms: hit.matched_terms,
+                ...(hit.series_id ? { series_id: hit.series_id } : {}),
+                ...(hit.series_kind ? { series_kind: hit.series_kind } : {}),
+                ...(hit.series_relation ? { series_relation: hit.series_relation } : {}),
+                ...(hit.series_distance !== undefined ? { series_distance: hit.series_distance } : {}),
+                ...(hit.temporal_time ? { temporal_time: hit.temporal_time } : {})
+              }))
+            }
+          };
+        }
+        adaptiveEvidence = derived.raw_evidence.map((hit) => ({
+          evidence_ref: hit.evidence_ref,
+          text: hit.text,
+          score: hit.score,
+          matched_terms: hit.matched_terms
+        })).sort((left, right) => {
+          const leftStructural = left.text.startsWith("[Event family ") ? 1 : 0;
+          const rightStructural = right.text.startsWith("[Event family ") ? 1 : 0;
+          return rightStructural - leftStructural || right.score - left.score;
+        });
+      }
       const turnKnowledgePlan = await buildTurnKnowledgePlan({
         query,
         capsule,
         detail,
         dedupe: true,
+        ...(adaptiveEvidence.length > 0 ? { adaptiveEvidence } : {}),
         hydrateEvidence: async (evidenceRef) => {
-          const item = await hydrateMemoryEvidence({ stateRoot, accountId: runtime.accountId, evidenceRef, projects: runtime.projects });
+          const item = await hydrateExact(evidenceRef);
           return {
             content: item.content,
             ...(item.fact_metadata ? { factMetadata: item.fact_metadata } : {})
@@ -236,6 +342,18 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
         } as unknown as typeof capsule.retrievalDiagnostics;
       }
 
+      // Derived fact hits are an internal TKP ranking aid. Keeping the full
+      // per-fact score list in brief ContextItems would spend host context on
+      // diagnostics that the Harness cannot act on; full mode may expose it
+      // for retrieval review.
+      if (detail !== "full") {
+        for (const item of capsule.projectMemory) {
+          if (!item.provenance || !("derivedFactRetrieval" in item.provenance)) continue;
+          const { derivedFactRetrieval: _derivedFactRetrieval, ...rest } = item.provenance;
+          item.provenance = rest;
+        }
+      }
+
       if (detail !== "full") compactContextMetadata(capsule);
 
       const {
@@ -243,11 +361,21 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
         retrievalScope: internalRetrievalScope,
         ...publicCapsule
       } = capsule;
+      const publicTurnKnowledgePlan = detail === "full"
+        ? turnKnowledgePlan
+        : (() => {
+            const {
+              evidence_sufficiency: _evidenceSufficiency,
+              context_packing: _contextPacking,
+              ...compactPlan
+            } = turnKnowledgePlan;
+            return compactPlan;
+          })();
       const responsePayload: Record<string, unknown> = {
         ...publicCapsule,
         ...(finalDiagnostics ? { retrievalDiagnostics: finalDiagnostics } : {}),
         retrievalTrace,
-        turnKnowledgePlan,
+        turnKnowledgePlan: publicTurnKnowledgePlan,
         projectCandidates: finalProjectCandidates
       };
       if (capsule.branchContext && capsule.resolvedProjectId) {

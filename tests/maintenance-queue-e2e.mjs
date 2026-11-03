@@ -1,3 +1,4 @@
+import { submitReviewed as submitCard, withFacts, finishReview } from "./maintenance-answers.mjs";
 import { closeCaptureIndexDb, listCaptureEvents } from "../dist/capture.js";
 import { structureFingerprint, nodeEvidenceHash, maintenanceGenerators, registerMaintenanceGenerator } from "../dist/core/maintenance/registry.js";
 import assert from "node:assert/strict";
@@ -25,13 +26,13 @@ import { setWorkstreamEnabled } from "../dist/workstream-config.js";
 import { inlineJsonResult } from "../dist/shell/mcp/shared.js";
 import { listDistillationJobs, leaseDistillationJob, recordCompletedDistillationRevision, mutateMaintenanceJob } from "../dist/distillation-jobs.js";
 import { readMaintenanceStore, readMaintenanceLog, withMaintenanceStore, getMaintenanceConfig, setMaintenanceConfig, readMaintenanceOfferState, withMaintenanceOfferState } from "../dist/maintenance-store.js";
-import { queueStatus, markRequested, maintenanceWaiting, ensureCards, nextCard, submitCard, releaseCard, offerForCommit, peekCard } from "../dist/maintenance-control.js";
+import { queueStatus, markRequested, maintenanceWaiting, ensureCards, nextCard, releaseCard, offerForCommit, peekCard } from "../dist/maintenance-control.js";
 import { buildArchitectureCognitiveMap, architectureCognitiveMapFingerprint } from "../dist/archify/architecture-cognitive-map.js";
 import { readMemoryControlData } from "../dist/memory-control-plane.js";
 import { hydrateMemoryEvidence } from "../dist/memory-hydration.js";
 import { submitDistillationControl } from "../dist/distillation-submit.js";
 import { validateDistillationEvidenceChain } from "../dist/distillation-evidence.js";
-import { L2_INSTRUCTIONS } from "../dist/core/maintenance/chunk.js";
+import { QUALITY_INSTRUCTIONS as L2_INSTRUCTIONS } from "../dist/core/maintenance/quality.js";
 import { codexInlineHook } from "../dist/shell/recorders/codex-notify.js";
 import { claudeHook } from "../dist/shell/recorders/claude-hook.js";
 import { cardEstTokens } from "../dist/core/maintenance/estimate.js";
@@ -90,12 +91,33 @@ async function fixture(t, jobs = [], architecture = false) {
   const client = new Client({ name: "maintenance-client", version: "1" }); await client.connect(clientTransport);
   // Windows cannot unlink open SQLite files: release the capture index before removing the state root.
   t.after(async () => { await client.close(); await server.close(); closeCaptureIndexDb(stateRoot); await rm(stateRoot, { recursive: true, force: true }); });
+  let autoReview = true;
+  const rawCall = client.callTool.bind(client);
+  client.callTool = async request => {
+    const args = request.arguments ?? {}, maintenance = request.name === "litsan_turn" ? args.maintenance_answer : args.action === "submit" ? args : undefined;
+    let normalized = request;
+    if (maintenance) {
+      const card = (await readMaintenanceStore(stateRoot, "acct")).cards.find(c => c.card_id === maintenance.card_id);
+      const amended = { ...maintenance, answer: withFacts(card, maintenance.answer) };
+      normalized = { ...request, arguments: request.name === "litsan_turn" ? { ...args, maintenance_answer: amended } : amended };
+    }
+    const result = await rawCall(normalized);
+    if (!maintenance || !autoReview || result.isError) return result;
+    const parsed = JSON.parse(result.content[0].text), value = request.name === "litsan_turn" ? parsed.maintenance_result : parsed;
+    if (!value) return result;
+    const reviewed = await finishReview(deps, maintenance.card_id, value);
+    return { ...result, content: [{ type: "text", text: JSON.stringify(request.name === "litsan_turn" ? { ...parsed, maintenance_result: reviewed } : reviewed) }] };
+  };
   const call = async (action, args = {}) => {
+    if (action === "submit") {
+      const card = (await readMaintenanceStore(stateRoot, "acct")).cards.find(c => c.card_id === args.card_id);
+      args = { ...args, answer: withFacts(card, args.answer) };
+    }
     const result = await client.callTool({ name: "litsan_card", arguments: { action, client_profile: delegate, ...args } });
     const text = result.content.map(c => c.text ?? "").join("");
     assert.equal(result.isError, undefined, text); return JSON.parse(text);
   };
-  return { ...deps, deps, call, client, writes, mapWrites, get architectureLoads() { return architectureLoads; }, get visualizationReads() { return visualizationReads; }, get map() { return map; }, set map(value) { map = value; }, fail: () => { failCore = 1; }, race: () => { race = true; } };
+  return { ...deps, deps, call, client, writes, mapWrites, set autoReview(value) { autoReview = value; }, get architectureLoads() { return architectureLoads; }, get visualizationReads() { return visualizationReads; }, get map() { return map; }, set map(value) { map = value; }, fail: () => { failCore = 1; }, race: () => { race = true; } };
 }
 async function seedTimeline(f, content = "# Timeline\n\n## 2026-10-19: Earlier history\n\nKeep earlier timeline intact.") {
   return recordCompletedDistillationRevision({ stateRoot: f.stateRoot, accountId: "acct", target: "l2", projectId: "alpha", resultId: "timeline-alpha", content,
@@ -276,7 +298,7 @@ test("maintenance containment, expiry/reclaim, release, inline cap and account f
   assert.equal((await submitCard({ ...f.deps, cardId: old.card_id, leaseToken: old.lease_token, answer: answer(old), now: now + 30002 })).code, "lease_token_stale");
   const logs = await readMaintenanceLog(f.stateRoot, "acct"); for (const outcome of ["leased", "rejected", "released", "expired"]) assert.ok(logs.some(e => e.outcome === outcome));
 });
-test("maintenance accepted partials lock legacy workers; three answer rejects abort", async t => {
+test("maintenance accepted partials lock legacy workers; three answer rejects retain a visible quality block", async t => {
   const g = await fixture(t, [job("partial", 9000)]); await ensureCards(g.deps);
   let card = (await g.call("next")).card;
   assert.equal((await g.call("submit", { card_id: card.card_id, lease_token: card.lease_token, answer: answer(card) })).ok, true);
@@ -286,8 +308,8 @@ test("maintenance accepted partials lock legacy workers; three answer rejects ab
     if (i) card = (await g.call("next", { card_id: card.card_id })).card;
     assert.equal((await g.call("submit", { card_id: card.card_id, lease_token: card.lease_token, answer: { events: [] } })).code, "schema_invalid");
   }
-  const store = await readMaintenanceStore(g.stateRoot, "acct"); assert.equal(store.sets[0].status, "aborted"); assert.ok(store.cards.every(c => c.status === "superseded"));
-  const parent = (await listDistillationJobs(g.stateRoot, "acct"))[0]; assert.equal(parent.maintenance_background_only, true); assert.equal(parent.split_card_set, undefined); assert.equal(parent.maintenance_split_locked, undefined);
+  const store = await readMaintenanceStore(g.stateRoot, "acct"); assert.equal(store.sets[0].status, "open"); assert.ok(store.sets[0].quality_blocked); assert.ok(store.cards.some(c => c.status === "accepted"));
+  const parent = (await listDistillationJobs(g.stateRoot, "acct"))[0]; assert.equal(parent.maintenance_background_only, undefined); assert.ok(parent.split_card_set); assert.equal(parent.maintenance_split_locked, true);
 });
 test("maintenance merge retries without double commit, skip-all uses noop path", async t => {
   const f = await fixture(t, [job("retry", 100, 1)]); await seedTimeline(f); f.fail();
@@ -298,8 +320,8 @@ test("maintenance merge retries without double commit, skip-all uses noop path",
   assert.match(result.merge_error, /temporary/); assert.equal(result.set_status, "open");
   let logs = await readMaintenanceLog(f.stateRoot, "acct");
   assert.equal(logs.filter(e => e.outcome === "merge_failed").length, 1);
-  assert.equal(logs.filter(e => e.outcome === "accepted").length, 1);
-  assert.equal((await queueStatus({ ...f.deps, dry: true })).kinds.l2_chunk.accepted_today, 1);
+  assert.equal(logs.filter(e => e.outcome === "accepted").length, 2);
+  assert.equal((await queueStatus({ ...f.deps, dry: true })).kinds.l2_chunk.accepted_today, 2);
   await ensureCards(f.deps); await ensureCards(f.deps);
   assert.equal((await readMaintenanceStore(f.stateRoot, "acct")).sets[0].status, "merged"); assert.equal(f.writes.length, 1);
   const g = await fixture(t, [job("noop", 100, 1)]); const empty = (await g.call("next")).card;
@@ -477,15 +499,15 @@ for (const action of ["inline_claim", "next"]) test(`lazy inline claim honors di
   assert.equal((await call()).card, null);
   assert.equal((await readMaintenanceStore(f.stateRoot, "acct")).cards.filter(c => c.status === "leased").length, 0);
 });
-test("hydrated inline claim releases evidence that exceeds the turn budget", async t => {
+test("hydrated inline claim trims oversized dedup hints without truncating evidence", async t => {
   const f = await fixture(t, [job("hydrated-overflow", 200, 1)]);
   await seedTimeline(f, "# Timeline\n\n## 2026-10-22: " + "oversized heading ".repeat(2000));
   await setMaintenanceConfig(f.stateRoot, { conversation_maintenance: "quiet" });
   const opened = await turnCall(f, "open", { project: "alpha", user_text: "Question", inline_maintenance: false });
   const response = await f.client.callTool({ name: "litsan_card", arguments: { action: "next", inline_turn_event: opened.event_id } });
   const result = JSON.parse(response.content[0].text);
-  assert.equal(result.ok, false); assert.equal(result.code, "card_too_large");
-  assert.equal((await readMaintenanceStore(f.stateRoot, "acct")).cards.filter(c => c.status === "leased").length, 0);
+  assert.equal(result.ok, true); assert.ok(result.card.est_tokens <= 3000); assert.deepEqual(result.card.input.items, job("hydrated-overflow", 200, 1).evidence);
+  assert.equal((await readMaintenanceStore(f.stateRoot, "acct")).cards.filter(c => c.status === "leased").length, 1);
 });
 test("skipped and expired in-turn cards back off without blocking explicit workers", async t => {
   const f = await fixture(t, [job("inline-backoff", 200, 1)]);
@@ -600,8 +622,9 @@ test("in-turn load checks the budget after adding recent timeline context", asyn
     assert.ok(card && card.est_tokens <= 2000);
     const loaded = JSON.parse((await f.client.callTool({ name: "litsan_card", arguments: { action: "inline_load", project: "alpha",
       card_id: card.card_id, lease_token: card.lease_token, inline_turn_event: opened.event_id } })).content[0].text);
-    if (oversized) assert.deepEqual(loaded, { ok: false, code: "card_too_large" });
-    else { assert.equal(loaded.ok, true); assert.ok(loaded.card.est_tokens <= 2000); }
+    assert.equal(loaded.ok, true); assert.ok(loaded.card.est_tokens <= 2000);
+    assert.deepEqual(loaded.card.input.items, job(`in-turn-context-${oversized}`, 200, 1).evidence);
+    if (oversized) assert.deepEqual(loaded.card.input.base_recent, []);
     await turnCall(f, "commit", { event_id: opened.event_id, project: "alpha", assistant_text: "Normal answer." });
     assert.equal((await readMaintenanceStore(f.stateRoot, "acct")).cards.find(c => c.card_id === card.card_id).status, "pending");
     assert.equal(f.writes.length, 0);
@@ -630,6 +653,7 @@ test("new in-turn L2 jobs split to the client budget and merge every source in o
     assert.ok(loaded.card.est_tokens <= 2000);
     const output = answer(loaded.card, index);
     output.events[0].evidence_refs = loaded.card.allowed_refs;
+    output.events[0].body_en = "Atomic fact: " + output.events[0].body_en + " | Evidence: " + loaded.card.allowed_refs.join(", ");
     const committed = await turnCall(f, "commit", { event_id: opened.event_id, conversation_id: "adaptive", project: "alpha",
       assistant_text: "Normal answer.", maintenance_answer: { card_id: offered.card_id, lease_token: offered.lease_token, answer: output } });
     assert.equal(committed.maintenance_result.ok, true);
@@ -698,6 +722,7 @@ test("in-turn replan preserves coalesced parents and merges all evidence once", 
       card_id: card.card_id, lease_token: card.lease_token, inline_turn_event: turn.event_id } })).content[0].text);
     assert.equal(loaded.ok, true); assert.ok(loaded.card.est_tokens <= 3000);
     const output = answer(loaded.card, index); output.events[0].evidence_refs = loaded.card.allowed_refs;
+    output.events[0].body_en = "Atomic fact: " + output.events[0].body_en + " | Evidence: " + loaded.card.allowed_refs.join(", ");
     const result = await turnCall(f, "commit", { event_id: turn.event_id, project: "alpha", assistant_text: "Normal answer.",
       maintenance_answer: { card_id: card.card_id, lease_token: card.lease_token, answer: output } });
     assert.equal(result.maintenance_result.ok, true);
@@ -731,7 +756,8 @@ test("in-turn replan leaves active, released and partially accepted sets intact"
   assert.equal((await g.call("submit", { card_id: first.card_id, lease_token: first.lease_token, answer: answer(first) })).ok, true);
   const started = await turnCall(g, "open", { project: "alpha", user_text: "Continue", inline_maintenance: true });
   const partialAfter = await readMaintenanceStore(g.stateRoot, "acct");
-  assert.deepEqual(partialAfter.sets[0].card_ids, partialBefore.sets[0].card_ids);
+  assert.deepEqual(partialAfter.sets[0].card_ids.slice(1), partialBefore.sets[0].card_ids.slice(1));
+  assert.equal(partialAfter.cards.find(c => c.card_id === partialAfter.sets[0].card_ids[0]).input.stage, "review");
   assert.equal(partialAfter.cards.find(c => c.card_id === first.card_id).status, "accepted");
   await turnCall(g, "commit", { event_id: started.event_id, project: "alpha", assistant_text: "Normal answer." });
   assert.equal(g.writes.length, 0);
@@ -781,7 +807,7 @@ test("budget-aware in-turn chunks stay within their workstream branch", async t 
   assert.equal((await readMaintenanceStore(f.stateRoot, "acct")).cards.find(c => c.card_id === card.card_id).status, "pending");
   assert.equal(f.writes.length, 0);
 });
-test("in-turn L2 card shares the user turn and commits once without another model task", async t => {
+test("in-turn L2 card shares the user turn and commits once after a separate review task", async t => {
   const f = await fixture(t, [job("in-turn", 200, 1)]); await seedTimeline(f);
   await setMaintenanceConfig(f.stateRoot, { conversation_maintenance: "quiet" });
   await ensureCards(f.deps);
@@ -802,7 +828,7 @@ test("in-turn L2 card shares the user turn and commits once without another mode
   const replayCommit = await turnCall(f, "commit", finish);
   assert.equal(replayCommit.maintenance_result.ok, true);
   assert.equal(replayCommit.maintenance_result.already_accepted, true);
-  assert.equal((await readMaintenanceStore(f.stateRoot, "acct")).cards.filter(c => c.kind === "l2_chunk" && c.status === "accepted").length, 1);
+  assert.equal((await readMaintenanceStore(f.stateRoot, "acct")).cards.filter(c => c.kind === "l2_chunk" && c.status === "accepted").length, 2);
   assert.equal(f.writes.length, 1);
 });
 test("in-turn invalid evidence cannot block the conversation or write memory", async t => {
@@ -944,7 +970,7 @@ test("in-turn Codex hook carries one model result through the real card and turn
       assert.equal(r.isError, undefined, JSON.stringify(r)); return JSON.parse(r.content.map(c => c.text ?? "").join("")); } };
   await codexInlineHook("UserPromptSubmit", { session_id: "s", turn_id: "t", cwd: "/test", prompt: "A user question" }, recorder);
   const context = JSON.parse(stdout).hookSpecificOutput.additionalContext;
-  assert.match(context, /Before the main user task/);
+  assert.match(context, /For each ordinary user turn/);
   assert.match(context, /submit the evidence-bound answer immediately/);
   const route = JSON.parse(context.match(/litsan card --json-args '([^']+)'/)[1]);
   const tool = async args => { const r = await f.client.callTool({ name: "litsan_card", arguments: args });
@@ -995,7 +1021,7 @@ test("Claude hook exposes its leased card for immediate submit before the user t
       assert.equal(r.isError, undefined, JSON.stringify(r)); return JSON.parse(r.content.map(c => c.text ?? "").join("")); } };
   await claudeHook("UserPromptSubmit", { session_id: "claude-test", cwd: "/test", prompt: "A user question", transcript_path: transcript }, recorder);
   const context = JSON.parse(stdout).hookSpecificOutput.additionalContext;
-  assert.match(context, /Before the main user task/);
+  assert.match(context, /For each ordinary user turn/);
   const route = JSON.parse(context.match(/litsan card --json-args '([^']+)'/)[1]);
   const tool = async args => { const r = await f.client.callTool({ name: "litsan_card", arguments: args });
     assert.equal(r.isError, undefined, JSON.stringify(r)); return JSON.parse(r.content.map(c => c.text ?? "").join("")); };
@@ -1615,7 +1641,7 @@ test("maintenance branch set merge calls completeBranchJobWithEvents and never C
   assert.equal(branchJobCall.leaseOwner, "memhub-card-merge");
   assert.ok(branchJobCall.leaseToken);
   assert.equal(branchJobCall.events.length, 3);
-  assert.deepEqual(branchJobCall.cardIds, branchCards.map(c => c.card_id));
+  assert.deepEqual(branchJobCall.cardIds, (await readMaintenanceStore(f.stateRoot, "acct")).sets.find(s => s.parent_job_id === branchCards[0].parent_job_id).card_ids);
   assert.equal(f.writes.length, 0, "branch set merge must never call Core memory.distill");
 
   const storeAfter = await readMaintenanceStore(f.stateRoot, "acct");
@@ -1868,5 +1894,85 @@ test("timeline cards carry earlier sources across batches without losing their e
   const visual = await readMemoryControlData({ ...f.deps, projects: await f.runtime.projects.list("acct"), projectId: "alpha", kind: "visualization" });
   assert.equal(visual.state.timeline_digest.milestones.length, 1);
   assert.deepEqual(visual.state.timeline_digest.milestones[0].source_ids, combined.milestones[0].source_ids);
+  assert.equal(f.writes.length, 0);
+});
+
+const queueProfile = { execution: 'inline', max_card_tokens: 3000 };
+async function queueTurn(t, id = 'queue-driven', count = 10) {
+  const f = await fixture(t, [job(id, 600, count)]); f.autoReview = false;
+  await setMaintenanceConfig(f.stateRoot, { conversation_maintenance: 'quiet', daily_card_cap: 20, daily_est_token_cap: 60000 });
+  const opened = await turnCall(f, 'open', { project: 'alpha', user_text: 'User request', inline_maintenance: false });
+  return { f, opened, args: { project: 'alpha', inline_turn_event: opened.event_id, client_profile: queueProfile } };
+}
+test('queue-driven first card ignores AI busy, zero capacity and zero cards reports', async t => {
+  for (const report of [{}, { availability: 'busy' }, { cards_per_turn: 0 }, { available_tokens: 0 }]) {
+    const { f, args } = await queueTurn(t);
+    const result = await f.call('next', { ...args, client_profile: { ...queueProfile, ...report } });
+    assert.ok(result.card); assert.equal(result.dispatch.issued, 1); assert.equal(result.dispatch.availability, undefined);
+  }
+});
+test('queue-driven submissions auto-continue up to three without availability, retries do not allocate twice', async t => {
+  const { f, args } = await queueTurn(t);
+  let result = await f.call('next', args), card = result.card, used = 0;
+  const seen = new Set();
+  for (let i = 0; i < 3 && card; i++) {
+    assert.ok(card, JSON.stringify(result)); assert.ok(card.input); assert.ok(!seen.has(card.card_id)); seen.add(card.card_id); used += card.est_tokens;
+    const request = { ...args, client_profile: { ...queueProfile, availability: 'busy', available_tokens: 0, cards_per_turn: 0 }, card_id: card.card_id, lease_token: card.lease_token, answer: answer(card) };
+    result = await f.call('submit', request); assert.equal(result.ok, true, JSON.stringify(result));
+    const retry = await f.call('submit', request); assert.equal(retry.already_accepted, true); assert.equal(retry.inline_maintenance, undefined);
+    card = result.inline_maintenance;
+  }
+  assert.equal(card, undefined); assert.ok(['turn_cap','token_budget'].includes(result.dispatch.reason)); assert.equal(result.dispatch.issued, seen.size); assert.ok(seen.size >= 2 && seen.size <= 3);
+  assert.ok(used <= 6000); assert.equal(result.dispatch.used_tokens, used);
+  assert.equal((await f.call('next', args)).card, null);
+  assert.equal((await readMaintenanceOfferState(f.stateRoot, 'acct', Date.now())).cards_offered, seen.size);
+});
+test('queue-driven first card survives exhausted daily quotas and long user prompt; extras still stop', async t => {
+  const { f } = await queueTurn(t);
+  await setMaintenanceConfig(f.stateRoot, { daily_card_cap: 1, daily_est_token_cap: 1000 });
+  await withMaintenanceOfferState(f.stateRoot, 'acct', Date.now(), state => { state.cards_offered = 1; state.est_tokens_offered = 1000; });
+  const opened = await turnCall(f, 'open', { project: 'alpha', user_text: 'x'.repeat(13000), client_profile: { ...queueProfile, availability: 'busy', available_tokens: 0, cards_per_turn: 0 } });
+  assert.ok(opened.inline_maintenance);
+  const args = { project: 'alpha', inline_turn_event: opened.event_id, client_profile: queueProfile };
+  const loaded = await f.call('inline_load', { ...args, card_id: opened.inline_maintenance.card_id, lease_token: opened.inline_maintenance.lease_token });
+  assert.ok(loaded.card);
+  const result = await f.call('submit', { ...args, card_id: loaded.card.card_id, lease_token: loaded.card.lease_token, answer: answer(loaded.card) });
+  assert.equal(result.ok, true); assert.equal(result.inline_maintenance, undefined); assert.equal(result.dispatch.reason, 'daily_cap');
+});
+test('queue-driven concurrent claims resume one lease; skipped card is retried on the next turn', async t => {
+  const { f, args, opened } = await queueTurn(t);
+  assert.equal((await f.call('next', { ...args, project: 'beta' })).code, 'wrong_project');
+  const [first, retry] = await Promise.all([f.call('next', args), f.call('next', args)]);
+  assert.equal(retry.card.card_id, first.card.card_id); assert.equal(retry.card.lease_token, first.card.lease_token);
+  assert.equal((await readMaintenanceOfferState(f.stateRoot, 'acct', Date.now())).cards_offered, 1);
+  await turnCall(f, 'commit', { event_id: opened.event_id, assistant_text: 'Normal answer', inline_maintenance: false });
+  const nextTurn = await turnCall(f, 'open', { project: 'alpha', user_text: 'Next user request', inline_maintenance: false });
+  const next = await f.call('next', { ...args, inline_turn_event: nextTurn.event_id });
+  assert.equal(next.card.card_id, first.card.card_id); assert.notEqual(next.card.lease_token, first.card.lease_token);
+});
+test('queue-driven empty queue gives zero and does not spend quota', async t => {
+  const f = await fixture(t); await setMaintenanceConfig(f.stateRoot, { conversation_maintenance: 'quiet' });
+  const opened = await turnCall(f, 'open', { project: 'alpha', user_text: 'Question', inline_maintenance: false });
+  const result = await f.call('next', { project: 'alpha', inline_turn_event: opened.event_id });
+  assert.equal(result.card, null); assert.equal(result.dispatch.reason, 'no_card'); assert.equal(result.dispatch.limit, 0);
+  assert.equal((await readMaintenanceOfferState(f.stateRoot, 'acct', Date.now())).cards_offered, 0);
+});
+test('queue-driven rejection stops the same turn and scoped Console reports it', async t => {
+  const { f, args } = await queueTurn(t);
+  const first = await f.call('next', args);
+  const result = await f.call('submit', { ...args, card_id: first.card.card_id, lease_token: first.card.lease_token, answer: {} });
+  assert.equal(result.ok, false); assert.equal((await f.call('next', args)).dispatch.reason, 'backoff');
+  const read = projectId => readMemoryControlData({ stateRoot: f.stateRoot, runtime: f.runtime, kind: 'processing', projectId });
+  assert.equal((await read('alpha')).maintenance.dispatches[0].reason, 'backoff');assert.deepEqual((await read('beta')).maintenance.dispatches, []);
+});
+test('review continuation keeps admitted evidence available when unrelated map loading fails', async t => {
+  const { f, args } = await queueTurn(t, 'load-failure');
+  const first = await f.call('next', args); assert.ok(first.card);
+  f.runtime.architecture.inspectProjectCognitiveMap = async () => { throw Error('test context source unavailable'); };
+  const result = await f.call('submit', { ...args, card_id: first.card.card_id, lease_token: first.card.lease_token, answer: answer(first.card) });
+  assert.equal(result.ok, true); assert.equal(result.inline_maintenance.input.stage, 'review');
+  assert.deepEqual(result.inline_maintenance.input.items, first.card.input.items);
+  const store = await readMaintenanceStore(f.stateRoot, 'acct');
+  assert.equal(store.cards.find(c => c.card_id === first.card.card_id).status, 'accepted');
   assert.equal(f.writes.length, 0);
 });

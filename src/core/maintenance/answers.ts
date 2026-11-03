@@ -1,4 +1,5 @@
 import { ARCHITECTURE_NODE_KINDS } from "../architecture/node-kinds.js";
+import { validateFactCoverage } from "./quality.js";
 import type { MaintenanceCard, L2ChunkInput, ArchLinkInput, L2ChunkAnswer, ArchLinkAnswer, GapCheckAnswer, CardValidationResult, MaintenanceRejectCode } from "../../contracts/maintenance.js";
 const fail = (code: MaintenanceRejectCode, detail: string): CardValidationResult => ({ ok: false, code, detail });
 const record = (v: unknown): v is Record<string, unknown> => Boolean(v) && typeof v === "object" && !Array.isArray(v);
@@ -17,7 +18,7 @@ function inlineEvidenceRefs(body: string): string[] {
 }
 export function validateL2ChunkAnswer(card: MaintenanceCard, answer: unknown): CardValidationResult {
   if (!record(answer)) return fail("schema_invalid", "answer must be an object");
-  if (!keys(answer, ["events", "skip_reason"]) || !Array.isArray(answer.events) || answer.events.length > 3 ||
+  if (!keys(answer, ["events", "skip_reason", ...((card.input as L2ChunkInput)?.quality ? ["facts"] : [])]) || !Array.isArray(answer.events) || answer.events.length > 3 ||
     (answer.skip_reason !== undefined && !text(answer.skip_reason, 300)) || (!answer.events.length && !text(answer.skip_reason, 300))) return fail("schema_invalid", "expected 0-3 events, or events:[] with skip_reason");
   for (const event of answer.events) {
     if (!record(event) || !keys(event, ["date", "title_en", "title_zh", "body_en", "body_zh", "evidence_refs", "continues"])) return fail("schema_invalid", "unknown event fields");
@@ -35,9 +36,18 @@ export function validateL2ChunkAnswer(card: MaintenanceCard, answer: unknown): C
       !(card.input as L2ChunkInput | undefined)?.prior_events?.some(prior => prior.key === event.continues))) return fail("schema_invalid", "continues must name a prior_events key");
     if (event.evidence_refs.some(r => !card.allowed_refs.includes(r))) return fail("ref_not_allowed", "event ref outside allowed_refs");
     const eventRefs = event.evidence_refs;
+    if (eventRefs.length > 1) {
+      const facts = (event.body_en as string).split(/\r?\n/u).filter(line => line.trim());
+      if (facts.some(line => !/^Atomic fact:/u.test(line.trim()) || !inlineEvidenceRefs(line).length))
+        return fail("schema_invalid", "multi-source events require an Atomic fact: line and supporting | Evidence: refs for each claim");
+    }
     if ([event.body_en as string, event.body_zh as string].flatMap(inlineEvidenceRefs).some(r => !eventRefs.includes(r))) {
       return fail("ref_not_allowed", "inline fact ref outside event evidence_refs");
     }
+  }
+  if ((card.input as L2ChunkInput)?.quality) {
+    const error = validateFactCoverage(card, answer as unknown as L2ChunkAnswer);
+    if (error) return fail("schema_invalid", error);
   }
   return { ok: true, normalized: structuredClone(answer) as unknown as L2ChunkAnswer };
 }

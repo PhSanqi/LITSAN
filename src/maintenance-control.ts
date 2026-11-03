@@ -21,14 +21,18 @@ import { timelineLinkDate } from "./archify/memory-visualization.js";
 import type { ProjectArchitectureSource } from "./architecture-source.js";
 import { normalizeClientProfile } from "./core/maintenance/profile.js";
 import { planL2Chunks, L2_INSTRUCTIONS } from "./core/maintenance/chunk.js";
+import { maintenanceBacklog } from "./core/maintenance/backlog.js";
 import { cardEstTokens } from "./core/maintenance/estimate.js";
 import { structureFingerprint, chunkFingerprint, gapCheckFingerprint } from "./core/maintenance/structure-fingerprint.js";
 import { maintenanceGenerators } from "./core/maintenance/registry.js";
 import { currentTimelineBatchHash, TIMELINE_DIGEST_KEY } from "./core/maintenance/timeline-digest.js";
+import { inlineDispatchBudget } from "./core/maintenance/dispatch.js";
 import { decideOffer } from "./core/maintenance/offer-policy.js";
 import { validateCardAnswer } from "./core/maintenance/validate.js";
 import { completeBranchJobWithEvents } from "./branch-drafts.js";
 import { mergeChunkEvents, normalizeL2EventKey, datedL2Headings } from "./core/maintenance/merge-l2.js";
+import { QUALITY_INSTRUCTIONS, REVIEW_INSTRUCTIONS, qualitySchema } from "./core/maintenance/quality.js";
+import { L2_CHUNK_ANSWER_SCHEMA } from "./core/maintenance/answers.js";
 
 export interface MaintenanceDeps { stateRoot: string; readVisualization?: typeof readMemoryControlData; completeBranchJob?: typeof completeBranchJobWithEvents; runtime: DistillationSubmitDeps & { architecture: DistillationSubmitDeps["architecture"] & Pick<ProjectArchitectureSource, "listProjectArchitectureMarkdown" | "getProjectCodeCitations">; memoryClient: DistillationSubmitDeps["memoryClient"] & TurnSessionWriter } }
 interface ClockInput { now?: number }
@@ -96,8 +100,9 @@ async function finishCoalesced(deps: MaintenanceDeps, store: MaintenanceStore, s
 }
 
 async function mergeSet(deps: MaintenanceDeps, store: MaintenanceStore, set: MaintenanceCardSet, now: number, log: Log, checkpoint: () => Promise<void>): Promise<string | undefined> {
+  scheduleQuality(store, set, now);
   const cards = set.card_ids.map(id => store.cards.find(c => c.card_id === id));
-  if (set.status !== "open" || !cards.length || cards.some(c => c?.status !== "accepted")) return;
+  if (set.status !== "open" || set.quality_blocked || !cards.length || cards.some(c => c?.status !== "accepted")) return;
   try {
     let parent = (await listDistillationJobs(deps.stateRoot, deps.runtime.accountId)).find(j => j.job_id === set.parent_job_id);
     if (!parent) throw new Error("merge parent unavailable");
@@ -193,6 +198,48 @@ async function mergeSet(deps: MaintenanceDeps, store: MaintenanceStore, set: Mai
   }
 }
 
+// Replacement cards retain immutable accepted candidates; only reviewed leaves enter the merge.
+function scheduleQuality(store: MaintenanceStore, set: MaintenanceCardSet, now: number): void {
+  if (set.status !== "open" || set.quality_blocked) return;
+  for (const id of [...set.card_ids]) {
+    const source = store.cards.find(c => c.card_id === id);
+    if (!source || source.status !== "accepted" || source.quality_next_card_id) continue;
+    const input = source.input as L2ChunkInput, answer = source.result as L2ChunkAnswer;
+    if (!answer || !Array.isArray(answer.events)) {
+      set.quality_blocked = "Accepted card is missing its saved candidate; original evidence retained for inspection.";
+      markMaintenanceDirty(store); return;
+    }
+    const review = input.stage !== "review";
+    const deferred = answer.facts?.filter(f => f.disposition === "deferred") ?? [];
+    if (!review && !deferred.length) continue;
+    if (!review && (input.continuation ?? 0) >= 3) {
+      set.quality_blocked = "Fact overflow remains after 3 continuations; original evidence and candidates retained for review.";
+      markMaintenanceDirty(store); return;
+    }
+    const nextInput: L2ChunkInput = { items: structuredClone(input.items), quality: "facts-v1", stage: review ? "review" : "extract",
+      ...(input.context_items ? { context_items: structuredClone(input.context_items) } : {}),
+      continuation: (input.continuation ?? 0) + (review ? 0 : 1),
+      ...(review ? { candidate: structuredClone(answer), required_facts: input.required_facts, completed_facts: input.completed_facts } : {
+        required_facts: structuredClone(deferred), completed_facts: [...input.completed_facts ?? [], ...answer.facts?.filter(f => f.disposition === "kept") ?? []] }) };
+    const next = makeCard({ key: `${source.key}:${review ? "review" : "continue"}`, kind: "l2_chunk", account_id: source.account_id,
+      project_id: source.project_id, branch_id: source.branch_id, parent_job_id: source.parent_job_id,
+      chunk: { index: source.chunk!.index + (review ? 0 : 1), of: source.chunk!.of + (review ? 0 : 1) },
+      fingerprint: source.fingerprint, allowed_refs: source.allowed_refs.slice(), input: nextInput,
+      instructions: review ? REVIEW_INSTRUCTIONS : QUALITY_INSTRUCTIONS, answer_schema: qualitySchema(L2_CHUNK_ANSWER_SCHEMA) }, now);
+    markMaintenanceDirty(store); source.quality_next_card_id = next.card_id;
+    if (review) set.card_ids[set.card_ids.indexOf(id)] = next.card_id;
+    else {
+      for (const c of store.cards.filter(c => set.card_ids.includes(c.card_id))) {
+        if (c.chunk!.index > source.chunk!.index) c.chunk!.index++;
+        c.chunk!.of++;
+      }
+      set.card_ids.splice(set.card_ids.indexOf(id) + 1, 0, next.card_id);
+    }
+    store.cards.push(next);
+    if (next.est_tokens > 8000) set.quality_blocked = "Quality follow-up exceeds 8000 input tokens; evidence retained, not silently merged.";
+  }
+}
+
 function artifactSnapshot(store: MaintenanceStore, projectId: string) {
   const snapshot = new Map(Object.entries(store.artifacts ?? {}).flatMap(([key, value]) => {
     const [project, name] = JSON.parse(key) as [string, string];
@@ -240,6 +287,7 @@ async function generateLocked(deps: MaintenanceDeps, store: MaintenanceStore, lo
     supersede(card, now, log, store);
   const initialOpen = new Set(store.sets.filter(s => s.status === "open").map(s => s.set_id));
   for (const set of store.sets.filter(s => s.status === "open" && (!projectId || s.project_id === projectId))) {
+    scheduleQuality(store, set, now);
     if (set.card_ids.length && set.card_ids.every(id => store.cards.find(c => c.card_id === id)?.status === "accepted")) {
       await outsideDistillationJobsBatch(deps.stateRoot, () => mergeSet(deps, store, set, now, log, checkpoint));
     }
@@ -397,10 +445,15 @@ export async function ensureCards(input: MaintenanceDeps & ClockInput & { projec
   const now = input.now ?? Date.now();
   await withMaintenanceStore(input.stateRoot, input.runtime.accountId, now, (store, log, checkpoint) => ensureLocked(input, store, log, checkpoint, input.projectId, now));
 }
-async function summary(deps: { stateRoot: string; runtime: { accountId: string } }, store: MaintenanceStore, projectId: string | undefined, now: number) {
-  const cards = store.cards.filter(c => !projectId || c.project_id === projectId), sets = store.sets.filter(s => !projectId || s.project_id === projectId);
+async function summary(deps: { stateRoot: string; runtime: { accountId: string } }, store: MaintenanceStore, projectId: string | undefined, now: number, detailed = false) {
+  const scopedCards = store.cards.filter(c => !projectId || c.project_id === projectId);
+  const sets = store.sets.filter(s => !projectId || s.project_id === projectId);
+  const jobs = (await readDistillationJobsSnapshot(deps.stateRoot, deps.runtime.accountId)).filter(j => !projectId || j.project_id === projectId);
+  const allLogs = (await readMaintenanceLog(deps.stateRoot, deps.runtime.accountId)).filter(e => !projectId || e.project === projectId);
+  const backlog = maintenanceBacklog(scopedCards, sets, jobs, allLogs, now);
+  const cards = backlog.active_cards;
   const day = new Date(now).toISOString().slice(0, 10);
-  const logs = (await readMaintenanceLog(deps.stateRoot, deps.runtime.accountId)).filter(e => e.ts.startsWith(day) && (!projectId || e.project === projectId));
+  const logs = allLogs.filter(e => e.ts.startsWith(day));
   const kinds = Object.fromEntries((["l2_chunk", "arch_link", "gap_check", "arch_review", "timeline_digest"] as const).map(kind => [kind, {
     pending: cards.filter(c => c.kind === kind && (c.status === "pending" || (c.status === "leased" && Date.parse(c.lease!.until) <= now))).length,
     ...(cards.some(c => c.kind === kind && c.status === "pending" && c.inline_retry_after && Date.parse(c.inline_retry_after) > now)
@@ -412,23 +465,23 @@ async function summary(deps: { stateRoot: string; runtime: { accountId: string }
   }]));
   const pending = cards.filter(c => c.status === "pending" || (c.status === "leased" && Date.parse(c.lease!.until) <= now));
   const branchSetsOpen = sets.filter(s => s.status === "open" && Boolean(s.branch_id)).length;
-  return { kinds, oldest_pending_age_h: pending.length ? Math.round(Math.max(0, now - Math.min(...pending.map(c => Date.parse(c.created_at)))) / 36000) / 100 : 0,
-    split_jobs: { open: sets.filter(s => s.status === "open").length, merged_today: sets.filter(s => s.status === "merged" && s.merged_at?.startsWith(day)).length, aborted: sets.filter(s => s.status === "aborted").length },
+  return { account_id: deps.runtime.accountId, project_id: projectId ?? null, kinds, ...(detailed ? { l2_backlog: backlog.summary } : {}), oldest_pending_age_h: pending.length ? Math.round(Math.max(0, now - Math.min(...pending.map(c => Date.parse(c.created_at)))) / 36000) / 100 : 0,
+    split_jobs: { open: sets.filter(s => s.status === "open" && parentIds(s).every(id => jobs.some(j => j.job_id === id && ["pending", "leased"].includes(j.status)))).length, merged_today: sets.filter(s => s.status === "merged" && s.merged_at?.startsWith(day)).length, aborted: sets.filter(s => s.status === "aborted").length },
     ...(branchSetsOpen > 0 ? { branch_sets_open: branchSetsOpen } : {}),
-    background_only_jobs: (await readDistillationJobsSnapshot(deps.stateRoot, deps.runtime.accountId)).filter(j => j.status === "pending" && j.maintenance_background_only && (!projectId || j.project_id === projectId)).length,
+    background_only_jobs: jobs.filter(j => j.status === "pending" && j.maintenance_background_only && (!projectId || j.project_id === projectId)).length,
     est_tokens_today: logs.filter(e => e.outcome === "accepted").reduce((sum, e) => sum + e.est_tokens, 0) };
 }
-export function queueStatus(input: { stateRoot: string; runtime: { accountId: string }; now?: number; projectId?: string; dry: true }): ReturnType<typeof summary>;
-export function queueStatus(input: MaintenanceDeps & ClockInput & { projectId?: string; dry?: boolean }): ReturnType<typeof summary>;
-export async function queueStatus(input: { stateRoot: string; runtime: { accountId: string }; now?: number; projectId?: string; dry?: boolean }) {
+export function queueStatus(input: { stateRoot: string; runtime: { accountId: string }; now?: number; projectId?: string; detailed?: boolean; dry: true }): ReturnType<typeof summary>;
+export function queueStatus(input: MaintenanceDeps & ClockInput & { projectId?: string; detailed?: boolean; dry?: boolean }): ReturnType<typeof summary>;
+export async function queueStatus(input: { stateRoot: string; runtime: { accountId: string }; now?: number; projectId?: string; detailed?: boolean; dry?: boolean }) {
   const now = input.now ?? Date.now();
   if (!input.dry) await ensureCards({ ...input, now } as MaintenanceDeps & ClockInput);
-  return summary(input, await readMaintenanceStore(input.stateRoot, input.runtime.accountId), input.projectId, now);
+  return summary(input, await readMaintenanceStore(input.stateRoot, input.runtime.accountId), input.projectId, now, input.detailed);
 }
 function sequentialReady(store: MaintenanceStore, card: MaintenanceCard): boolean {
-  if (card.kind !== "l2_chunk" || !card.chunk?.index) return true;
+  if (card.kind !== "l2_chunk") return true;
   const set = store.sets.find(s => s.status === "open" && s.card_ids.includes(card.card_id));
-  return Boolean(set && store.cards.some(c => set.card_ids.includes(c.card_id) && c.chunk?.index === card.chunk!.index - 1 && c.status === "accepted"));
+  return Boolean(set && !set.quality_blocked && (!card.chunk?.index || store.cards.some(c => set.card_ids.includes(c.card_id) && c.chunk?.index === card.chunk!.index - 1 && c.status === "accepted")));
 }
 function priorEvents(store: MaintenanceStore, card: MaintenanceCard): NonNullable<L2ChunkInput["prior_events"]> {
   const set = store.sets.find(s => s.card_ids.includes(card.card_id));
@@ -438,9 +491,17 @@ function priorEvents(store: MaintenanceStore, card: MaintenanceCard): NonNullabl
 }
 async function leaseInput(deps: MaintenanceDeps, store: MaintenanceStore, card: MaintenanceCard): Promise<MaintenanceCard["input"]> {
   if (card.kind !== "l2_chunk") return card.input;
+  if ((card.input as L2ChunkInput).stage === "review") return card.input;
   const model = await buildProjectModel(deps.runtime, { stateRoot: deps.stateRoot, projectId: card.project_id, l2: [], todos: [] });
   const latest = [...model.revisions].sort((a, b) => cmp(a.committed_at, b.committed_at) || cmp(a.ref.split(":").at(-1)!, b.ref.split(":").at(-1)!)).at(-1);
-  return { ...card.input, prior_events: priorEvents(store, card), base_recent: datedL2Headings(latest?.content ?? "").slice(-5) };
+  const result: L2ChunkInput = { ...card.input as L2ChunkInput, prior_events: priorEvents(store, card), base_recent: datedL2Headings(latest?.content ?? "").slice(-5) };
+  const cap = card.lease?.inline_token_budget;
+  // Dedup hints may shrink; source evidence must never be truncated to fit a lease.
+  if (cap !== undefined) {
+    while (result.base_recent?.length && cardEstTokens({ ...card, input: result }) > cap) result.base_recent.shift();
+    while (result.prior_events?.length && cardEstTokens({ ...card, input: result }) > cap) result.prior_events.shift();
+  }
+  return result;
 }
 function inlineEligible(card: MaintenanceCard): boolean {
   return card.kind === "l2_chunk" || card.kind === "timeline_digest" || card.kind === "arch_review" && (card.input as { review_round?: number }).review_round === 1;
@@ -449,6 +510,77 @@ function deferSkippedInline(card: MaintenanceCard, now: number): void {
   card.inline_skips = Math.min((card.inline_skips ?? 0) + 1, 8);
   card.inline_retry_after = new Date(now + Math.min(6 * 3600000, 300000 * 2 ** (card.inline_skips - 1))).toISOString();
 }
+export async function claimInlineMaintenance(input: MaintenanceDeps & ClockInput & {
+  projectId: string; eventId: string; branchId: string; profile?: unknown;
+  allowVisible?: boolean; resumeOnly?: boolean; hydrate?: boolean;
+}) {
+  const now = input.now ?? Date.now(), config = await getMaintenanceConfig(input.stateRoot), owner = inlineTurnOwner(input.eventId);
+  return withMaintenanceOfferState(input.stateRoot, input.runtime.accountId, now, async state => {
+    const store = await readMaintenanceStore(input.stateRoot, input.runtime.accountId);
+    const held = store.cards.find(c => c.project_id === input.projectId && (c.branch_id ?? 'main') === input.branchId &&
+      c.status === 'leased' && c.lease?.owner === owner && Date.parse(c.lease.until) > now);
+    const logs = (await readMaintenanceLog(input.stateRoot, input.runtime.accountId)).filter(e => e.harness === owner).sort((a, b) => a.ts.localeCompare(b.ts));
+    const leases = logs.filter(e => e.outcome === 'leased');
+    const tokens = (cardId: string, fallback: number) => Math.max(fallback, ...logs.filter(e => e.card_id === cardId && e.outcome === 'loaded').map(e => e.est_tokens));
+    const usedTokens = leases.filter(e => e.card_id !== held?.card_id).reduce((sum, e) => sum + tokens(e.card_id, e.est_tokens), 0);
+    const jobs = await readDistillationJobsSnapshot(input.stateRoot, input.runtime.accountId);
+    const backlog = maintenanceBacklog(store.cards.filter(c => c.project_id === input.projectId && (c.branch_id ?? 'main') === input.branchId),
+      store.sets, jobs.filter(j => j.project_id === input.projectId && (j.branch_id ?? 'main') === input.branchId), [], now).summary;
+    const profile = input.profile && typeof input.profile === "object" ? input.profile as ClientProfile : undefined;
+    const reviewWaiting = store.cards.some(c => c.project_id === input.projectId && (c.branch_id ?? "main") === input.branchId &&
+      c.kind === "l2_chunk" && (c.input as L2ChunkInput).stage === "review" && open(c) && sequentialReady(store, c) && (!c.lease || c.lease.owner === owner || Date.parse(c.lease.until) <= now));
+    // Review carries the source and candidate; explicit client bounds still win.
+    const dispatchProfile = reviewWaiting && profile?.max_card_tokens === undefined ? { ...profile, max_card_tokens: 8000 } : input.profile;
+    const decision = inlineDispatchBudget({ profile: dispatchProfile, pending: backlog.pending_cards, oldestHours: backlog.oldest_pending_age_h,
+      usedCards: leases.length - (held ? 1 : 0), usedTokens, dailyCardsLeft: config.daily_card_cap - state.cards_offered + (held ? 1 : 0),
+      dailyTokensLeft: config.daily_est_token_cap - state.est_tokens_offered + (held ? tokens(held.card_id, held.est_tokens) : 0),
+      elapsedMs: leases.length ? now - Date.parse(leases[0]!.ts) : 0,
+      stopped: logs.some(e => ['rejected', 'released', 'expired'].includes(e.outcome)) });
+    const record = (reason: string, issued = leases.length, spent = usedTokens + (held ? tokens(held.card_id, held.est_tokens) : 0)) => {
+      const dispatch = { at: new Date(now).toISOString(), project: input.projectId,
+        limit: reason === 'no_card' ? 0 : decision.limit, issued, total_token_budget: decision.totalTokens, used_tokens: spent, backlog: backlog.pending_cards, reason };
+      state.last_dispatches = [dispatch, ...(state.last_dispatches ?? []).filter(d => d.project !== input.projectId)].slice(0, 50);
+      return dispatch;
+    };
+    const disabled = config.conversation_maintenance === 'off' || config.conversation_maintenance === 'visible' && !input.allowVisible;
+    const reason = disabled ? 'setting_off' : config.opted_out_projects.includes(input.projectId) ? 'opted_out' : decision.reason;
+    if (reason !== 'ready') {
+      if (held && ['time_budget', 'setting_off', 'opted_out', 'token_budget', 'daily_cap', 'turn_cap', 'backoff'].includes(reason))
+        await releaseCard({ ...input, harness: owner, cardId: held.card_id, leaseToken: held.lease!.token });
+      return { ok: true, card: null, dispatch: record(reason) };
+    }
+    const selected = await nextCard({ ...input, harness: owner, profile: { execution: 'inline' },
+      kinds: ['l2_chunk', 'timeline_digest', 'arch_review'], leaseSeconds: 900, inlineL2MaxTokens: decision.maxCardTokens,
+      inlineBranchId: input.branchId, resumeInlineOnly: input.resumeOnly, inlineIgnoreBackoff: leases.length === 0 });
+    if (!selected.card) {
+      if (held && input.hydrate) await releaseCard({ ...input, harness: owner, cardId: held.card_id, leaseToken: held.lease!.token });
+      return { ok: true, card: null, dispatch: record(held ? 'token_budget' : backlog.pending_cards || backlog.unmaterialized_jobs ? 'no_eligible_card' : 'no_card') };
+    }
+    // Open keeps its pointer contract; lazy claims and automatic continuation validate the complete input.
+    if (!input.hydrate) {
+      if (!selected.resumed) { state.cards_offered++; state.est_tokens_offered += selected.card.est_tokens; }
+      return { ok: true, card: selected.card, dispatch: record(selected.resumed ? 'resumed' : 'issued',
+        leases.length + (selected.resumed ? 0 : 1), usedTokens + selected.card.est_tokens) };
+    }
+    // Hydrate before accounting so contextual headings also consume the hard token allowance.
+    const loaded = await loadInlineCard({ ...input, inlineTurnId: input.eventId, inlineBranchId: input.branchId,
+      cardId: selected.card.card_id, leaseToken: selected.card.lease_token }).catch(error => {
+        console.error("[litsan] automatic card load:", error);
+        return { ok: false, code: "load_failed", card: undefined };
+      });
+    if (!selected.resumed) {
+      state.cards_offered++;
+      state.est_tokens_offered += loaded.card?.est_tokens ?? selected.card.est_tokens;
+    }
+    if (!loaded.ok || !loaded.card) {
+      await releaseCard({ ...input, harness: owner, cardId: selected.card.card_id, leaseToken: selected.card.lease_token });
+      return { ok: false, card: null, code: loaded.code, dispatch: record('backoff', leases.length + (selected.resumed ? 0 : 1)) };
+    }
+    const dispatch = record(selected.resumed ? 'resumed' : 'issued', leases.length + (selected.resumed ? 0 : 1), usedTokens + loaded.card.est_tokens);
+    return { ok: true, card: input.hydrate ? loaded.card : selected.card, dispatch };
+  });
+}
+
 export async function loadInlineCard(input: MaintenanceDeps & ClockInput & { projectId: string; inlineTurnId: string; inlineBranchId: string; cardId: string; leaseToken: string }) {
   const now = input.now ?? Date.now(), store = await readMaintenanceStore(input.stateRoot, input.runtime.accountId);
   const card = store.cards.find(c => c.card_id === input.cardId);
@@ -469,6 +601,12 @@ export async function loadInlineCard(input: MaintenanceDeps & ClockInput & { pro
     input: cardInput, allowed_refs, answer_schema, lease_token: card.lease.token, lease_until: card.lease.until } };
 }
 function currentCardView(card: MaintenanceCard): MaintenanceCard {
+  if (card.kind === "l2_chunk" && (card.input as L2ChunkInput).quality) {
+    const instructions = (card.input as L2ChunkInput).stage === "review" ? REVIEW_INSTRUCTIONS : QUALITY_INSTRUCTIONS;
+    if (card.instructions === instructions) return card;
+    const updated = { ...card, instructions };
+    return { ...updated, est_tokens: cardEstTokens(updated) };
+  }
   if (card.kind === "arch_review" || card.kind === "timeline_digest") {
     const instructions = maintenanceGenerators.get(card.kind)?.instructions;
     if (!instructions || card.instructions === instructions) return card;
@@ -480,11 +618,11 @@ function currentCardView(card: MaintenanceCard): MaintenanceCard {
   const estTokens = cardEstTokens(updated);
   return estTokens <= 8000 ? { ...updated, est_tokens: estTokens } : card;
 }
-function selectCard(store: MaintenanceStore, input: { cardId?: string; projectId?: string; kinds?: MaintenanceCardKind[]; restrictProject?: boolean; inline?: boolean; inlineBranchId?: string; inlineSameTurn?: boolean }, maxCardTokens: number, now: number) {
+function selectCard(store: MaintenanceStore, input: { cardId?: string; projectId?: string; kinds?: MaintenanceCardKind[]; restrictProject?: boolean; inline?: boolean; inlineBranchId?: string; inlineSameTurn?: boolean; inlineIgnoreBackoff?: boolean }, maxCardTokens: number, now: number) {
   const priority: Record<MaintenanceCardKind, number> = { l2_chunk: 0, arch_link: 1, gap_check: 2, timeline_digest: 3, arch_review: 4 };
   const available = store.cards.filter(c => open(c) && (!c.lease || Date.parse(c.lease.until) <= now) && sequentialReady(store, c) &&
     (input.inlineBranchId === undefined || (c.branch_id ?? "main") === input.inlineBranchId) &&
-    (!input.inlineSameTurn || inlineEligible(c) && !(Date.parse(c.inline_retry_after ?? "") > now)));
+    (!input.inlineSameTurn || inlineEligible(c) && (input.inlineIgnoreBackoff || !(Date.parse(c.inline_retry_after ?? "") > now))));
   let card: MaintenanceCard | undefined;
   if (input.cardId) {
     card = available.find(c => c.card_id === input.cardId);
@@ -496,10 +634,10 @@ function selectCard(store: MaintenanceStore, input: { cardId?: string; projectId
       (!input.restrictProject || !input.projectId || c.project_id === input.projectId))
     .sort((a, b) => Number(Boolean(b.requested_at)) - Number(Boolean(a.requested_at)) ||
       (a.requested_at && b.requested_at ? cmp(a.requested_at, b.requested_at) : 0) || Number(b.project_id === input.projectId) - Number(a.project_id === input.projectId) ||
-      priority[a.kind] - priority[b.kind] || cmp(a.created_at, b.created_at) || cmp(a.card_id, b.card_id))[0];
+      priority[a.kind] - priority[b.kind] || Number((b.input as L2ChunkInput).stage === "review") - Number((a.input as L2ChunkInput).stage === "review") || cmp(a.created_at, b.created_at) || cmp(a.card_id, b.card_id))[0];
   return card;
 }
-export async function nextCard(input: MaintenanceDeps & ClockInput & Actor & { cardId?: string; projectId?: string; kinds?: MaintenanceCardKind[]; leaseSeconds?: number; inlineL2MaxTokens?: number; inlineBranchId?: string; resumeInlineOnly?: boolean }) {
+export async function nextCard(input: MaintenanceDeps & ClockInput & Actor & { cardId?: string; projectId?: string; kinds?: MaintenanceCardKind[]; leaseSeconds?: number; inlineL2MaxTokens?: number; inlineBranchId?: string; resumeInlineOnly?: boolean; inlineIgnoreBackoff?: boolean }) {
   const now = input.now ?? Date.now(), profile = normalizeClientProfile(input.profile);
   const cap = input.inlineL2MaxTokens === undefined ? profile.max_card_tokens : Math.min(8000, input.inlineL2MaxTokens);
   return withMaintenanceStore(input.stateRoot, input.runtime.accountId, now, async (store, log, checkpoint) => {
@@ -621,7 +759,8 @@ export async function submitCard(input: MaintenanceDeps & ClockInput & Actor & {
       if (card.kind === "l2_chunk" && card.rejections >= 3 && open(card)) {
         const set = store.sets.find(s => s.card_ids.includes(card.card_id) && s.status === "open");
         if (set) {
-          await abortSet(input, store, set, now, log, true);
+          if ((card.input as L2ChunkInput).quality) set.quality_blocked = "Three invalid quality answers; source and candidates retained for inspection.";
+          else await abortSet(input, store, set, now, log, true);
         }
       }
       return { ok: false, code, detail };

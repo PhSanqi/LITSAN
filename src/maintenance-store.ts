@@ -141,7 +141,7 @@ async function readOfferStates(root: string): Promise<Record<string, Maintenance
 }
 function dailyOfferState(state: MaintenanceOfferState | undefined, now: number): MaintenanceOfferState {
   const day = new Date(now).toISOString().slice(0, 10);
-  return state?.day === day ? state : { day, cards_offered: 0, est_tokens_offered: 0, by_continuity: state?.by_continuity ?? {} };
+  return state?.day === day ? state : { day, cards_offered: 0, est_tokens_offered: 0, by_continuity: state?.by_continuity ?? {}, ...(state?.last_dispatches ? { last_dispatches: state.last_dispatches } : {}) };
 }
 export async function readMaintenanceOfferState(root: string, accountId: string, now: number): Promise<MaintenanceOfferState> {
   const all = await readOfferStates(root);

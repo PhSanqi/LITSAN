@@ -1,0 +1,418 @@
+[
+  {
+    "id": "positive-0",
+    "query": "Evan在2023年7月去了哪些地方？",
+    "expected": {
+      "start": "2023-07-01",
+      "end": "2023-07-31"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-1",
+    "query": "2023年七月发生了什么？",
+    "expected": {
+      "start": "2023-07-01",
+      "end": "2023-07-31"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-2",
+    "query": "二〇二三年十二月发生了什么？",
+    "expected": {
+      "start": "2023-12-01",
+      "end": "2023-12-31"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-3",
+    "query": "２０２４年２月发生了什么？",
+    "expected": {
+      "start": "2024-02-01",
+      "end": "2024-02-29"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-4",
+    "query": "2023 年 7 月有哪些活动？",
+    "expected": {
+      "start": "2023-07-01",
+      "end": "2023-07-31"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-5",
+    "query": "2023年7月12日发生了什么？",
+    "expected": {
+      "start": "2023-07-12",
+      "end": "2023-07-12"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-6",
+    "query": "2024年二月二十九日发生了什么？",
+    "expected": {
+      "start": "2024-02-29",
+      "end": "2024-02-29"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-7",
+    "query": "2023年7月12号在哪里？",
+    "expected": {
+      "start": "2023-07-12",
+      "end": "2023-07-12"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-8",
+    "query": "2023年7月初去哪里？",
+    "expected": {
+      "start": "2023-07-01",
+      "end": "2023-07-10"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-9",
+    "query": "2023年7月中旬去哪里？",
+    "expected": {
+      "start": "2023-07-11",
+      "end": "2023-07-20"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-10",
+    "query": "2023年7月下旬去哪里？",
+    "expected": {
+      "start": "2023-07-21",
+      "end": "2023-07-31"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-11",
+    "query": "2023年2月底发生了什么？",
+    "expected": {
+      "start": "2023-02-21",
+      "end": "2023-02-28"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-12",
+    "query": "2023年7月至8月去哪里？",
+    "expected": {
+      "start": "2023-07-01",
+      "end": "2023-08-31"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-13",
+    "query": "2023年7月12日到16日去哪里？",
+    "expected": {
+      "start": "2023-07-12",
+      "end": "2023-07-16"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-14",
+    "query": "2023年7月30日至8月4日去哪里？",
+    "expected": {
+      "start": "2023-07-30",
+      "end": "2023-08-04"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-15",
+    "query": "2023年12月至2024年2月发生了什么？",
+    "expected": {
+      "start": "2023-12-01",
+      "end": "2024-02-29"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-16",
+    "query": "2023年发生了什么？",
+    "expected": {
+      "start": "2023-01-01",
+      "end": "2023-12-31"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-17",
+    "query": "What happened on 2023-07-12?",
+    "expected": {
+      "start": "2023-07-12",
+      "end": "2023-07-12"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-18",
+    "query": "2023/07/12发生了什么？",
+    "expected": {
+      "start": "2023-07-12",
+      "end": "2023-07-12"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-19",
+    "query": "2023-07有哪些活动？",
+    "expected": {
+      "start": "2023-07-01",
+      "end": "2023-07-31"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-20",
+    "query": "from 2023-07-12 to 2023-07-16",
+    "expected": {
+      "start": "2023-07-12",
+      "end": "2023-07-16"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-21",
+    "query": "2023/07/12至2023/07/16在哪里？",
+    "expected": {
+      "start": "2023-07-12",
+      "end": "2023-07-16"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-22",
+    "query": "Where was Evan in July 2023?",
+    "expected": {
+      "start": "2023-07-01",
+      "end": "2023-07-31"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-23",
+    "query": "between July 12 and July 16 2023",
+    "expected": {
+      "start": "2023-07-12",
+      "end": "2023-07-16"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-24",
+    "query": "from December 30 2023 to January 2 2024",
+    "expected": {
+      "start": "2023-12-30",
+      "end": "2024-01-02"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-25",
+    "query": "on 29 February 2024",
+    "expected": {
+      "start": "2024-02-29",
+      "end": "2024-02-29"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-26",
+    "query": "on July 12, 2023",
+    "expected": {
+      "start": "2023-07-12",
+      "end": "2023-07-12"
+    },
+    "trigger": true
+  },
+  {
+    "id": "positive-27",
+    "query": "beginning of July 2023",
+    "expected": {
+      "start": "2023-07-01",
+      "end": "2023-07-10"
+    },
+    "trigger": true
+  },
+  {
+    "id": "invalid-0",
+    "query": "2023年13月",
+    "expected": null
+  },
+  {
+    "id": "invalid-1",
+    "query": "2023年0月",
+    "expected": null
+  },
+  {
+    "id": "invalid-2",
+    "query": "2023年2月29日",
+    "expected": null
+  },
+  {
+    "id": "invalid-3",
+    "query": "2024年2月30日",
+    "expected": null
+  },
+  {
+    "id": "invalid-4",
+    "query": "2023年4月31日",
+    "expected": null
+  },
+  {
+    "id": "invalid-5",
+    "query": "2023年8月到7月",
+    "expected": null
+  },
+  {
+    "id": "invalid-6",
+    "query": "2023年7月16日到12日",
+    "expected": null
+  },
+  {
+    "id": "invalid-7",
+    "query": "2023-02-29",
+    "expected": null
+  },
+  {
+    "id": "invalid-8",
+    "query": "2023/13/12",
+    "expected": null
+  },
+  {
+    "id": "invalid-9",
+    "query": "between February 30 and March 2 2023",
+    "expected": null
+  },
+  {
+    "id": "invalid-10",
+    "query": "on February 30, 2023",
+    "expected": null
+  },
+  {
+    "id": "invalid-11",
+    "query": "on 31 April 2023",
+    "expected": null
+  },
+  {
+    "id": "negative-0",
+    "query": "What food does Evan like?",
+    "expected": null,
+    "trigger": false
+  },
+  {
+    "id": "negative-1",
+    "query": "Evan喜欢什么食物？",
+    "expected": null,
+    "trigger": false
+  },
+  {
+    "id": "negative-2",
+    "query": "项目编号202307是什么？",
+    "expected": null,
+    "trigger": false
+  },
+  {
+    "id": "negative-3",
+    "query": "版本v2023.7怎么安装？",
+    "expected": null,
+    "trigger": false
+  },
+  {
+    "id": "negative-4",
+    "query": "七月去哪里？",
+    "expected": null
+  },
+  {
+    "id": "negative-5",
+    "query": "上个月去了哪里？",
+    "expected": null
+  },
+  {
+    "id": "negative-6",
+    "query": "Model 2023 benchmark",
+    "expected": null
+  },
+  {
+    "id": "negative-7",
+    "query": "有7个月的保修吗？",
+    "expected": null
+  },
+  {
+    "id": "holdout-leap",
+    "query": "记录2028年二月二十九日的事件",
+    "expected": {
+      "start": "2028-02-29",
+      "end": "2028-02-29"
+    },
+    "trigger": true
+  },
+  {
+    "id": "holdout-fullwidth",
+    "query": "２０２５年１２月有哪些事件",
+    "expected": {
+      "start": "2025-12-01",
+      "end": "2025-12-31"
+    },
+    "trigger": true
+  },
+  {
+    "id": "holdout-crossyear",
+    "query": "2024年12月至2025年1月",
+    "expected": {
+      "start": "2024-12-01",
+      "end": "2025-01-31"
+    },
+    "trigger": true
+  },
+  {
+    "id": "holdout-late",
+    "query": "2024年二月下旬",
+    "expected": {
+      "start": "2024-02-21",
+      "end": "2024-02-29"
+    },
+    "trigger": true
+  },
+  {
+    "id": "holdout-slash",
+    "query": "2030/4/9的记录",
+    "expected": {
+      "start": "2030-04-09",
+      "end": "2030-04-09"
+    },
+    "trigger": true
+  },
+  {
+    "id": "holdout-invalid",
+    "query": "2027年2月29日",
+    "expected": null
+  },
+  {
+    "id": "holdout-reversed",
+    "query": "2025-04-09 to 2025-04-08",
+    "expected": null
+  },
+  {
+    "id": "holdout-version",
+    "query": "release v2025-04",
+    "expected": null
+  }
+]

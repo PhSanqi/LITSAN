@@ -310,6 +310,11 @@ const residualNameAllowlist = [
   { path: "tests/litsan-core-interface-contract.mjs", names: ["memhub_core","memhub_v1"], reason: "Legacy environment/state/service/schema compatibility assertions and isolated fixtures matching stored data or upstream APIs." },
   { path: "tests/litsan-core-retrieval-e2e.mjs", names: ["memhub-core-chinese-ab-suite.json","memhub-core-retrieval-e2e-","memhub_core"], reason: "Legacy environment/state/service/schema compatibility assertions and isolated fixtures matching stored data or upstream APIs." },
   { path: "tests/p5-upstream-litsan.mjs", names: ["healthy.build.memhubVersion","memhub-p5-upstream-litsan","memmy-agent","memhubVersion"], reason: "Legacy environment/state/service/schema compatibility assertions and isolated fixtures matching stored data or upstream APIs." },
+  { path: "src/core/maintenance/backlog.ts", names: ["memhub-in-turn"], reason: "In-turn card lease owner prefix stored in live maintenance leases (same prefix as src/maintenance-control.ts)." },
+  { path: "tests/maintenance-backlog.mjs", names: ["MEMHUB_PUBLIC_HOST","memhub-in-turn"], reason: "Fixture text quoting the legacy env name and the stored in-turn lease owner prefix." },
+  { path: "tests/maintenance-quality.mjs", names: ["MEMHUB_PUBLIC_HOST","memhub-unbound"], reason: "Fixture text quoting the legacy env name and the stored unbound continuity ID prefix." },
+  { path: "tests/progressive-mcp-e2e.mjs", names: ["MEMHUB_MEMORY_DB","memmyMemory"], reason: "Legacy environment fallback and vendor Core config key, matching tests/mcp-e2e.mjs." },
+  { path: "scripts/freeze-memory-holdout.py", names: ["memhub-holdout-v1"], reason: "Hash seed of a frozen evaluation holdout; changing it changes the selected cases." },
 ];
 const residualHistory = /^(?:vendor\/|runtime-releases\/|dist\/|node_modules\/|recovery\/|docs\/(?:reviews|research)\/)|^docs\/.*-20\d\d-.*\.md$/;
 const legacyTokens = text => text.match(/[\w.@-]*(?:memhub|memmy)[\w.@-]*/gi) ?? [];

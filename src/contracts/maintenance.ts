@@ -5,10 +5,11 @@ import type { ProjectMapQuality } from "./project-map-quality.js";
 export type MaintenanceCardKind = "l2_chunk" | "arch_link" | "gap_check" | "arch_review" | "timeline_digest";
 export type MaintenanceCardStatus = "pending" | "leased" | "accepted" | "rejected" | "superseded";
 export type ClientExecution = "inline" | "delegate" | "background";
-export interface ClientProfile { execution: ClientExecution; max_card_tokens?: number; cards_per_turn?: number; model?: string }
+export interface ClientProfile { execution: ClientExecution; max_card_tokens?: number; cards_per_turn?: number; model?: string; availability?: "busy" | "available" | "unknown"; available_tokens?: number }
 export interface L2ChunkEvent { date: string; title_en: string; title_zh: string; body_en: string; body_zh: string; evidence_refs: string[]; continues?: string }
-export interface L2ChunkInput { items: DistillationEvidenceItem[]; prior_events?: { key: string; date: string; title_en: string }[]; base_recent?: { date: string; title: string }[] }
-export interface L2ChunkAnswer { events: L2ChunkEvent[]; skip_reason?: string }
+export interface L2Fact { ref: string; field: "user_text" | "assistant_text" | "tool_summary" | "reasoning_summary" | "content"; quote: string; state: "decision" | "suggestion" | "reported" | "pending" | "uncertain"; disposition: "kept" | "duplicate" | "transient" | "deferred"; events: number[]; reason?: string }
+export interface L2ChunkInput { items: DistillationEvidenceItem[]; context_items?: DistillationEvidenceItem[]; quality?: "facts-v1"; stage?: "extract" | "review"; candidate?: L2ChunkAnswer; required_facts?: L2Fact[]; completed_facts?: L2Fact[]; continuation?: number; prior_events?: { key: string; date: string; title_en: string }[]; base_recent?: { date: string; title: string }[] }
+export interface L2ChunkAnswer { events: L2ChunkEvent[]; skip_reason?: string; facts?: L2Fact[] }
 export interface ArchLink { architecture_refs: string[]; architecture_level: ArchitectureNodeKind; change_kind: ArchitectureChangeKind; confidence: number }
 export type ArchLinkAnswer = { links: ArchLink[] } | { no_fit: true; reason: string };
 export interface GapCheckAnswer { verdict: "supported" | "still_gap" | "possibly_obsolete"; evidence_refs: string[]; confidence: number; note: string }
@@ -34,12 +35,14 @@ export interface MaintenanceCard {
   lease?: { token: string; owner: string; until: string; model?: string; profile?: ClientExecution; inline_token_budget?: number }; attempts: number; rejections: number;
   inline_receipt?: { event_id: string; lease_hash: string };
   inline_skips?: number; inline_retry_after?: string;
+  quality_next_card_id?: string;
   created_at: string; updated_at: string; requested_at?: string; accepted_at?: string; result?: MaintenanceAnswer;
 }
 export interface MaintenanceCardSet {
   set_id: string; parent_job_id: string; parent_job_ids?: string[]; parent_fingerprints?: Record<string, string>; account_id: string; project_id: string; card_ids: string[];
   branch_id?: string;
   status: "open" | "merged" | "aborted"; created_at: string; merged_at?: string; result_job_id?: string;
+  quality_blocked?: string;
 }
 export type MaintenanceRejectCode = "wrong_account" | "wrong_project" | "lease_expired" | "lease_token_stale" |
   "stale_fingerprint" | "schema_invalid" | "oversize" | "ref_not_allowed" | "node_not_allowed" |
@@ -58,14 +61,19 @@ export interface MaintenanceConfig {
   delegate_min_interval_s: number; heavy_turn_chars: number; cross_project: boolean; opted_out_projects: string[];
 }
 export interface ContinuityOfferState { committed_turns_since_offer: number; last_offer_at: string | null }
+export interface MaintenanceDispatch {
+  at: string; project: string; limit: number; issued: number;
+  total_token_budget: number; used_tokens: number; backlog: number; reason: string;
+}
 export interface MaintenanceOfferState {
   day: string; cards_offered: number; est_tokens_offered: number;
   by_continuity: Record<string, ContinuityOfferState>;
+  last_dispatches?: MaintenanceDispatch[];
 }
 export interface MaintenanceOfferTurn {
   ingested: boolean; projectId?: string | null; assistantChars: number; toolSummaryChars: number; continuityId: string;
 }
-export type MaintenanceOfferReason = "setting_off" | "not_ingested" | "no_project" | "opted_out" | "heavy_turn" | "background_profile" | "daily_cap" | "throttled";
+export type MaintenanceOfferReason = "setting_off" | "not_ingested" | "no_project" | "opted_out" | "heavy_turn" | "background_profile" | "busy" | "daily_cap" | "throttled";
 export interface MaintenanceOffer {
   card_id: string; kind: MaintenanceCardKind; project: string; est_tokens: number; call: string; mode: "quiet" | "visible"; rule: string;
 }

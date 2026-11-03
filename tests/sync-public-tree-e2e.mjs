@@ -47,10 +47,10 @@ async function snapshot(root) {
   return files;
 }
 await check('private exclusions and custom globs', async (o) => {
-  for (const path of ['docs/reviews/a.md', 'docs/internal/a.md', 'docs/research/a.md', 'distribution/agensi/a', 'AGENTS.md', 'CLAUDE.md', '.claude/a', 'tests/agensi-skill-package-e2e.mjs', 'secret/a.txt']) await put(o.sourceRoot, path);
+  for (const path of ['docs/reviews/a.md', 'docs/internal/a.md', 'docs/research/a.md', 'distribution/agensi/a', 'AGENTS.md', 'CLAUDE.md', '.claude/a', 'tests/agensi-skill-package-e2e.mjs', 'scripts/memory-arena-codex-proxy.py', 'secret/a.txt']) await put(o.sourceRoot, path);
   commit(o.sourceRoot);
   const result = await syncPublicTree({...o, exclude: ['secret/**']});
-  assert.equal(PRIVATE_EXCLUSIONS.length, 8);
+  assert.equal(PRIVATE_EXCLUSIONS.length, 9);
   assert.deepEqual(result.counts, {added: 0, updated: 0, deleted: 0, unchanged: 1});
   assert.deepEqual(Object.keys(await snapshot(o.target)), ['same.txt']);
 });

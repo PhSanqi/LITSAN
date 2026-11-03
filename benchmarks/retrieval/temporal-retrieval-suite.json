@@ -1,0 +1,153 @@
+{
+  "version": "event-relation-pilot-v1",
+  "note": "Synthetic labelled fixtures, constant semantic scores; compare algorithms at K=2, not end-to-end LLM quality.",
+  "events": [
+    {
+      "id": "doctor1",
+      "date": "2023-05-10",
+      "text": "Sam went to the doctor for the first appointment about his weight problem. Sam 第一次看医生，讨论体重问题。"
+    },
+    {
+      "id": "doctor2",
+      "date": "2023-08-10",
+      "text": "Sam returned to the doctor for a second appointment about the weight problem. Sam 第二次看医生，讨论体重问题。"
+    },
+    {
+      "id": "banff",
+      "date": "2023-07-12",
+      "text": "Evan visited Banff in Canada. Evan 七月去加拿大班夫。"
+    },
+    {
+      "id": "rockies",
+      "date": "2023-07-16",
+      "text": "Evan explored the Rocky Mountains in Canada. Evan 七月去加拿大落基山。"
+    },
+    {
+      "id": "vancouver",
+      "date": "2023-08-04",
+      "text": "Evan visited Vancouver in Canada. Evan 八月去加拿大温哥华。"
+    },
+    {
+      "id": "food",
+      "date": "2023-06-01",
+      "text": "Evan likes pasta. Evan 喜欢意大利面。"
+    }
+  ],
+  "cases": [
+    {
+      "id": "july-en",
+      "query": "Which places in Canada was Evan visiting in July 2023?",
+      "expected": [
+        "banff",
+        "rockies"
+      ]
+    },
+    {
+      "id": "july-zh",
+      "query": "Evan 在2023年7月去加拿大哪些地方？",
+      "expected": [
+        "banff",
+        "rockies"
+      ]
+    },
+    {
+      "id": "july-cn-num",
+      "query": "Evan 在二〇二三年七月去加拿大哪些地方？",
+      "expected": [
+        "banff",
+        "rockies"
+      ]
+    },
+    {
+      "id": "july-fullwidth",
+      "query": "Evan 在２０２３年７月去加拿大哪些地方？",
+      "expected": [
+        "banff",
+        "rockies"
+      ]
+    },
+    {
+      "id": "july-iso",
+      "query": "Where did Evan go during 2023-07?",
+      "expected": [
+        "banff",
+        "rockies"
+      ]
+    },
+    {
+      "id": "point12",
+      "query": "Evan 在2023年7月12日去了哪里？",
+      "expected": [
+        "banff"
+      ]
+    },
+    {
+      "id": "point16",
+      "query": "Where was Evan on July 16, 2023?",
+      "expected": [
+        "rockies"
+      ]
+    },
+    {
+      "id": "august",
+      "query": "Evan 在2023年8月去加拿大哪些地方？",
+      "expected": [
+        "vancouver"
+      ]
+    },
+    {
+      "id": "dayrange",
+      "query": "Evan 在2023年7月12日至16日去加拿大哪些地方？",
+      "expected": [
+        "banff",
+        "rockies"
+      ]
+    },
+    {
+      "id": "dayrange-exclusion",
+      "query": "Evan 在2023年7月13日至16日去加拿大哪些地方？",
+      "expected": [
+        "rockies"
+      ]
+    },
+    {
+      "id": "crossmonth",
+      "query": "Evan 在2023年7月30日至8月4日去加拿大哪些地方？",
+      "expected": [
+        "vancouver"
+      ]
+    },
+    {
+      "id": "empty",
+      "query": "Evan 在2023年9月去加拿大哪些地方？",
+      "expected": []
+    },
+    {
+      "id": "early",
+      "query": "Evan 在2023年7月初去加拿大哪些地方？",
+      "expected": []
+    },
+    {
+      "id": "middle",
+      "query": "Evan 在2023年7月中旬去加拿大哪些地方？",
+      "expected": [
+        "banff",
+        "rockies"
+      ]
+    },
+    {
+      "id": "late",
+      "query": "Evan 在2023年7月下旬去加拿大哪些地方？",
+      "expected": []
+    },
+    {
+      "id": "year",
+      "query": "Evan 在2023年去加拿大哪些地方？",
+      "expected": [
+        "banff",
+        "rockies",
+        "vancouver"
+      ]
+    }
+  ]
+}

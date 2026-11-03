@@ -8,7 +8,7 @@ import { listCaptureEvents } from "../../capture.js";
 import { resolveExplicitProjectEvidence } from "../../context-router.js";
 import { maybeQueueThresholdDistillation } from "../../distillation-scheduling.js";
 import * as maintenanceControl from "../../maintenance-control.js";
-import { getMaintenanceConfig, readMaintenanceStore, withMaintenanceOfferState, withTurnCommitMaintenance } from "../../maintenance-store.js";
+import { readMaintenanceStore, withTurnCommitMaintenance } from "../../maintenance-store.js";
 import { eventBranchAssignment } from "../../capture-branch-assignments.js";
 import { recentL1Continuity, upsertL1Turn } from "../../turn-log.js";
 import { assignCaptureProjects, projectClarification } from "../../capture-project-assignments.js";
@@ -28,7 +28,7 @@ export function turnTools(deps: TurnToolDeps): ToolDefinition[] {
   const { runtime, context: { stateRoot } } = deps;
   tools.push({
     name: toolName("turn"),
-    description: "For each relevant user turn, open with user_text and known project. If litsan_card supports inline_claim, open with inline_maintenance=false and claim when ready using event_id as inline_turn_event; otherwise an inline_maintenance offer may be returned by open. If suitable, load and submit its evidence-bound answer before the main task; check the result. Commit the normal assistant_text before the final answer; commit releases skipped cards. Keep evidence separate. Do not invent conversation IDs. If project_resolution appears, ask then assign. / 优先按需领取维护卡，适合处理时先加载并完成即提交；兼容旧版 open 发卡。",
+    description: "For each relevant user turn, open with user_text and known project. Process offered inline_maintenance, or automatically check litsan_card next with event_id as inline_turn_event if open returned no card. The server sets card count from queue demand; do not self-report busy or skip the check. Submit card answers separately and follow any returned next card until the server stops. Commit normal assistant_text before final response; commit releases leftover leases. Do not invent conversation IDs. Ask on project_resolution. / 每轮自动领取，积压决定数量，首张保底；无需 AI 判断忙闲。",
     inputSchema: {
       type: "object",
       properties: {
@@ -60,7 +60,7 @@ export function turnTools(deps: TurnToolDeps): ToolDefinition[] {
         reasoning_summary: { type: "string", description: "可公开审计的决策摘要，不得包含隐藏 chain-of-thought" },
         tool_summary: { type: "string", description: "关键工具动作与结果摘要" },
         client_profile: CLIENT_PROFILE_SCHEMA,
-        inline_maintenance: { type: "boolean", description: "quiet mode automatically offers one bounded same-turn card on open; false opts out, true also opts in for visible mode." },
+        inline_maintenance: { type: "boolean", description: "quiet mode offers a queue-selected card on open; false defers to the same-turn next check; true opts in visible mode." },
         maintenance_answer: { type: "object", additionalProperties: true, description: "Separate {card_id, lease_token, answer} from the offered card; never include it in assistant_text." },
         limit: { type: "integer", minimum: 1, maximum: 50, description: "resume 最大返回轮数，默认 12" }
       },
@@ -193,22 +193,10 @@ export function turnTools(deps: TurnToolDeps): ToolDefinition[] {
       if (action === "open" && args.inline_maintenance !== false && result.project_id && (args.origin ?? "user") === "user" &&
         (args.inline_maintenance === true || args.trigger === undefined || args.trigger === "user_prompt")) {
         try {
-          const config = await getMaintenanceConfig(stateRoot), now = Date.now();
-          if ((args.inline_maintenance === true ? config.conversation_maintenance !== "off" : config.conversation_maintenance === "quiet") &&
-            !config.opted_out_projects.includes(result.project_id) &&
-            (userText?.length ?? 0) <= config.heavy_turn_chars) {
-            inlineMaintenance = await withMaintenanceOfferState(stateRoot, runtime.accountId, now, async state => {
-              if (result.created && (state.cards_offered >= config.daily_card_cap || state.est_tokens_offered >= config.daily_est_token_cap)) return;
-              const requestedCap = optionalInteger(objectRecord(args.client_profile).max_card_tokens) ?? 3000;
-              const cap = Math.min(8000, requestedCap, result.created ? config.daily_est_token_cap - state.est_tokens_offered : 8000);
-              if (cap < 500) return;
-              const selected = await maintenanceControl.nextCard({ stateRoot, runtime, projectId: result.project_id!,
-                harness: inlineOwner, profile: { execution: "inline" }, kinds: ["l2_chunk", "timeline_digest", "arch_review"], leaseSeconds: 900,
-                inlineL2MaxTokens: cap, inlineBranchId: binding?.id ?? "main", resumeInlineOnly: !result.created });
-              if (selected.card && result.created) { state.cards_offered++; state.est_tokens_offered += selected.card.est_tokens; }
-              return selected.card ?? undefined;
-            });
-          }
+          const selected = await maintenanceControl.claimInlineMaintenance({ stateRoot, runtime, projectId: result.project_id!,
+            eventId: result.turn.event_id, branchId: binding?.id ?? "main",
+            profile: args.client_profile, allowVisible: args.inline_maintenance === true, resumeOnly: !result.created });
+          inlineMaintenance = selected.card ?? undefined;
         } catch (error) { console.error("[litsan] inline maintenance open:", error); }
       }
       let distillation: unknown;

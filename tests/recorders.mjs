@@ -125,9 +125,9 @@ test('Claude hook exposes a leased card route without embedding evidence', async
   const context = JSON.parse(result.stdout).hookSpecificOutput.additionalContext;
   const route = JSON.parse(context.match(/litsan card --json-args '([^']+)'/)[1]);
   assert.equal(route.action, 'next'); assert.ok(route.inline_turn_event); assert.equal(route.card_id, undefined);
-  assert.ok(context.includes('Before the main user task')); assert.match(context, /only if input is absent/); assert.ok(context.includes('submit the evidence-bound answer immediately'));
+  assert.ok(context.includes('For each ordinary user turn')); assert.match(context, /only if input is absent/); assert.ok(context.includes('submit the evidence-bound answer immediately'));
   assert.equal(requests.at(-1).args.inline_maintenance, false);
-  assert.match(context, /make exactly one maintenance check, including on brief status questions/);
+  assert.match(context, /For each ordinary user turn, automatically check maintenance/);
   assert.ok(!context.includes('if suitable'));
   assert.ok(!context.includes('PRIVATE EVIDENCE'));
   await invoke(f, ['hook', 'claude', 'Stop'], payload(f));

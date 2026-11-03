@@ -347,14 +347,22 @@ test('real branch l2_chunk cards → mergeSet → completeBranchJobWithEvents �
   await ensureCards(deps);
   const store = await readMaintenanceStore(f.root, 'acct'), set = store.sets.find(s => s.parent_job_id === parent.job_id);
   assert.ok(set); assert.equal(set.branch_id, b.branchId);
-  for (const id of set.card_ids) {
-    const { card } = await nextCard({ ...deps, cardId: id }); assert.equal(store.cards.find(c => c.card_id === id).branch_id, b.branchId);
-    const result = await submitCard({ ...deps, cardId: id, leaseToken: card.lease_token, answer: { events: [event(card.allowed_refs[0], `Card ${set.card_ids.indexOf(id)}`)] } });
+  // Quality cards must enumerate quoted facts; each accepted extract card is replaced in the set by its review card.
+  for (let guard = 0; guard < 4 * set.card_ids.length; guard++) {
+    const current = await readMaintenanceStore(f.root, 'acct'), live = current.sets.find(s => s.set_id === set.set_id);
+    const id = live.card_ids.find(cid => current.cards.find(c => c.card_id === cid).status !== 'accepted');
+    if (!id) break;
+    const { card } = await nextCard({ ...deps, cardId: id }); assert.equal(current.cards.find(c => c.card_id === card.card_id).branch_id, b.branchId);
+    const index = live.card_ids.indexOf(card.card_id), base = { events: [event(card.allowed_refs[0], `Card ${index}`)] };
+    const item = card.input.items[0], field = ['user_text', 'assistant_text', 'content'].find(k => item[k]);
+    const answer = card.answer_schema?.required?.includes('facts') ? { ...base, facts: [{ ref: item.ref, field, quote: item[field], state: 'reported', disposition: 'kept', events: [0] }] } : base;
+    const result = await submitCard({ ...deps, cardId: card.card_id, leaseToken: card.lease_token, answer });
     assert.equal(result.ok, true, JSON.stringify(result));
   }
+  const merged = (await readMaintenanceStore(f.root, 'acct')).sets.find(s => s.set_id === set.set_id);
   const done = (await f.jobs()).find(j => j.job_id === parent.job_id); assert.equal(done.status, 'completed'); assert.equal(done.result_kind, 'branch_draft');
-  const draft = await readBranchDraft(f.root, 'acct', 'demo', b.branchId); assert.equal(draft.events.length, set.card_ids.length);
-  assert.ok(draft.events.every(e => set.card_ids.includes(e.card_id))); assert.equal(f.writes.length, 0);
+  const draft = await readBranchDraft(f.root, 'acct', 'demo', b.branchId); assert.equal(draft.events.length, merged.card_ids.length);
+  assert.ok(draft.events.every(e => merged.card_ids.includes(e.card_id))); assert.equal(f.writes.length, 0);
   assert.equal((await readMaintenanceStore(f.root, 'acct')).sets.find(s => s.set_id === set.set_id).status, 'merged');
   assert.equal((await f.jobs()).some(j => j.target === 'l3'), false);
 });

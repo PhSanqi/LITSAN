@@ -1,3 +1,4 @@
+import { submitReviewed as submitCard, withFacts, finishReview } from "./maintenance-answers.mjs";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { mkdir, readFile, writeFile, stat, rm } from "node:fs/promises";
@@ -12,7 +13,7 @@ import { normalizeL2EventKey, mergeChunkEvents } from "../dist/core/maintenance/
 import { validateCardAnswer } from "../dist/core/maintenance/validate.js";
 import { normalizeMaintenanceConfig } from "../dist/core/maintenance/config.js";
 import { readBranchDraft, validateBranchEvents } from "../dist/branch-drafts.js";
-import { ensureCards, nextCard, submitCard, peekCard, offerForCommit } from "../dist/maintenance-control.js";
+import { ensureCards, nextCard, peekCard, offerForCommit, queueStatus } from "../dist/maintenance-control.js";
 import { readMaintenanceStore, withMaintenanceStore, setMaintenanceConfig, setMaintenanceStoreHooks } from "../dist/maintenance-store.js";
 import { listDistillationJobs, readDistillationJobsSnapshot, mutateMaintenanceJob, recordCompletedDistillationRevision, leaseDistillationJob, setDistillationJobsHooks, withDistillationJobsBatch, outsideDistillationJobsBatch } from "../dist/distillation-jobs.js";
 const now = Date.now(), profile = { execution: "delegate" }, harness = "spec6";
@@ -86,7 +87,7 @@ async function seedBase(f) {
     committedAt: "2026-10-20T00:00:00Z", evidence: [job("initial").evidence[0]] });
 }
 
-test("spec6 6k chunks keep evidence order, 8k cap and instructions <=600 chars", () => {
+test("spec6 6k chunks keep evidence order, 8k cap and bounded evidence-review instructions", () => {
   const evidence = job("budget", 3600, 3).evidence;
   assert.equal(planL2Chunks(evidence).chunks.length, 1);
   assert.equal(planL2Chunks(evidence, 3000).chunks.length, 3);
@@ -160,7 +161,7 @@ test("spec6 tiny main jobs coalesce oldest first, one revision unions evidence a
   assert.deepEqual(store.cards[0].allowed_refs, ["l1:a-0", "l1:b-0", "l1:c-0"]);
   for (const id of ["a", "b", "c"]) assert.equal(await leaseDistillationJob(f.stateRoot, "acct", { jobId: id, harness: "legacy", useLeaseToken: true }), null);
   const card = (await nextCard(f.deps)).card;
-  const result = await accept(f, card, { events: [event(card.allowed_refs[0], "Combined", { evidence_refs: card.allowed_refs })] });
+  const result = await accept(f, card, { events: [event(card.allowed_refs[0], "Combined", { evidence_refs: card.allowed_refs, body_en: "Atomic fact: Confirmed change. | Evidence: " + card.allowed_refs.join(", ") })] });
   assert.equal(result.merge_error, undefined); assert.equal(result.set_status, "merged"); assert.equal(f.writes.length, 1);
   const jobs = await listDistillationJobs(f.stateRoot, "acct");
   const primary = jobs.find(j => j.job_id === "a"); assert.equal(primary.result_kind, "l2");
@@ -369,4 +370,22 @@ for (const correction of [true, false]) test(`inline L2 format correction is bou
   assert.equal(second.ok, correction); assert.equal(second.retryable, undefined);
   const final = (await readMaintenanceStore(f.stateRoot, "acct")).cards.find(c => c.card_id === card.card_id);
   assert.equal(final.status, correction ? "accepted" : "pending"); assert.equal(final.lease, undefined);
+});
+
+test("dry backlog is account/project scoped and does not retire stale cards", async t => {
+  const f = await fixture(t, [job("active"), job("retired", 100, 1, { status: "completed", result_kind: "noop" }),
+    job("beta", 100, 1, { project_id: "beta" }), job("foreign", 100, 1, { account_id: "other" })]);
+  await withMaintenanceStore(f.stateRoot, "acct", now, async store => {
+    for (const [id, project] of [["active", "alpha"], ["retired", "alpha"], ["beta", "beta"]]) {
+      store.cards.push({ card_id: id, account_id: "acct", project_id: project, parent_job_id: id, kind: "l2_chunk", status: "pending", created_at: new Date(now - 3600000).toISOString() });
+      store.sets.push({ set_id: id, account_id: "acct", project_id: project, parent_job_id: id, status: "open", card_ids: [id] });
+    }
+  });
+  const before = await readMaintenanceStore(f.stateRoot, "acct");
+  const result = await queueStatus({ stateRoot: f.stateRoot, runtime: { accountId: "acct" }, projectId: "alpha", dry: true, detailed: true, now });
+  assert.equal(result.account_id, "acct"); assert.equal(result.project_id, "alpha");
+  assert.equal(result.kinds.l2_chunk.pending, 1); assert.equal(result.l2_backlog.stale_cards, 1);
+  assert.equal(result.l2_backlog.parent_jobs, 1); assert.equal(result.split_jobs.open, 1);
+  assert.deepEqual(result.l2_backlog.projects.map(row => row.project), ["alpha"]);
+  assert.deepEqual(await readMaintenanceStore(f.stateRoot, "acct"), before);
 });

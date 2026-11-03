@@ -7,6 +7,9 @@ import { fileURLToPath } from "node:url";
 import { spawn } from "node:child_process";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { JsonProjectRegistry } from "../dist/project-registry.js";
+import { annotateTurnKnowledgeEvidence, packTurnKnowledgeContext } from "../dist/turn-knowledge-plan.js";
+import { listDistillationJobs } from "../dist/distillation-jobs.js";
+import { prewarmDerivedFactRevisionIndex } from "../dist/derived-fact-retrieval.js";
 
 const ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const ARENA_ROOT = resolve(ROOT, ".review-runtime", "memory-arena");
@@ -30,13 +33,21 @@ const stack = spawn(process.execPath, [
   "--gateway-port", String(GATEWAY_PORT)
 ], {
   cwd: ROOT,
-  env: { ...process.env, MEMHUB_HOME: STATE_ROOT },
+  env: {
+    ...process.env,
+    MEMHUB_HOME: STATE_ROOT,
+    // The Arena explicitly validates the fine-grained fact lane. Normal
+    // product runtime remains opt-in until the benchmark/regression gate is
+    // accepted; the implementation itself still fails closed to lexical.
+    MEMHUB_DERIVED_FACT_RETRIEVAL: process.env.MEMHUB_DERIVED_FACT_RETRIEVAL || "semantic"
+  },
   stdio: ["ignore", "ignore", "pipe"]
 });
 
 let stackError = "";
 stack.stderr.on("data", (chunk) => { stackError += chunk.toString(); });
 await waitForHealth();
+await prewarmExistingDerivedFactIndexes();
 
 const client = new Client({ name: "memhub-memory-arena", version: "1.0.0" });
 await client.connect(new StreamableHTTPClientTransport(new URL(`http://127.0.0.1:${GATEWAY_PORT}/mcp`)));
@@ -119,12 +130,45 @@ async function search(body) {
   const topK = Math.max(1, Math.min(50, Number(body.top_k || 10)));
   const project = await projectFor(userId);
   const context = await call("memmy_context", { query, project, workspace_project: project, limit: topK });
-  const memories = [];
-  for (const item of context.projectMemory ?? []) {
-    if (!item?.content) continue;
-    memories.push({ id: item.id ?? "", memory: item.content, score: item.provenance?.retrievalV1?.fusedScore ?? item.provenance?.score ?? null, layer: item.provenance?.memoryLayer ?? null, evidence_ref: item.evidenceRef ?? null });
-  }
-  return { project, memories: memories.slice(0, topK), diagnostics: context.retrievalDiagnostics ?? null, tkp: context.turnKnowledgePlan ?? null };
+  const adaptiveEvidenceUsed = (context.turnKnowledgePlan?.supporting ?? [])
+    .some((entry) => entry?.reason === "adaptive_evidence_hydration");
+  const annotatedPlan = annotateTurnKnowledgeEvidence(
+    context.turnKnowledgePlan,
+    query,
+    adaptiveEvidenceUsed
+  );
+  const wholeQuestionBudget = Number(annotatedPlan.context_packing?.recommended_bytes ?? 4000);
+  // Medium Canary searches two speaker lanes and concatenates them. Split the
+  // whole-question 4k/6k/8k budget evenly so the final context remains in the
+  // same envelope as the EverOS 8k comparison instead of silently doubling.
+  const laneBudget = Math.max(1000, Math.min(4000, Math.ceil(wholeQuestionBudget / 2)));
+  const packed = packTurnKnowledgeContext({
+    query,
+    plan: annotatedPlan,
+    projectMemory: context.projectMemory ?? [],
+    maxBytes: laneBudget
+  });
+  const memories = packed.sections.slice(0, topK).map((section) => ({
+    id: section.id,
+    memory: section.text,
+    score: section.score,
+    layer: section.kind,
+    source: section.source,
+    evidence_ref: section.evidence_ref ?? null
+  }));
+  return {
+    project,
+    memories,
+    diagnostics: context.retrievalDiagnostics ?? null,
+    tkp: annotatedPlan,
+    packing: {
+      ...packed,
+      context: undefined,
+      sections: undefined,
+      whole_question_budget_bytes: wholeQuestionBudget,
+      lane_budget_bytes: laneBudget
+    }
+  };
 }
 
 function resetUser(body) {
@@ -132,6 +176,29 @@ function resetUser(body) {
   const generation = (generations.get(userId) ?? 0) + 1;
   generations.set(userId, generation);
   return { ok: true, user_id: userId, generation };
+}
+
+async function prewarmExistingDerivedFactIndexes() {
+  if ((process.env.MEMHUB_DERIVED_FACT_RETRIEVAL || "semantic").toLowerCase() !== "semantic") return;
+  const jobs = await listDistillationJobs(CONTROL_ROOT, ACCOUNT_ID, true);
+  let facts = 0;
+  let cacheHits = 0;
+  for (const job of jobs) {
+    if (job.status !== "completed" || (job.target !== "l2" && job.target !== "l3")) continue;
+    if (!job.result_id || !job.result_fact_metadata) continue;
+    const warmed = await prewarmDerivedFactRevisionIndex({
+      stateRoot: CONTROL_ROOT,
+      accountId: ACCOUNT_ID,
+      revisionId: job.job_id,
+      memoryId: job.result_id,
+      layer: job.target.toUpperCase(),
+      factMetadata: job.result_fact_metadata,
+      sourceEvidence: job.evidence
+    });
+    facts += warmed.facts;
+    if (warmed.cache_hit) cacheHits += 1;
+  }
+  if (facts > 0) console.log(`derived_fact_prewarm facts=${facts} cache_hits=${cacheHits}`);
 }
 
 async function projectFor(userId) {

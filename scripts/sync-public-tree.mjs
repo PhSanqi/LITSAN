@@ -8,6 +8,8 @@ import { fileURLToPath } from 'node:url';
 export const PRIVATE_EXCLUSIONS = Object.freeze([
   'docs/reviews/**', 'docs/internal/**', 'docs/research/**', 'distribution/agensi/**',
   'AGENTS.md', 'CLAUDE.md', '.claude/**', 'tests/agensi-skill-package-e2e.mjs',
+  // Local review proxy: its default usage-log path is a private host path.
+  'scripts/memory-arena-codex-proxy.py',
 ]);
 export const PUBLISH_ONLY_KEEP = Object.freeze(['tests/public-repository-privacy-e2e.mjs']);
 // Public copies carry deliberate sanitization (hosted domains replaced by placeholders/GitHub Pages).

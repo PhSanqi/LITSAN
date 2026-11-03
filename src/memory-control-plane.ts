@@ -746,7 +746,7 @@ async function processingPayload(input: MemoryControlRequest): Promise<unknown> 
     listControlPlaneJobs(input.stateRoot, input.runtime.accountId),
     getDistillationConfig(input.stateRoot),
     getMaintenanceConfig(input.stateRoot),
-    queueStatus({ stateRoot: input.stateRoot, runtime: input.runtime, dry: true, now }),
+    queueStatus({ stateRoot: input.stateRoot, runtime: input.runtime, projectId: input.projectId ?? undefined, detailed: true, dry: true, now }),
     readMaintenanceLog(input.stateRoot, input.runtime.accountId),
     readMaintenanceOfferState(input.stateRoot, input.runtime.accountId, now)
   ]);
@@ -756,7 +756,9 @@ async function processingPayload(input: MemoryControlRequest): Promise<unknown> 
     total: items.length,
     config,
     maintenance: { config: maintenanceConfig, today: { ...today, cards_offered: offerState.cards_offered, est_tokens_offered: offerState.est_tokens_offered },
-      recent_log: recentLog.sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 50) },
+      dispatches: (offerState.last_dispatches ?? []).filter(d => !input.projectId || d.project === input.projectId),
+      promotion_review_required: config.promotion_review_accounts?.includes(input.runtime.accountId) ?? false,
+      recent_log: recentLog.filter(e => !input.projectId || e.project === input.projectId).sort((a, b) => b.ts.localeCompare(a.ts)).slice(0, 50) },
     counts: {
       pending: items.filter((job) => job.status === "pending").length,
       leased: items.filter((job) => job.status === "leased").length,

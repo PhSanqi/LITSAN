@@ -3,8 +3,11 @@ import type { MemoryDistiller, MemoryViewerReader } from "./core/ports/memory.js
 import { createHash, randomUUID } from "node:crypto";
 import { validateDurableMemoryContent } from "./distillation-contract.js";
 import {
+  distillationResultTimestamp,
+  listDistillationJobs,
   recordCompletedDistillationRevision,
-  type DistillationEvidenceItem
+  type DistillationEvidenceItem,
+  type DistillationJob
 } from "./distillation-jobs.js";
 import { hydrateMemoryEvidence } from "./memory-hydration.js";
 
@@ -67,6 +70,13 @@ export async function planUserAuthorizedMemory(input: {
     }
     const core = activeCoreItems.find((item) => item.id === base.memory_id);
     if (!core) throw new Error("base_evidence_ref is not the current active Core memory; refresh litsan_context before planning");
+    // Core can still list a superseded memory as active, so an active, content-matching
+    // base is not enough: it must be the newest completed revision for this layer/scope.
+    const canonicalRef = await canonicalRevisionRef(input.stateRoot, input.runtime.accountId, input.kind, input.projectId, activeCoreItems);
+    if (canonicalRef !== base.evidence_ref) {
+      throw new Error(`base_evidence_ref is not the current canonical ${input.kind.toUpperCase()} revision` +
+        ` (current: ${canonicalRef ?? "none"}); refresh litsan_context before planning`);
+    }
     const coreContent = coreMemoryContent(core);
     if (!coreContent || sha256(normalizeContent(coreContent)) !== sha256(normalizeContent(base.content))) {
       throw new Error("base_evidence_ref no longer matches the current Core memory body; refresh litsan_context before planning");
@@ -131,14 +141,22 @@ export async function executeUserAuthorizedMemory(input: {
   if (!plan || plan.accountId !== input.runtime.accountId) {
     throw new Error("invalid or already-used L3/L4 authorization");
   }
-  authorizations.delete(authorizationId);
-  if (plan.expiresAt < Date.now()) throw new Error("L3/L4 authorization expired; create and show a fresh plan");
+  if (plan.expiresAt < Date.now()) {
+    authorizations.delete(authorizationId);
+    throw new Error("L3/L4 authorization expired; create and show a fresh plan");
+  }
+  // The authorization is consumed only once every check below has passed, so a
+  // refused execute (stale confirmation, wrong project, ...) can be retried.
 
   const activeCoreItems = await activeLayerItems(input.runtime, plan.kind, plan.projectId);
   if (plan.expectedMemoryId) {
     const core = activeCoreItems.find((item) => item.id === plan.expectedMemoryId);
     const coreContent = core ? coreMemoryContent(core) : undefined;
     if (!coreContent || sha256(normalizeContent(coreContent)) !== plan.expectedCoreContentHash) {
+      throw new Error("canonical L3/L4 changed after plan; show the new full replacement and obtain fresh user confirmation");
+    }
+    const canonicalRef = await canonicalRevisionRef(input.stateRoot, input.runtime.accountId, plan.kind, plan.projectId, activeCoreItems);
+    if (canonicalRef !== plan.expectedRevisionRef) {
       throw new Error("canonical L3/L4 changed after plan; show the new full replacement and obtain fresh user confirmation");
     }
   } else if (activeCoreItems.length > 0) {
@@ -172,6 +190,12 @@ export async function executeUserAuthorizedMemory(input: {
     ...(confirmation.source_conversation_id ? { conversation_id: confirmation.source_conversation_id } : {}),
     content: confirmation.content
   };
+  // Claim the authorization synchronously before the first write; a concurrent
+  // execute that passed the same checks loses here.
+  if (authorizations.get(authorizationId) !== plan) {
+    throw new Error("invalid or already-used L3/L4 authorization");
+  }
+  authorizations.delete(authorizationId);
   const artifactId = plan.kind === "l3"
     ? `project-profile:${plan.projectId}`
     : `user-profile:${input.runtime.accountId}`;
@@ -245,6 +269,35 @@ async function activeLayerItems(
   const payload = objectRecord(await runtime.memoryClient.viewerGet(`/api/v1/${kind}?${params.toString()}`));
   const items = Array.isArray(payload.items) ? payload.items.map(objectRecord) : [];
   return items.filter((item) => item.status === undefined || item.status === "activated");
+}
+
+/** Exact ref of the newest completed, non-retired revision in this layer/scope that Core still lists as active. */
+async function canonicalRevisionRef(
+  stateRoot: string,
+  accountId: string,
+  kind: "l3" | "l4",
+  projectId: string | null,
+  activeCoreItems: Record<string, unknown>[]
+): Promise<string | null> {
+  const activeIds = new Set(activeCoreItems.map((item) => item.id).filter((id): id is string => typeof id === "string"));
+  let latest: DistillationJob | undefined;
+  for (const job of await listDistillationJobs(stateRoot, accountId)) {
+    if (job.status !== "completed" ||
+        job.target !== kind ||
+        job.result_kind !== kind ||
+        (job.project_id ?? null) !== projectId ||
+        !job.result_id || !activeIds.has(job.result_id) ||
+        !job.result_content?.trim() ||
+        !distillationResultTimestamp(job)) continue;
+    if (!latest || compareCompletedRevision(job, latest) > 0) latest = job;
+  }
+  return latest ? `${kind}:${latest.result_id}:${latest.job_id}` : null;
+}
+
+function compareCompletedRevision(a: DistillationJob, b: DistillationJob): number {
+  return distillationResultTimestamp(a)!.localeCompare(distillationResultTimestamp(b)!) ||
+    a.created_at.localeCompare(b.created_at) ||
+    a.job_id.localeCompare(b.job_id);
 }
 
 function coreMemoryContent(item: Record<string, unknown>): string | undefined {

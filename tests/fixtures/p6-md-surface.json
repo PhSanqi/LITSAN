@@ -33,7 +33,7 @@
     },
     {
       "name": "litsan_turn",
-      "description": "For each relevant user turn, open with user_text and known project. If litsan_card supports inline_claim, open with inline_maintenance=false and claim when ready using event_id as inline_turn_event; otherwise an inline_maintenance offer may be returned by open. If suitable, load and submit its evidence-bound answer before the main task; check the result. Commit the normal assistant_text before the final answer; commit releases skipped cards. Keep evidence separate. Do not invent conversation IDs. If project_resolution appears, ask then assign. / 优先按需领取维护卡，适合处理时先加载并完成即提交；兼容旧版 open 发卡。",
+      "description": "For each relevant user turn, open with user_text and known project. Process offered inline_maintenance, or automatically check litsan_card next with event_id as inline_turn_event if open returned no card. The server sets card count from queue demand; do not self-report busy or skip the check. Submit card answers separately and follow any returned next card until the server stops. Commit normal assistant_text before final response; commit releases leftover leases. Do not invent conversation IDs. Ask on project_resolution. / 每轮自动领取，积压决定数量，首张保底；无需 AI 判断忙闲。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -225,18 +225,34 @@
               },
               "cards_per_turn": {
                 "type": "integer",
-                "minimum": 1,
-                "maximum": 5
+                "minimum": 0,
+                "maximum": 5,
+                "description": "Legacy client preference; automatic queue-driven counts are server-controlled."
               },
               "model": {
                 "type": "string",
                 "maxLength": 80
+              },
+              "availability": {
+                "type": "string",
+                "enum": [
+                  "busy",
+                  "available",
+                  "unknown"
+                ],
+                "description": "Deprecated compatibility field; ignored by queue-driven automatic allocation."
+              },
+              "available_tokens": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 24000,
+                "description": "Deprecated compatibility field; ignored by queue-driven automatic allocation."
               }
             }
           },
           "inline_maintenance": {
             "type": "boolean",
-            "description": "quiet mode automatically offers one bounded same-turn card on open; false opts out, true also opts in for visible mode."
+            "description": "quiet mode offers a queue-selected card on open; false defers to the same-turn next check; true opts in visible mode."
           },
           "maintenance_answer": {
             "type": "object",
@@ -1202,7 +1218,7 @@
     },
     {
       "name": "litsan_card",
-      "description": "Open L1: next + inline_turn_event (or inline_claim) claims when ready; existing inline_maintenance offers work. Use validated input; inline_load only if absent. Submit evidence-based answers immediately with the same card/lease/turn IDs; check the result; keep maintenance separate. / 同轮按需领取，缺输入才加载，完成即提交并核对，勿混入用户答复。",
+      "description": "Each open user turn: next + inline_turn_event. Server picks 1-3 cards by queue demand, first eligible card reserved. Use returned input; inline_load only if absent. Submit evidence-based answers at once with the same card/lease/turn IDs; follow inline_maintenance until none or error. Keep it out of the user answer. / 服务器按积压分配，首张保底；AI 只做蒸馏。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -1256,12 +1272,28 @@
               },
               "cards_per_turn": {
                 "type": "integer",
-                "minimum": 1,
-                "maximum": 5
+                "minimum": 0,
+                "maximum": 5,
+                "description": "Legacy client preference; automatic queue-driven counts are server-controlled."
               },
               "model": {
                 "type": "string",
                 "maxLength": 80
+              },
+              "availability": {
+                "type": "string",
+                "enum": [
+                  "busy",
+                  "available",
+                  "unknown"
+                ],
+                "description": "Deprecated compatibility field; ignored by queue-driven automatic allocation."
+              },
+              "available_tokens": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 24000,
+                "description": "Deprecated compatibility field; ignored by queue-driven automatic allocation."
               }
             }
           },
@@ -1285,6 +1317,10 @@
           },
           "dry": {
             "type": "boolean"
+          },
+          "detailed": {
+            "type": "boolean",
+            "description": "Include scoped L2 backlog and 24-hour throughput statistics."
           }
         },
         "required": [
@@ -1814,6 +1850,8 @@
     "litsan_card": {
       "success": [
         {
+          "account_id": "acct-surface",
+          "project_id": null,
           "kinds": {
             "l2_chunk": {
               "pending": 0,

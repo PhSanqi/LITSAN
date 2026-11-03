@@ -106,7 +106,7 @@ test("maintenance merge renders bilingual events, sorts and deduplicates against
   const wrap = (e, chunkIndex = 0, eventIndex = 0) => ({ event: e, chunkIndex, eventIndex, cardId: "c" });
   const result = mergeChunkEvents({ baseContent: base, canonicalTitle: "Timeline", events: [wrap(event, 1),
     wrap({ ...event, title_en: "Later" }, 2), wrap({ ...event, date: "2026-10-25", title_en: " prior title " }), wrap({ ...event }, 2)] });
-  assert.equal(result.appended, 2); assert.equal(result.dropped_duplicates, 2);
+  assert.equal(result.appended, 2); assert.equal(result.dropped_duplicates, 1);
   assert.ok(result.content.startsWith(base + "\n\n")); assert.ok(result.content.indexOf("Event / 事件") < result.content.indexOf("Later / 事件"));
   assert.match(result.content, /Atomic fact: Durable facts\. \| Evidence: l1:x\n\n长期事实。\n\nEvidence: l1:x\n/);
   assert.equal(mergeChunkEvents({ baseContent: null, canonicalTitle: "Timeline", events: [wrap(event)] }).content,
@@ -357,4 +357,18 @@ test("timeline digest fits normal long bilingual inputs into the inline budget",
   assert.ok(draft.input.events.length > 0 && draft.input.events.length < 10);
   assert.ok(cardEstTokens({ ...draft, instructions: generator.instructions }) <= 2000);
   assert.match(draft.input.events[0].summary, /EN: .*… ZH: .*…/);
+});
+
+import { inlineDispatchBudget } from '../dist/core/maintenance/dispatch.js';
+test('queue-driven allowance ignores AI availability and guarantees first card before extra-card caps', () => {
+  const base = { pending: 10, oldestHours: 0, usedCards: 0, usedTokens: 0, dailyCardsLeft: 20, dailyTokensLeft: 60000, elapsedMs: 0, stopped: false };
+  for (const profile of [undefined, { availability: 'busy', cards_per_turn: 0, available_tokens: 0 }]) {
+    assert.equal(inlineDispatchBudget({ ...base, profile }).limit, 3);
+    assert.equal(inlineDispatchBudget({ ...base, profile, pending: 3 }).limit, 2);
+    assert.equal(inlineDispatchBudget({ ...base, profile, pending: 1 }).limit, 1);
+    assert.equal(inlineDispatchBudget({ ...base, profile, dailyCardsLeft: 0, dailyTokensLeft: 0 }).reason, 'ready');
+  }
+  assert.equal(inlineDispatchBudget({ ...base, pending: 1, oldestHours: 24 }).limit, 2);
+  for (const [overrides, reason] of [[{ stopped: true },'backoff'],[{ elapsedMs: 90000 },'time_budget'],[{ usedCards: 3 },'turn_cap'],[{ dailyCardsLeft: 0 },'daily_cap'],[{ usedTokens: 5700 },'token_budget']])
+    assert.equal(inlineDispatchBudget({ ...base, usedCards: 1, ...overrides }).reason, reason);
 });

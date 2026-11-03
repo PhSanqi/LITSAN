@@ -1,0 +1,1301 @@
+{
+  "name": "Memhub Real Agent Task Arena v1",
+  "version": "real-agent-task-arena-v1",
+  "description": "Deterministic end-to-end coding tasks for measuring whether memory improves actual agent delivery. Primary outcomes come from hidden functional/diff/architecture/stale checks, not an LLM judge.",
+  "categories": {
+    "interrupted_resume": "Resume interrupted work using durable handoff/current truth.",
+    "stale_decision": "Prefer current decisions over superseded history.",
+    "project_isolation": "Modify only the intended project/account/client scope.",
+    "architecture_constraint": "Complete work without violating durable architecture constraints.",
+    "provenance_debug": "Use prior reproduction/root-cause evidence to fix a regression.",
+    "cross_session_handoff": "Carry an agreed contract from design/review into implementation."
+  },
+  "primary_metrics": [
+    "task_completion_rate",
+    "hidden_check_pass_rate",
+    "wrong_scope_modification_rate",
+    "architecture_violation_rate",
+    "stale_fact_usage_rate",
+    "runtime_ms",
+    "token_usage"
+  ],
+  "tasks": [
+    {
+      "id": "resume-retry-delay",
+      "category": "interrupted_resume",
+      "title": "Resume retry policy",
+      "prompt": "Continue the interrupted retry-policy change. Finish only the remaining implementation work.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/retry.js": "export const retryPolicy = { maxRetries: 5, delayMs: 1000 };\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "The accepted retry policy is maxRetries=5 and delayMs=250. maxRetries was already completed; only delayMs remains."
+        ],
+        "superseded": [],
+        "handoff": [
+          "Previous session completed maxRetries and stopped before changing delayMs."
+        ]
+      },
+      "oracle": {
+        "files": {
+          "src/retry.js": "export const retryPolicy = { maxRetries: 5, delayMs: 250 };\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "file_contains",
+          "path": "src/retry.js",
+          "text": "delayMs: 250",
+          "class": "functional"
+        },
+        {
+          "type": "file_contains",
+          "path": "src/retry.js",
+          "text": "maxRetries: 5",
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/retry.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "resume-header-normalization",
+      "category": "interrupted_resume",
+      "title": "Resume header normalization",
+      "prompt": "Continue the interrupted header normalization implementation.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/headers.js": "export function normalizeHeaderName(name) { return name.trim(); }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Header names must be trimmed and lower-cased. Trimming was implemented in the prior session; lower-casing is the remaining step."
+        ],
+        "superseded": [],
+        "handoff": [
+          "The parser integration is done. Only normalizeHeaderName remains."
+        ]
+      },
+      "oracle": {
+        "files": {
+          "src/headers.js": "export function normalizeHeaderName(name) { return name.trim().toLowerCase(); }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/headers.js",
+          "export": "normalizeHeaderName",
+          "args": [
+            "  X-Trace-ID  "
+          ],
+          "equals": "x-trace-id",
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/headers.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "resume-cache-namespace",
+      "category": "interrupted_resume",
+      "title": "Resume cache namespace",
+      "prompt": "Finish the cache-key work from the previous session without redesigning the cache.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/cache.js": "export function cacheKey(projectId, key) { return key; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Cache keys must be project-scoped as `${projectId}:${key}` to prevent cross-project collisions."
+        ],
+        "superseded": [],
+        "handoff": [
+          "Storage and callers were already migrated. The remaining step is cacheKey itself."
+        ]
+      },
+      "oracle": {
+        "files": {
+          "src/cache.js": "export function cacheKey(projectId, key) { return `${projectId}:${key}`; }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/cache.js",
+          "export": "cacheKey",
+          "args": [
+            "memhub",
+            "profile"
+          ],
+          "equals": "memhub:profile",
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/cache.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "resume-strict-flag",
+      "category": "interrupted_resume",
+      "title": "Resume strict flag wiring",
+      "prompt": "Continue the strict-mode flag work from the handoff.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/options.js": "export function strictEnabled(opts) { return false; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "The CLI parser already emits opts.strict. Runtime strict mode must return Boolean(opts.strict); default remains false."
+        ],
+        "superseded": [],
+        "handoff": [
+          "CLI flag parsing is complete; runtime wiring is the only unfinished step."
+        ]
+      },
+      "oracle": {
+        "files": {
+          "src/options.js": "export function strictEnabled(opts) { return Boolean(opts.strict); }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/options.js",
+          "export": "strictEnabled",
+          "args": [
+            {
+              "strict": true
+            }
+          ],
+          "equals": true,
+          "class": "functional"
+        },
+        {
+          "type": "module_call",
+          "path": "src/options.js",
+          "export": "strictEnabled",
+          "args": [
+            {}
+          ],
+          "equals": false,
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/options.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "stale-api-path",
+      "category": "stale_decision",
+      "title": "Reject stale API path",
+      "prompt": "Apply the current API-path decision to the client.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/client.js": "export const API_PATH = \"/v1/memory\";\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Current Truth: memory writes use /v2/memory."
+        ],
+        "superseded": [
+          "Superseded: memory writes use /v1/memory."
+        ],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "src/client.js": "export const API_PATH = \"/v2/memory\";\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "file_contains",
+          "path": "src/client.js",
+          "text": "/v2/memory",
+          "class": "functional"
+        },
+        {
+          "type": "file_not_contains",
+          "path": "src/client.js",
+          "text": "/v1/memory",
+          "class": "stale"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/client.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": [
+        "/v1/memory"
+      ]
+    },
+    {
+      "id": "stale-timeout",
+      "category": "stale_decision",
+      "title": "Reject stale timeout",
+      "prompt": "Update the request timeout according to the current decision.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/timeouts.js": "export const REQUEST_TIMEOUT_MS = 10000;\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Current Truth: request timeout is 3000 ms."
+        ],
+        "superseded": [
+          "Superseded: timeout is 10000 ms."
+        ],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "src/timeouts.js": "export const REQUEST_TIMEOUT_MS = 3000;\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "file_contains",
+          "path": "src/timeouts.js",
+          "text": "3000",
+          "class": "functional"
+        },
+        {
+          "type": "file_not_contains",
+          "path": "src/timeouts.js",
+          "text": "10000",
+          "class": "stale"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/timeouts.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": [
+        "10000"
+      ]
+    },
+    {
+      "id": "stale-config-key",
+      "category": "stale_decision",
+      "title": "Reject stale config key",
+      "prompt": "Bring context-budget lookup in line with the current configuration contract.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/config.js": "export function contextBudget(cfg) { return cfg.memoryLimit ?? 4096; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Current Truth: the supported key is contextBudget; memoryLimit was retired. Default remains 4096."
+        ],
+        "superseded": [
+          "Superseded: use memoryLimit."
+        ],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "src/config.js": "export function contextBudget(cfg) { return cfg.contextBudget ?? 4096; }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/config.js",
+          "export": "contextBudget",
+          "args": [
+            {
+              "contextBudget": 7000
+            }
+          ],
+          "equals": 7000,
+          "class": "functional"
+        },
+        {
+          "type": "file_not_contains",
+          "path": "src/config.js",
+          "text": "memoryLimit",
+          "class": "stale"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/config.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": [
+        "memoryLimit"
+      ]
+    },
+    {
+      "id": "stale-jsonl-format",
+      "category": "stale_decision",
+      "title": "Reject stale wire format",
+      "prompt": "Implement the current serialization decision.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/format.js": "export function encode(row) { return `${row.id}|${row.value}`; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Current Truth: records are serialized as one JSON object per line (JSONL), with a trailing newline."
+        ],
+        "superseded": [
+          "Superseded: serialize as id|value plain text."
+        ],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "src/format.js": "export function encode(row) { return `${JSON.stringify(row)}\\n`; }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/format.js",
+          "export": "encode",
+          "args": [
+            {
+              "id": "a",
+              "value": 2
+            }
+          ],
+          "equals": "{\"id\":\"a\",\"value\":2}\n",
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/format.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": [
+        "|${row.value}"
+      ]
+    },
+    {
+      "id": "isolation-alpha-beta",
+      "category": "project_isolation",
+      "title": "Do not modify sibling project",
+      "prompt": "Finish the auth-mode update for project alpha only.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "projects/alpha/config.js": "export const authMode = \"legacy\";\n",
+          "projects/beta/config.js": "export const authMode = \"legacy\";\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Project alpha Current Truth: authMode is token-v2. Project beta is unrelated and must remain untouched."
+        ],
+        "superseded": [],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "projects/alpha/config.js": "export const authMode = \"token-v2\";\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "file_contains",
+          "path": "projects/alpha/config.js",
+          "text": "token-v2",
+          "class": "functional"
+        },
+        {
+          "type": "path_unchanged",
+          "path": "projects/beta/config.js",
+          "class": "isolation"
+        }
+      ],
+      "expected_changed_paths": [
+        "projects/alpha/config.js"
+      ],
+      "forbidden_changed_prefixes": [
+        "projects/beta/"
+      ],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "isolation-server-personal",
+      "category": "project_isolation",
+      "title": "Keep client editions isolated",
+      "prompt": "Apply the endpoint handoff to the server client only.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "clients/server/settings.js": "export const endpoint = \"old\";\n",
+          "clients/personal/settings.js": "export const endpoint = \"old\";\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Server client endpoint is now \"core-v2\". Personal client has no approved change."
+        ],
+        "superseded": [],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "clients/server/settings.js": "export const endpoint = \"core-v2\";\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "file_contains",
+          "path": "clients/server/settings.js",
+          "text": "core-v2",
+          "class": "functional"
+        },
+        {
+          "type": "path_unchanged",
+          "path": "clients/personal/settings.js",
+          "class": "isolation"
+        }
+      ],
+      "expected_changed_paths": [
+        "clients/server/settings.js"
+      ],
+      "forbidden_changed_prefixes": [
+        "clients/personal/"
+      ],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "isolation-tenant-a",
+      "category": "project_isolation",
+      "title": "Keep tenant state isolated",
+      "prompt": "Continue the tenant-A policy change.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "tenants/a/policy.js": "export const limit = 4;\n",
+          "tenants/b/policy.js": "export const limit = 4;\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Tenant A limit is 6. Tenant B remains 4."
+        ],
+        "superseded": [],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "tenants/a/policy.js": "export const limit = 6;\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "file_contains",
+          "path": "tenants/a/policy.js",
+          "text": "6",
+          "class": "functional"
+        },
+        {
+          "type": "path_unchanged",
+          "path": "tenants/b/policy.js",
+          "class": "isolation"
+        }
+      ],
+      "expected_changed_paths": [
+        "tenants/a/policy.js"
+      ],
+      "forbidden_changed_prefixes": [
+        "tenants/b/"
+      ],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "isolation-main-experimental",
+      "category": "project_isolation",
+      "title": "Keep experimental app untouched",
+      "prompt": "Apply the approved mode update to the main app only.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "apps/main/feature.js": "export const mode = \"safe\";\n",
+          "apps/experimental/feature.js": "export const mode = \"safe\";\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Main app mode is \"strict\". Experimental app is outside this task."
+        ],
+        "superseded": [],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "apps/main/feature.js": "export const mode = \"strict\";\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "file_contains",
+          "path": "apps/main/feature.js",
+          "text": "strict",
+          "class": "functional"
+        },
+        {
+          "type": "path_unchanged",
+          "path": "apps/experimental/feature.js",
+          "class": "isolation"
+        }
+      ],
+      "expected_changed_paths": [
+        "apps/main/feature.js"
+      ],
+      "forbidden_changed_prefixes": [
+        "apps/experimental/"
+      ],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "arch-no-new-dependency",
+      "category": "architecture_constraint",
+      "title": "Implement without a dependency",
+      "prompt": "Implement deduplication while respecting the project architecture.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/dedupe.js": "export function dedupe(items) { return items; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Architecture: do not add a dependency for this; use native language primitives. Preserve first occurrence order."
+        ],
+        "superseded": [],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "src/dedupe.js": "export function dedupe(items) { return [...new Set(items)]; }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/dedupe.js",
+          "export": "dedupe",
+          "args": [
+            [
+              "b",
+              "a",
+              "b",
+              "c",
+              "a"
+            ]
+          ],
+          "equals": [
+            "b",
+            "a",
+            "c"
+          ],
+          "class": "functional"
+        },
+        {
+          "type": "dependencies_unchanged",
+          "class": "architecture"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/dedupe.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [
+        "No new package dependency."
+      ],
+      "stale_markers": []
+    },
+    {
+      "id": "arch-no-second-store",
+      "category": "architecture_constraint",
+      "title": "No parallel durable store",
+      "prompt": "Add delete support without introducing another store or file-backed database.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/cache.js": "const cache = new Map();\nexport function put(k,v){ cache.set(k,v); }\nexport function get(k){ return cache.get(k); }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Architecture: extend the existing Map-backed cache. Do not introduce a second store, DB file, or dependency."
+        ],
+        "superseded": [],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "src/cache.js": "const cache = new Map();\nexport function put(k,v){ cache.set(k,v); }\nexport function get(k){ return cache.get(k); }\nexport function remove(k){ return cache.delete(k); }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/cache.js",
+          "export": "remove",
+          "args": [
+            "missing"
+          ],
+          "equals": false,
+          "class": "functional"
+        },
+        {
+          "type": "path_exists",
+          "path": "src/db.js",
+          "exists": false,
+          "class": "architecture"
+        },
+        {
+          "type": "dependencies_unchanged",
+          "class": "architecture"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/cache.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [
+        "One cache only; no second durable store."
+      ],
+      "stale_markers": []
+    },
+    {
+      "id": "arch-fail-closed-scope",
+      "category": "architecture_constraint",
+      "title": "Fail closed on scope conflict",
+      "prompt": "Fix project scope resolution to obey the architecture contract.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/scope.js": "export function resolveScope(explicit, workspace) { return explicit || workspace || null; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Architecture: conflicting explicit and workspace project evidence fails closed to null; matching or singular evidence resolves normally."
+        ],
+        "superseded": [],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "src/scope.js": "export function resolveScope(explicit, workspace) {\n  if (explicit && workspace && explicit !== workspace) return null;\n  return explicit || workspace || null;\n}\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/scope.js",
+          "export": "resolveScope",
+          "args": [
+            "a",
+            "b"
+          ],
+          "equals": null,
+          "class": "functional"
+        },
+        {
+          "type": "module_call",
+          "path": "src/scope.js",
+          "export": "resolveScope",
+          "args": [
+            "a",
+            "a"
+          ],
+          "equals": "a",
+          "class": "functional"
+        },
+        {
+          "type": "module_call",
+          "path": "src/scope.js",
+          "export": "resolveScope",
+          "args": [
+            null,
+            "b"
+          ],
+          "equals": "b",
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/scope.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [
+        "Project conflicts fail closed."
+      ],
+      "stale_markers": []
+    },
+    {
+      "id": "arch-local-validation",
+      "category": "architecture_constraint",
+      "title": "Keep validation local",
+      "prompt": "Implement name validation under the no-network architecture constraint.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/validate.js": "export async function validateName(name) { return true; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Architecture: validation must be deterministic and local. Valid names match lowercase letters, digits, and hyphens only. No network calls."
+        ],
+        "superseded": [],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "src/validate.js": "export async function validateName(name) { return /^[a-z0-9-]+$/.test(name); }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/validate.js",
+          "export": "validateName",
+          "args": [
+            "memhub-v2"
+          ],
+          "equals": true,
+          "class": "functional"
+        },
+        {
+          "type": "module_call",
+          "path": "src/validate.js",
+          "export": "validateName",
+          "args": [
+            "Memhub V2"
+          ],
+          "equals": false,
+          "class": "functional"
+        },
+        {
+          "type": "file_not_contains",
+          "path": "src/validate.js",
+          "text": "fetch(",
+          "class": "architecture"
+        },
+        {
+          "type": "file_not_contains",
+          "path": "src/validate.js",
+          "text": "http",
+          "class": "architecture"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/validate.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [
+        "No network validation."
+      ],
+      "stale_markers": []
+    },
+    {
+      "id": "debug-trimmed-port",
+      "category": "provenance_debug",
+      "title": "Use prior reproduction evidence",
+      "prompt": "Fix the regression identified in the prior debugging session.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/parse.js": "export function parsePort(text) { return Number(text); }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Provenance: failing input was \" 17678 # control\". Root cause: inline comments were not stripped before Number conversion."
+        ],
+        "superseded": [],
+        "handoff": [
+          "Reproduction was narrowed to parsePort; no other component needs changes."
+        ]
+      },
+      "oracle": {
+        "files": {
+          "src/parse.js": "export function parsePort(text) { return Number(text.split(\"#\",1)[0].trim()); }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/parse.js",
+          "export": "parsePort",
+          "args": [
+            " 17678 # control"
+          ],
+          "equals": 17678,
+          "class": "functional"
+        },
+        {
+          "type": "module_call",
+          "path": "src/parse.js",
+          "export": "parsePort",
+          "args": [
+            "3001"
+          ],
+          "equals": 3001,
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/parse.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "debug-env-rename",
+      "category": "provenance_debug",
+      "title": "Fix renamed environment variable",
+      "prompt": "Apply the root cause from the last regression investigation.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/env.js": "export function endpoint(env) { return env.MEM_ENDPOINT || \"http://127.0.0.1:3001\"; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Provenance: production exposes MEMHUB_ENDPOINT; MEM_ENDPOINT was an obsolete pre-release name. Default stays loopback 3001."
+        ],
+        "superseded": [],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "src/env.js": "export function endpoint(env) { return env.MEMHUB_ENDPOINT || \"http://127.0.0.1:3001\"; }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/env.js",
+          "export": "endpoint",
+          "args": [
+            {
+              "MEMHUB_ENDPOINT": "https://m.example"
+            }
+          ],
+          "equals": "https://m.example",
+          "class": "functional"
+        },
+        {
+          "type": "file_not_contains",
+          "path": "src/env.js",
+          "text": "MEM_ENDPOINT",
+          "class": "stale"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/env.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": [
+        "MEM_ENDPOINT"
+      ]
+    },
+    {
+      "id": "debug-cache-invalidation",
+      "category": "provenance_debug",
+      "title": "Fix stale cache regression",
+      "prompt": "Finish the regression fix from the recorded root cause.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/state.js": "let cached;\nexport function read(load){ if (cached === undefined) cached=load(); return cached; }\nexport function invalidate(){}\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Provenance: stale reads persist because invalidate() never clears the module cache. Correct fix is to reset cached to undefined."
+        ],
+        "superseded": [],
+        "handoff": [
+          "Do not redesign caching; the reproduction isolated invalidate()."
+        ]
+      },
+      "oracle": {
+        "files": {
+          "src/state.js": "let cached;\nexport function read(load){ if (cached === undefined) cached=load(); return cached; }\nexport function invalidate(){ cached = undefined; }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "file_contains",
+          "path": "src/state.js",
+          "text": "cached = undefined",
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/state.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "debug-inclusive-window",
+      "category": "provenance_debug",
+      "title": "Fix interval off-by-one",
+      "prompt": "Use the prior failure evidence to repair the interval calculation.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/window.js": "export function inclusiveCount(start,end){ return end-start; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Provenance: ranges are inclusive. [3,5] contains 3 positions, but current code returns 2."
+        ],
+        "superseded": [],
+        "handoff": []
+      },
+      "oracle": {
+        "files": {
+          "src/window.js": "export function inclusiveCount(start,end){ return end-start+1; }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/window.js",
+          "export": "inclusiveCount",
+          "args": [
+            3,
+            5
+          ],
+          "equals": 3,
+          "class": "functional"
+        },
+        {
+          "type": "module_call",
+          "path": "src/window.js",
+          "export": "inclusiveCount",
+          "args": [
+            7,
+            7
+          ],
+          "equals": 1,
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/window.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "handoff-user-label",
+      "category": "cross_session_handoff",
+      "title": "Continue contract from design handoff",
+      "prompt": "Implement the next handoff item without reopening the completed design.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/render.js": "export function renderUser(user){ return user.name; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Current contract: user labels are `name <email>` when email exists, otherwise `name`."
+        ],
+        "superseded": [],
+        "handoff": [
+          "Design session finalized label format; implementation session starts at renderer."
+        ]
+      },
+      "oracle": {
+        "files": {
+          "src/render.js": "export function renderUser(user){ return user.email ? `${user.name} <${user.email}>` : user.name; }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/render.js",
+          "export": "renderUser",
+          "args": [
+            {
+              "name": "A",
+              "email": "a@x.test"
+            }
+          ],
+          "equals": "A <a@x.test>",
+          "class": "functional"
+        },
+        {
+          "type": "module_call",
+          "path": "src/render.js",
+          "export": "renderUser",
+          "args": [
+            {
+              "name": "A"
+            }
+          ],
+          "equals": "A",
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/render.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "handoff-field-migration",
+      "category": "cross_session_handoff",
+      "title": "Continue migration handoff",
+      "prompt": "Complete the compatibility adapter from the migration handoff.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/compat.js": "export function normalize(row){ return row; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Canonical field is projectId. Legacy persisted rows may still contain project_id; normalize must return projectId without dropping other fields."
+        ],
+        "superseded": [],
+        "handoff": [
+          "Schema migration was approved; only read compatibility remains."
+        ]
+      },
+      "oracle": {
+        "files": {
+          "src/compat.js": "export function normalize(row){ const { project_id, ...rest } = row; return { ...rest, projectId: row.projectId ?? project_id }; }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/compat.js",
+          "export": "normalize",
+          "args": [
+            {
+              "project_id": "memhub",
+              "value": 1
+            }
+          ],
+          "equals": {
+            "value": 1,
+            "projectId": "memhub"
+          },
+          "class": "functional"
+        },
+        {
+          "type": "module_call",
+          "path": "src/compat.js",
+          "export": "normalize",
+          "args": [
+            {
+              "projectId": "new",
+              "project_id": "old"
+            }
+          ],
+          "equals": {
+            "projectId": "new"
+          },
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/compat.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "handoff-error-map",
+      "category": "cross_session_handoff",
+      "title": "Continue error mapping handoff",
+      "prompt": "Implement the error mapping agreed in the previous session.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/errors.js": "export function statusFor(code){ return 500; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Approved mapping: NOT_FOUND→404, CONFLICT→409, everything else→500."
+        ],
+        "superseded": [],
+        "handoff": [
+          "API contract review is complete; implementation is pending."
+        ]
+      },
+      "oracle": {
+        "files": {
+          "src/errors.js": "export function statusFor(code){ if(code === \"NOT_FOUND\") return 404; if(code === \"CONFLICT\") return 409; return 500; }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/errors.js",
+          "export": "statusFor",
+          "args": [
+            "NOT_FOUND"
+          ],
+          "equals": 404,
+          "class": "functional"
+        },
+        {
+          "type": "module_call",
+          "path": "src/errors.js",
+          "export": "statusFor",
+          "args": [
+            "CONFLICT"
+          ],
+          "equals": 409,
+          "class": "functional"
+        },
+        {
+          "type": "module_call",
+          "path": "src/errors.js",
+          "export": "statusFor",
+          "args": [
+            "OTHER"
+          ],
+          "equals": 500,
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/errors.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": []
+    },
+    {
+      "id": "handoff-stable-order",
+      "category": "cross_session_handoff",
+      "title": "Continue ordering handoff",
+      "prompt": "Finish the deterministic ordering implementation from the prior session.",
+      "workspace": {
+        "files": {
+          "package.json": "{\n  \"name\": \"arena-fixture\",\n  \"private\": true,\n  \"type\": \"module\"\n}\n",
+          "src/order.js": "export function order(items){ return items; }\n"
+        }
+      },
+      "memory": {
+        "current": [
+          "Sort by priority descending; ties preserve original order."
+        ],
+        "superseded": [],
+        "handoff": [
+          "Product behavior is finalized; do not add secondary sort keys."
+        ]
+      },
+      "oracle": {
+        "files": {
+          "src/order.js": "export function order(items){ return items.map((item,index)=>({item,index})).sort((a,b)=>b.item.priority-a.item.priority || a.index-b.index).map(x=>x.item); }\n"
+        }
+      },
+      "checks": [
+        {
+          "type": "module_call",
+          "path": "src/order.js",
+          "export": "order",
+          "args": [
+            [
+              {
+                "id": "a",
+                "priority": 1
+              },
+              {
+                "id": "b",
+                "priority": 3
+              },
+              {
+                "id": "c",
+                "priority": 3
+              }
+            ]
+          ],
+          "equals": [
+            {
+              "id": "b",
+              "priority": 3
+            },
+            {
+              "id": "c",
+              "priority": 3
+            },
+            {
+              "id": "a",
+              "priority": 1
+            }
+          ],
+          "class": "functional"
+        }
+      ],
+      "expected_changed_paths": [
+        "src/order.js"
+      ],
+      "forbidden_changed_prefixes": [],
+      "architecture_rules": [],
+      "stale_markers": []
+    }
+  ]
+}

@@ -58,6 +58,9 @@ export interface MemoryWhyEvidenceItem {
   matched_terms: string[];
 }
 
+const MAX_EXACT_REVISION_HYDRATION_CACHE = 256;
+const exactRevisionHydrationCache = new Map<string, Promise<HydratedMemoryEvidence>>();
+
 interface MemoryHydrationEvent {
   event_id: string;
   evidence_ref: string;
@@ -105,6 +108,29 @@ export async function hydrateMemoryEvidence(input: {
   const prefix = versioned[1]! as "l2" | "l3" | "l4" | "global_state";
   const memoryId = versioned[2]!;
   const revisionId = versioned[3]!;
+  const cacheKey = `${resolve(input.stateRoot)}\u0000${input.accountId}\u0000${ref}`;
+  const cached = exactRevisionHydrationCache.get(cacheKey);
+  if (cached) return cached;
+  const pending = hydrateExactRevision(input, ref, prefix, memoryId, revisionId).catch((error) => {
+    exactRevisionHydrationCache.delete(cacheKey);
+    throw error;
+  });
+  exactRevisionHydrationCache.set(cacheKey, pending);
+  while (exactRevisionHydrationCache.size > MAX_EXACT_REVISION_HYDRATION_CACHE) {
+    const oldest = exactRevisionHydrationCache.keys().next().value as string | undefined;
+    if (!oldest) break;
+    exactRevisionHydrationCache.delete(oldest);
+  }
+  return pending;
+}
+
+async function hydrateExactRevision(
+  input: { stateRoot: string; accountId: string; evidenceRef: string; projects?: FactProjectReader },
+  ref: string,
+  prefix: "l2" | "l3" | "l4" | "global_state",
+  memoryId: string,
+  revisionId: string
+): Promise<HydratedMemoryEvidence> {
   const jobs = await listDistillationJobs(input.stateRoot, input.accountId, true);
   const job = jobs.find((candidate) =>
     candidate.job_id === revisionId &&
@@ -120,13 +146,35 @@ export async function hydrateMemoryEvidence(input: {
   const projectStorageIds = prefix === "l2"
     ? await factProjectStorageIds(input.projects, input.accountId, job.project_id)
     : [];
-  const factMetadata = prefix === "l2" || prefix === "l3"
-    ? filterFactMetadataEvidence(
-      job.result_fact_metadata ?? extractDistilledFactMetadata(prefix, content, prefix === "l3" ? job.evidence_refs : []),
-      verifiedFactEvidenceRefs({ kind: prefix, accountId: input.accountId, projectId: job.project_id,
-        projectStorageIds, evidence: job.evidence, jobs, asOf: distillationResultTimestamp(job) ?? job.updated_at })
-    )
-    : undefined;
+  let factMetadata: DistilledFactMetadataSet | undefined;
+  if (prefix === "l2" || prefix === "l3") {
+    const verifiedRefs = verifiedFactEvidenceRefs({
+      kind: prefix,
+      accountId: input.accountId,
+      projectId: job.project_id,
+      projectStorageIds,
+      evidence: job.evidence,
+      jobs,
+      asOf: distillationResultTimestamp(job) ?? job.updated_at
+    });
+    const persisted = job.result_fact_metadata;
+    factMetadata = filterFactMetadataEvidence(
+      persisted ?? extractDistilledFactMetadata(prefix, content, prefix === "l3" ? job.evidence_refs : []),
+      verifiedRefs
+    );
+    // Legacy revisions may contain persisted Fact Metadata from an older
+    // parser that preserved the facts but failed to bind exact provenance.
+    // If verified filtering removes the whole persisted set, retry only from
+    // this immutable revision body with the current parser, then apply the
+    // exact same evidence verification. This recovers trustworthy legacy
+    // provenance without inventing refs or weakening the evidence boundary.
+    if (persisted && !factMetadata) {
+      factMetadata = filterFactMetadataEvidence(
+        extractDistilledFactMetadata(prefix, content, prefix === "l3" ? job.evidence_refs : []),
+        verifiedRefs
+      );
+    }
+  }
   return {
     evidence_ref: ref,
     layer,
@@ -141,6 +189,10 @@ export async function hydrateMemoryEvidence(input: {
     ...(factMetadata ? { fact_metadata: factMetadata } : {}),
     estimated_tokens: estimateTokens(content)
   };
+}
+
+export function resetExactRevisionHydrationCacheForTests(): void {
+  exactRevisionHydrationCache.clear();
 }
 
 /**

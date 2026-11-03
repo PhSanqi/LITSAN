@@ -2,13 +2,13 @@ import { toolName } from "../../brand.mjs";
 import { jsonResult, type ToolDefinition } from "./shared.js";
 import type { MaintenanceDeps } from "../../maintenance-control.js";
 import type { MaintenanceCardKind } from "../../contracts/maintenance.js";
-import { nextCard, queueStatus, submitCard, releaseCard, loadInlineCard } from "../../maintenance-control.js";
+import { nextCard, queueStatus, submitCard, releaseCard, loadInlineCard, claimInlineMaintenance } from "../../maintenance-control.js";
 import { requiredString, optionalString, optionalInteger, type CatalogContext, CLIENT_PROFILE_SCHEMA } from "./shared.js";
 import { listCaptureEvents } from "../../capture.js";
 import { resolveCaptureProject } from "../../capture-project-resolution.js";
 import { eventBranchAssignment } from "../../capture-branch-assignments.js";
 import { inlineTurnOwner } from "../../maintenance-control.js";
-import { appendMaintenanceCallTiming, type MaintenanceCallTiming, getMaintenanceConfig, readMaintenanceStore, withMaintenanceOfferState } from "../../maintenance-store.js";
+import { appendMaintenanceCallTiming, type MaintenanceCallTiming } from "../../maintenance-store.js";
 
 export function cardTools(deps: { runtime: MaintenanceDeps["runtime"]; context: CatalogContext }): ToolDefinition[] {
   const tools: ToolDefinition[] = [];
@@ -34,22 +34,8 @@ export function cardTools(deps: { runtime: MaintenanceDeps["runtime"]; context: 
           if (action === "inline_claim") {
             if (!["open", "partial"].includes(event.capture_status) || ![undefined, "user"].includes(event.provenance?.origin as string | undefined) ||
               ![undefined, "user_prompt"].includes(event.provenance?.trigger as string | undefined)) return jsonResult({ ok: false, code: "turn_unavailable" });
-            const config = await getMaintenanceConfig(stateRoot), now = Date.now();
-            if (config.conversation_maintenance !== "quiet" || config.opted_out_projects.includes(project) ||
-              (event.user_text?.length ?? 0) > config.heavy_turn_chars) return jsonResult({ ok: true, card: null });
-            const selected = await withMaintenanceOfferState(stateRoot, runtime.accountId, now, async state => {
-              const requestedCap = optionalInteger((args.client_profile as Record<string, unknown> | undefined)?.max_card_tokens) ?? 3000;
-              const held = (await readMaintenanceStore(stateRoot, runtime.accountId)).cards.some(c => c.project_id === project &&
-                (c.branch_id ?? "main") === (branch?.branch_id ?? "main") && c.status === "leased" &&
-                c.lease?.owner === inlineTurnOwner(inlineEvent) && Date.parse(c.lease.until) > now);
-              const cap = Math.min(8000, requestedCap, held ? 8000 : config.daily_est_token_cap - state.est_tokens_offered);
-              if ((!held && state.cards_offered >= config.daily_card_cap) || cap < 500) return { card: null };
-              const result = await nextCard({ ...base, projectId: project, harness: inlineTurnOwner(inlineEvent), profile: { execution: "inline" },
-                kinds: ["l2_chunk", "timeline_digest", "arch_review"], leaseSeconds: 900, inlineL2MaxTokens: cap,
-                inlineBranchId: branch?.branch_id ?? "main", resumeInlineOnly: held });
-              if (result.card && !result.resumed) { state.cards_offered++; state.est_tokens_offered += result.card.est_tokens; }
-              return result;
-            });
+            const selected = await claimInlineMaintenance({ stateRoot, runtime, projectId: project, eventId: inlineEvent,
+              branchId: branch?.branch_id ?? "main", profile: args.client_profile, hydrate: true });
             if (selected.card) {
               const latest = (await listCaptureEvents(stateRoot, runtime.accountId, { eventId: inlineEvent, limit: 1 }))[0];
               if (!latest || !["open", "partial"].includes(latest.capture_status)) {
@@ -57,19 +43,36 @@ export function cardTools(deps: { runtime: MaintenanceDeps["runtime"]; context: 
                 return jsonResult({ ok: false, code: "turn_unavailable" });
               }
             }
-            if (!selected.card) return jsonResult({ ok: true, card: null });
-            // Claiming is explicit agent readiness: hydrate once here to avoid a second tool round trip.
-            const loaded = await loadInlineCard({ stateRoot, runtime, projectId: project, inlineTurnId: inlineEvent,
-              inlineBranchId: branch?.branch_id ?? "main", cardId: selected.card.card_id, leaseToken: selected.card.lease_token });
-            if (!loaded.ok) await releaseCard({ ...base, harness: inlineTurnOwner(inlineEvent),
-              cardId: selected.card.card_id, leaseToken: selected.card.lease_token });
-            return jsonResult(loaded);
+            return jsonResult(selected);
           }
           if (action === "inline_load") return jsonResult(await loadInlineCard({ stateRoot, runtime, projectId: project, inlineTurnId: inlineEvent,
             inlineBranchId: branch?.branch_id ?? "main", cardId: requiredString(args.card_id, "card_id"), leaseToken: requiredString(args.lease_token, "lease_token") }));
-          return jsonResult(await submitCard({ ...base, harness: inlineTurnOwner(inlineEvent), cardId: requiredString(args.card_id, "card_id"),
+          const accepted = await submitCard({ ...base, harness: inlineTurnOwner(inlineEvent), cardId: requiredString(args.card_id, "card_id"),
             leaseToken: requiredString(args.lease_token, "lease_token"), answer: args.answer, project,
-            inlineTurnId: inlineEvent, inlineBranchId: branch?.branch_id ?? "main" }));
+            inlineTurnId: inlineEvent, inlineBranchId: branch?.branch_id ?? "main" });
+          // Successful submissions advance the queue without asking the AI to report availability.
+          if (accepted.ok && !("already_accepted" in accepted) && !("merge_error" in accepted && accepted.merge_error)) {
+            const latest = (await listCaptureEvents(stateRoot, runtime.accountId, { eventId: inlineEvent, limit: 1 }))[0];
+            if (latest && ["open", "partial"].includes(latest.capture_status) && [undefined, "user"].includes(latest.provenance?.origin as string | undefined) &&
+              [undefined, "user_prompt"].includes(latest.provenance?.trigger as string | undefined)) {
+              try {
+                const next = await claimInlineMaintenance({ stateRoot, runtime, projectId: project, eventId: inlineEvent,
+                  branchId: branch?.branch_id ?? "main", profile: args.client_profile, hydrate: true });
+                if (next.card) {
+                  const current = (await listCaptureEvents(stateRoot, runtime.accountId, { eventId: inlineEvent, limit: 1 }))[0];
+                  if (!current || !["open", "partial"].includes(current.capture_status)) {
+                    await releaseCard({ ...base, harness: inlineTurnOwner(inlineEvent), cardId: next.card.card_id, leaseToken: next.card.lease_token });
+                    return jsonResult(accepted);
+                  }
+                }
+                return jsonResult({ ...accepted, dispatch: next.dispatch, ...(next.card ? { inline_maintenance: next.card } : {}) });
+              } catch (error) {
+                console.error("[litsan] automatic card continuation:", error);
+                return jsonResult({ ...accepted, dispatch_error: "allocation_unavailable" });
+              }
+            }
+          }
+          return jsonResult(accepted);
         }
         if (action === "inline_load" || action === "inline_claim") return jsonResult({ ok: false, code: "turn_unavailable" });
         return jsonResult(await submitCard({ ...base, cardId: requiredString(args.card_id, "card_id"), leaseToken: requiredString(args.lease_token, "lease_token"),
@@ -79,21 +82,21 @@ export function cardTools(deps: { runtime: MaintenanceDeps["runtime"]; context: 
       const projects = await Promise.all(refs.map(ref => runtime.projects.resolve(runtime.accountId, ref)));
       if (projects.some(p => !p) || new Set(projects).size > 1) throw new Error("wrong_project");
       const projectId = projects[0] ?? undefined;
-      if (action === "queue_status") return jsonResult(await queueStatus({ ...base, projectId, dry: args.dry === true }), false);
+      if (action === "queue_status") return jsonResult(await queueStatus({ ...base, projectId, detailed: args.detailed === true, dry: args.dry === true }), false);
       if (action === "next") return jsonResult(await nextCard({ ...base, projectId, cardId: optionalString(args.card_id), kinds: args.kinds as MaintenanceCardKind[] | undefined, leaseSeconds: optionalInteger(args.lease_seconds) }));
       if (action === "release") return jsonResult(await releaseCard({ ...base, cardId: requiredString(args.card_id, "card_id"), leaseToken: requiredString(args.lease_token, "lease_token") }));
       throw new Error("unsupported card action");
   };
   tools.push({
     name: toolName("card"),
-    description: "Open L1: next + inline_turn_event (or inline_claim) claims when ready; existing inline_maintenance offers work. Use validated input; inline_load only if absent. Submit evidence-based answers immediately with the same card/lease/turn IDs; check the result; keep maintenance separate. / 同轮按需领取，缺输入才加载，完成即提交并核对，勿混入用户答复。",
+    description: "Each open user turn: next + inline_turn_event. Server picks 1-3 cards by queue demand, first eligible card reserved. Use returned input; inline_load only if absent. Submit evidence-based answers at once with the same card/lease/turn IDs; follow inline_maintenance until none or error. Keep it out of the user answer. / 服务器按积压分配，首张保底；AI 只做蒸馏。",
     inputSchema: { type: "object", required: ["action"], additionalProperties: false, properties: {
       action: { type: "string", enum: ["queue_status", "next", "submit", "release", "inline_claim", "inline_load"] },
       card_id: { type: "string" }, lease_token: { type: "string" }, answer: { type: "object", additionalProperties: true },
       inline_turn_event: { type: "string", description: "L1 event that owns an in-turn card lease; with next, restricts the claim to this open turn." },
       project: { type: "string" }, workspace_project: { type: "string" },
       client_profile: CLIENT_PROFILE_SCHEMA, kinds: { type: "array", items: { type: "string", enum: ["l2_chunk", "arch_link", "gap_check", "arch_review", "timeline_digest"] } },
-      lease_seconds: { type: "integer", minimum: 30, maximum: 900 }, dry: { type: "boolean" }
+      lease_seconds: { type: "integer", minimum: 30, maximum: 900 }, dry: { type: "boolean" }, detailed: { type: "boolean", description: "Include scoped L2 backlog and 24-hour throughput statistics." }
     } },
     run: async (args: Record<string, unknown>) => {
       const started = performance.now();

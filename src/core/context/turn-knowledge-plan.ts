@@ -10,6 +10,8 @@ export interface TurnKnowledgePassage {
   text: string;
   matched_terms: string[];
   score: number;
+  fact_id?: string;
+  parent_id?: string;
 }
 
 export interface TurnKnowledgeEntry {
@@ -58,7 +60,78 @@ export interface TurnKnowledgePlan {
     omitted_items: number;
   };
   sufficiency: "unknown" | "partial";
+  evidence_sufficiency?: TurnKnowledgeEvidenceSufficiency;
+  context_packing?: TurnKnowledgeContextPacking;
   rules?: string[];
+}
+
+export interface DerivedFactPlanHit {
+  fact_id: string;
+  parent_id: string;
+  score: number;
+  semantic_score?: number;
+  lexical_score?: number;
+  matched_terms?: string[];
+  series_id?: string;
+  series_kind?: "entity_timeline" | "entity_topic" | "supersession";
+  series_relation?: "seed" | "neighbor" | "time_window" | "ordered_series";
+  series_distance?: number;
+  temporal_time?: {
+    raw: string;
+    precision: "date" | "month" | "year" | "range" | "unknown";
+    start?: string;
+    end?: string;
+    original_expression?: string;
+    source: "canonical" | "relative_evidence" | "evidence_timestamp";
+    confidence: number;
+    answerable: boolean;
+  };
+}
+
+export interface AdaptiveEvidenceCandidate {
+  evidence_ref: string;
+  text: string;
+  score: number;
+  matched_terms?: string[];
+}
+
+export interface TurnKnowledgeEvidenceSufficiency {
+  version: "evidence-sufficiency-v1";
+  status: "sufficient" | "partial" | "insufficient";
+  query_terms: string[];
+  matched_terms: string[];
+  lexical_coverage: number;
+  grounded_passages: number;
+  adaptive_evidence_used: boolean;
+  reason: string;
+}
+
+export interface TurnKnowledgeContextPacking {
+  version: "adaptive-context-packing-v1";
+  base_bytes: 4000;
+  expanded_bytes: 6000;
+  max_bytes: 8000;
+  recommended_bytes: 4000 | 6000 | 8000;
+}
+
+export interface PackedTurnKnowledgeSection {
+  id: string;
+  role: TurnKnowledgeRole | "fallback";
+  kind: TurnKnowledgeKind | "projectMemory";
+  source: "turn_knowledge_plan" | "project_memory";
+  text: string;
+  score: number;
+  evidence_ref?: string;
+}
+
+export interface PackedTurnKnowledgeContext {
+  version: "adaptive-context-pack-v1";
+  stage: "base_4k" | "expanded_6k" | "max_8k";
+  budget_bytes: number;
+  used_bytes: number;
+  context: string;
+  sections: PackedTurnKnowledgeSection[];
+  evidence_sufficiency: TurnKnowledgeEvidenceSufficiency;
 }
 
 export interface BuildTurnKnowledgePlanInput {
@@ -67,6 +140,7 @@ export interface BuildTurnKnowledgePlanInput {
   hydrateEvidence?: (evidenceRef: string) => Promise<{ content: string; factMetadata?: DistilledFactMetadataSet } | null>;
   detail?: "brief" | "full";
   dedupe?: boolean;
+  adaptiveEvidence?: readonly AdaptiveEvidenceCandidate[];
   policy?: Partial<TurnKnowledgePolicy>;
 }
 
@@ -120,7 +194,7 @@ export const DEFAULT_TURN_KNOWLEDGE_POLICY: Readonly<TurnKnowledgePolicy> = Obje
   freshL1RelevantOnly: false,
   freshL1Role: "supporting",
   supportingSelection: "current",
-  passageWindow: "head",
+  passageWindow: "matched",
   trustAdmittedArchitecture: false,
   trustAdmittedSupporting: false
 });
@@ -174,6 +248,7 @@ export async function buildTurnKnowledgePlan(input: BuildTurnKnowledgePlanInput)
       typedFactFocusTerms,
       fullContent: topL3.evidenceRef ? hydrated.get(topL3.evidenceRef)?.content : undefined,
       factMetadata: topL3.evidenceRef ? hydrated.get(topL3.evidenceRef)?.factMetadata : undefined,
+      factRetrievalHits: derivedFactHits(topL3),
       fallback: "retrieval",
       maxPassages: policy.maxPassagesPerEntry,
       maxPassageChars: policy.maxPassageChars,
@@ -242,7 +317,10 @@ export async function buildTurnKnowledgePlan(input: BuildTurnKnowledgePlanInput)
     (policy.freshL1Role === "required" ? required : supporting).push(entry);
   }
 
-  if (topL2) {
+  const hasStructuralAdaptiveEvidence = (input.adaptiveEvidence ?? [])
+    .some((candidate) => candidate.text.trimStart().startsWith("[Event family "));
+
+  if (topL2 && !hasStructuralAdaptiveEvidence) {
     supporting.push(memoryEntry({
       item: topL2,
       role: "supporting",
@@ -253,11 +331,37 @@ export async function buildTurnKnowledgePlan(input: BuildTurnKnowledgePlanInput)
       typedFactFocusTerms,
       fullContent: topL2.evidenceRef ? hydrated.get(topL2.evidenceRef)?.content : undefined,
       factMetadata: topL2.evidenceRef ? hydrated.get(topL2.evidenceRef)?.factMetadata : undefined,
+      factRetrievalHits: derivedFactHits(topL2),
       fallback: "latest",
       maxPassages: policy.maxPassagesPerEntry,
       maxPassageChars: policy.maxPassageChars,
       passageWindow: policy.passageWindow
     }));
+  }
+
+  for (const candidate of input.adaptiveEvidence ?? []) {
+    const text = candidate.text.trim();
+    if (!text || !candidate.evidence_ref.trim()) continue;
+    const eventFamilyTemporal = text.startsWith("[Event family ");
+    const normalizedTemporal = text.startsWith("[Event series temporal normalization:");
+    const structuralTemporal = eventFamilyTemporal || normalizedTemporal;
+    supporting.push({
+      role: "supporting",
+      kind: "L1",
+      id: `adaptive:${candidate.evidence_ref}`,
+      evidence_ref: candidate.evidence_ref,
+      reason: structuralTemporal ? "adaptive_structural_temporal_evidence" : "adaptive_evidence_hydration",
+      use: structuralTemporal
+        ? eventFamilyTemporal
+          ? "Bounded exact L1 temporal event-family evidence. Use the grouped members together for order, interval or window reasoning; it remains supporting evidence and does not override Current Truth."
+          : "Bounded exact L1 evidence with source-grounded temporal normalization. Use the normalized time together with the raw statement; it remains supporting evidence and does not override Current Truth."
+        : "Exact raw evidence admitted only because the derived fact bundle was not sufficient. Use it to ground missing details without overriding Current Truth.",
+      passages: [{
+        text: boundText(text, Math.max(policy.maxPassageChars, 1200)),
+        matched_terms: (candidate.matched_terms ?? []).slice(0, 16),
+        score: Math.max(0, candidate.score) * 100
+      }]
+    });
   }
 
   for (const item of capsule.globalState) {
@@ -332,12 +436,18 @@ export async function buildTurnKnowledgePlan(input: BuildTurnKnowledgePlanInput)
     });
   }
 
-  const orderedSupporting = orderSupporting(supporting, policy.supportingSelection);
+  const orderedSupporting = orderSupporting(
+    supporting,
+    input.adaptiveEvidence?.length ? "score" : policy.supportingSelection
+  );
   const boundedRequired = required.slice(0, policy.maxRequiredEntries);
+  const supportingLimit = input.adaptiveEvidence?.length
+    ? Math.max(policy.maxSupportingEntries, Math.min(8, policy.maxSupportingEntries + input.adaptiveEvidence.length))
+    : policy.maxSupportingEntries;
   const boundedSupporting = dedupeSupportingPassages(
     boundedRequired,
     orderedSupporting
-  ).slice(0, policy.maxSupportingEntries);
+  ).slice(0, supportingLimit);
   omittedItems += Math.max(0, required.length - boundedRequired.length);
   omittedItems += Math.max(0, orderedSupporting.length - boundedSupporting.length);
 
@@ -397,7 +507,207 @@ export async function buildTurnKnowledgePlan(input: BuildTurnKnowledgePlanInput)
     } : {})
   };
 
-  return input.dedupe ? dedupeTurnKnowledgePlan(rawPlan, capsule) : rawPlan;
+  const planned = input.dedupe ? dedupeTurnKnowledgePlan(rawPlan, capsule) : rawPlan;
+  return annotateTurnKnowledgeEvidence(planned, query, Boolean(input.adaptiveEvidence?.length));
+}
+
+/**
+ * Evidence sufficiency is intentionally a bounded deterministic signal, not a
+ * second semantic judge. It answers only whether the selected evidence bundle
+ * appears strong enough to stop expanding context for this turn.
+ */
+export function annotateTurnKnowledgeEvidence(
+  plan: TurnKnowledgePlan,
+  query: string,
+  adaptiveEvidenceUsed = false
+): TurnKnowledgePlan {
+  const queryTerms = knowledgeQueryTerms(query);
+  const passages = [...plan.required, ...plan.supporting]
+    .flatMap((entry) => (entry.passages ?? []).map((passage) => ({ entry, passage })));
+  const grounded = passages.filter(({ entry, passage }) =>
+    entry.reason === "adaptive_evidence_hydration" ||
+    /Atomic fact:/iu.test(passage.text) ||
+    entry.kind === "L1"
+  );
+  const matchedTerms = uniqueStrings(grounded.flatMap(({ passage }) => [
+    ...passage.matched_terms,
+    ...matchedKnowledgeTerms(passage.text, queryTerms)
+  ]));
+  const coveredQueryTerms = queryTerms.filter((term) =>
+    matchedTerms.some((matched) => comparableTerm(matched) === comparableTerm(term))
+  );
+  const lexicalCoverage = queryTerms.length > 0 ? coveredQueryTerms.length / queryTerms.length : 0;
+  const topScore = Math.max(0, ...grounded.map(({ passage }) => passage.score));
+  let status: TurnKnowledgeEvidenceSufficiency["status"];
+  let reason: string;
+  if (grounded.length > 0 && topScore >= 60 && (lexicalCoverage >= 0.4 || matchedTerms.length >= Math.min(3, queryTerms.length))) {
+    status = "sufficient";
+    reason = "high-scoring grounded passages cover the main query anchors";
+  } else if (grounded.length > 0 && (topScore >= 45 || lexicalCoverage >= 0.2 || matchedTerms.length > 0)) {
+    status = "partial";
+    reason = "grounded evidence is relevant but some query anchors remain weakly covered";
+  } else {
+    status = "insufficient";
+    reason = "the selected evidence bundle lacks a strong grounded match";
+  }
+  const recommended: 4000 | 6000 | 8000 = status === "sufficient" && !adaptiveEvidenceUsed
+    ? 4000
+    : status === "insufficient"
+      ? 8000
+      : 6000;
+  return {
+    ...plan,
+    evidence_sufficiency: {
+      version: "evidence-sufficiency-v1",
+      status,
+      query_terms: queryTerms,
+      matched_terms: matchedTerms.slice(0, 24),
+      lexical_coverage: roundScore(lexicalCoverage),
+      grounded_passages: grounded.length,
+      adaptive_evidence_used: adaptiveEvidenceUsed,
+      reason
+    },
+    context_packing: {
+      version: "adaptive-context-packing-v1",
+      base_bytes: 4000,
+      expanded_bytes: 6000,
+      max_bytes: 8000,
+      recommended_bytes: recommended
+    }
+  };
+}
+
+/**
+ * Pack the host-facing answer context from TKP passages first, then bounded
+ * project-memory fallbacks. The byte ceiling is a hard fence; callers cannot
+ * silently turn adaptive expansion into an unbounded context dump.
+ */
+export function packTurnKnowledgeContext(input: {
+  query: string;
+  plan: TurnKnowledgePlan;
+  projectMemory?: readonly ContextItem[];
+  maxBytes?: number;
+}): PackedTurnKnowledgeContext {
+  const annotated = input.plan.evidence_sufficiency && input.plan.context_packing
+    ? input.plan
+    : annotateTurnKnowledgeEvidence(input.plan, input.query);
+  const recommended = annotated.context_packing?.recommended_bytes ?? 4000;
+  const budget = Math.max(1000, Math.min(8000, Math.trunc(input.maxBytes ?? recommended)));
+  const stage: PackedTurnKnowledgeContext["stage"] = budget <= 4000
+    ? "base_4k"
+    : budget <= 6000
+      ? "expanded_6k"
+      : "max_8k";
+
+  const planSections = planContextSections(annotated);
+  const fallbackSections = (input.projectMemory ?? []).map((item, index): PackedTurnKnowledgeSection => ({
+    id: item.id,
+    role: "fallback",
+    kind: "projectMemory",
+    source: "project_memory",
+    text: item.content,
+    score: Number((item.provenance?.retrievalV1 as { fusedScore?: number } | undefined)?.fusedScore ??
+      item.provenance?.score ?? Math.max(0, 1 - index / 100)),
+    ...(item.evidenceRef ? { evidence_ref: item.evidenceRef } : {})
+  }));
+  const seen = new Set<string>();
+  const selected: PackedTurnKnowledgeSection[] = [];
+  let remaining = budget;
+  for (const section of [...planSections, ...fallbackSections]) {
+    const key = normalizeComparableText(section.text);
+    if (!key || seen.has(key)) continue;
+    const prefix = `[${section.role}/${section.kind}/${section.source}]\n`;
+    const prefixBytes = Buffer.byteLength(prefix, "utf8");
+    if (remaining <= prefixBytes + 32) continue;
+    const text = boundUtf8(section.text, remaining - prefixBytes);
+    if (!text) continue;
+    const renderedBytes = prefixBytes + Buffer.byteLength(text, "utf8");
+    selected.push({ ...section, text });
+    seen.add(key);
+    remaining -= renderedBytes;
+    if (remaining <= 64) break;
+  }
+  const context = selected.map((section) =>
+    `[${section.role}/${section.kind}/${section.source}]\n${section.text}`
+  ).join("\n\n");
+  return {
+    version: "adaptive-context-pack-v1",
+    stage,
+    budget_bytes: budget,
+    used_bytes: Buffer.byteLength(context, "utf8"),
+    context,
+    sections: selected,
+    evidence_sufficiency: annotated.evidence_sufficiency!
+  };
+}
+
+function planContextSections(plan: TurnKnowledgePlan): PackedTurnKnowledgeSection[] {
+  const entries = [...plan.required, ...plan.supporting];
+  const sections = entries.flatMap((entry) => (entry.passages ?? []).map((passage, index): PackedTurnKnowledgeSection => ({
+    id: `${entry.id}:p${index}`,
+    role: entry.role,
+    kind: entry.kind,
+    source: "turn_knowledge_plan",
+    text: passage.text,
+    score: passage.score,
+    ...(entry.evidence_ref ? { evidence_ref: entry.evidence_ref } : {})
+  })));
+  const priority = (section: PackedTurnKnowledgeSection): number => {
+    if (section.role === "required") return 0;
+    const entry = entries.find((candidate) => section.id.startsWith(`${candidate.id}:`) && candidate.reason === "adaptive_structural_temporal_evidence");
+    if (entry) return 0.5;
+    // Ordinary supporting L1 and evidence-backed L2 passages compete on the
+    // relevance score already assigned by TKP. A hard L1-before-L2 ordering
+    // can otherwise let several generic raw observations exhaust a bounded
+    // context before a higher-scoring typed L2 fact that directly answers the
+    // query. Structural temporal evidence stays ahead of both.
+    if (section.kind === "L1" || section.kind === "L2") return 1;
+    return 2;
+  };
+  return sections.sort((left, right) =>
+    priority(left) - priority(right) || right.score - left.score || left.id.localeCompare(right.id)
+  );
+}
+
+function knowledgeQueryTerms(query: string): string[] {
+  return uniqueStrings(tokenizeRetrievalText(query)
+    .map((term) => comparableTerm(term))
+    .filter((term) => [...term].length >= 2 && !PASSAGE_QUERY_STOPWORDS.has(term)))
+    .slice(0, 24);
+}
+
+function matchedKnowledgeTerms(text: string, queryTerms: readonly string[]): string[] {
+  const tokens = new Set(tokenizeRetrievalText(text).map((term) => comparableTerm(term)));
+  const lower = text.normalize("NFKC").toLocaleLowerCase();
+  return queryTerms.filter((term) => tokens.has(comparableTerm(term)) || lower.includes(term));
+}
+
+function comparableTerm(value: string): string {
+  const token = value.normalize("NFKC").toLocaleLowerCase();
+  if (token.endsWith("ies") && token.length > 4) return `${token.slice(0, -3)}y`;
+  if (token.endsWith("ing") && token.length > 5) return token.slice(0, -3);
+  if (token.endsWith("ed") && token.length > 4) return token.slice(0, -2);
+  if (token.endsWith("s") && token.length > 3) return token.slice(0, -1);
+  return token;
+}
+
+function boundUtf8(value: string, maxBytes: number): string {
+  const normalized = value.trim();
+  if (maxBytes <= 0) return "";
+  if (Buffer.byteLength(normalized, "utf8") <= maxBytes) return normalized;
+  let low = 0, high = normalized.length;
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    if (Buffer.byteLength(normalized.slice(0, mid), "utf8") <= Math.max(1, maxBytes - 3)) low = mid;
+    else high = mid - 1;
+  }
+  let end = low;
+  if (end > 0 && /[\uD800-\uDBFF]/u.test(normalized[end - 1]!)) end -= 1;
+  return end > 0 ? `${normalized.slice(0, end).trimEnd()}…` : "";
+}
+
+function roundScore(value: number): number {
+  return Math.round(value * 10_000) / 10_000;
 }
 
 export function dedupeTurnKnowledgePlan(plan: TurnKnowledgePlan, capsule: ContextCapsule): TurnKnowledgePlan {
@@ -437,17 +747,18 @@ function dedupeSupportingPassages(
   required: readonly TurnKnowledgeEntry[],
   supporting: readonly TurnKnowledgeEntry[]
 ): TurnKnowledgeEntry[] {
-  const seen = required.flatMap((entry) => entry.passages ?? []).map((passage) => passage.text);
+  const seen = required.flatMap((entry) => entry.passages ?? []);
   return supporting.map((entry) => {
     if (!entry.passages?.length) return entry;
     const kept: TurnKnowledgePassage[] = [];
     for (const passage of entry.passages) {
-      const duplicate = [...seen, ...kept.map((candidate) => candidate.text)].some((candidate) =>
-        passageTextJaccard(candidate, passage.text) >= SUPPORTING_PASSAGE_DUPLICATE_JACCARD
-      );
+      const duplicate = [...seen, ...kept].some((candidate) => {
+        if (candidate.fact_id && passage.fact_id && candidate.fact_id !== passage.fact_id) return false;
+        return passageTextJaccard(candidate.text, passage.text) >= SUPPORTING_PASSAGE_DUPLICATE_JACCARD;
+      });
       if (!duplicate) kept.push(passage);
     }
-    seen.push(...kept.map((passage) => passage.text));
+    seen.push(...kept);
     return kept.length === entry.passages.length ? entry : { ...entry, passages: kept };
   });
 }
@@ -475,6 +786,48 @@ function normalizeComparableText(value: string): string {
   return value.normalize("NFKC").replace(/\s+/g, " ").trim();
 }
 
+function derivedFactHits(item: ContextItem): DerivedFactPlanHit[] {
+  const provenance = item.provenance;
+  if (!provenance || typeof provenance !== "object" || Array.isArray(provenance)) return [];
+  const raw = provenance.derivedFactRetrieval;
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return [];
+  const hits = (raw as { hits?: unknown }).hits;
+  if (!Array.isArray(hits)) return [];
+  return hits.flatMap((value) => {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return [];
+    const hit = value as Partial<DerivedFactPlanHit>;
+    if (typeof hit.fact_id !== "string" || typeof hit.parent_id !== "string" || typeof hit.score !== "number") return [];
+    return [{
+      fact_id: hit.fact_id,
+      parent_id: hit.parent_id,
+      score: hit.score,
+      ...(typeof hit.semantic_score === "number" ? { semantic_score: hit.semantic_score } : {}),
+      ...(typeof hit.lexical_score === "number" ? { lexical_score: hit.lexical_score } : {}),
+      ...(Array.isArray(hit.matched_terms)
+        ? { matched_terms: hit.matched_terms.filter((term): term is string => typeof term === "string") }
+        : {}),
+      ...(typeof hit.series_id === "string" ? { series_id: hit.series_id } : {}),
+      ...(hit.series_kind === "entity_timeline" || hit.series_kind === "entity_topic" || hit.series_kind === "supersession"
+        ? { series_kind: hit.series_kind }
+        : {}),
+      ...(hit.series_relation === "seed" || hit.series_relation === "neighbor" || hit.series_relation === "time_window" || hit.series_relation === "ordered_series"
+        ? { series_relation: hit.series_relation }
+        : {}),
+      ...(typeof hit.series_distance === "number" ? { series_distance: hit.series_distance } : {}),
+      ...(validTemporalPlanTime(hit.temporal_time) ? { temporal_time: hit.temporal_time } : {})
+    }];
+  });
+}
+
+function validTemporalPlanTime(value: unknown): value is NonNullable<DerivedFactPlanHit["temporal_time"]> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const item = value as Partial<NonNullable<DerivedFactPlanHit["temporal_time"]>>;
+  return typeof item.raw === "string" &&
+    ["date", "month", "year", "range", "unknown"].includes(String(item.precision)) &&
+    ["canonical", "relative_evidence", "evidence_timestamp"].includes(String(item.source)) &&
+    typeof item.confidence === "number" && typeof item.answerable === "boolean";
+}
+
 function memoryEntry(input: {
   item: ContextItem;
   role: TurnKnowledgeRole;
@@ -485,12 +838,16 @@ function memoryEntry(input: {
   typedFactFocusTerms?: readonly string[];
   fullContent?: string;
   factMetadata?: DistilledFactMetadataSet;
+  factRetrievalHits?: readonly DerivedFactPlanHit[];
   fallback: "retrieval" | "latest";
   maxPassages: number;
   maxPassageChars: number;
   passageWindow: TurnKnowledgePolicy["passageWindow"];
 }): TurnKnowledgeEntry {
   const content = input.fullContent?.trim() || input.item.content;
+  const factPassageLimit = input.kind === "L2" && input.factRetrievalHits?.length
+    ? Math.max(input.maxPassages, Math.min(6, input.factRetrievalHits.length))
+    : input.maxPassages;
   return {
     role: input.role,
     kind: input.kind,
@@ -504,8 +861,9 @@ function memoryEntry(input: {
       input.queryTerms,
       matchedTerms(input.item),
       input.typedFactFocusTerms ?? [],
-      input.maxPassages,
-      input.maxPassageChars
+      factPassageLimit,
+      input.maxPassageChars,
+      input.factRetrievalHits
     ) ?? selectPassages(
         content,
         input.queryTerms,
@@ -525,31 +883,61 @@ function selectFactMetadataPassages(
   itemMatchedTerms: readonly string[],
   focusTerms: readonly string[],
   maxPassages: number,
-  maxPassageChars: number
+  maxPassageChars: number,
+  retrievalHits: readonly DerivedFactPlanHit[] = []
 ): TurnKnowledgePassage[] | undefined {
   if (!metadata?.facts.length) return undefined;
   const wantsTemporal = queryNeedsTemporalContext(queryTerms);
   const wantsState = queryNeedsStateContext(queryTerms);
   const candidates = metadata.facts.map((fact) => ({ heading: fact.parent_heading, text: fact.text }));
-  const scored = scoreTypedFactPassages(candidates, queryTerms, itemMatchedTerms, focusTerms)
-    .filter((candidate) => candidate.score > 0)
-    .map((candidate) => {
-      const fact = metadata.facts[candidate.index];
-      const structuralBoost = (wantsState && fact?.supersedes ? 12 : 0) +
-        (wantsTemporal && fact?.canonical_time ? 6 : 0);
-      return { ...candidate, score: candidate.score + structuralBoost };
-    })
-    .sort((left, right) => right.score - left.score || left.index - right.index);
+  const byFactId = new Map(metadata.facts.map((fact, index) => [fact.fact_id, index]));
+  const retrievalRank = new Map(retrievalHits.map((hit, index) => [hit.fact_id, { hit, index }]));
+  const scored = retrievalRank.size > 0
+    ? retrievalHits.flatMap((hit, rank) => {
+        const index = byFactId.get(hit.fact_id);
+        if (index === undefined) return [];
+        const fact = metadata.facts[index]!;
+        const temporalTime = fact.canonical_time ?? (hit.temporal_time?.answerable ? hit.temporal_time : undefined);
+        const structuralBoost = (wantsState && fact.supersedes ? 12 : 0) +
+          (wantsTemporal && temporalTime ? 6 : 0) +
+          (wantsTemporal && hit.series_relation && hit.series_relation !== "seed" ? 4 : 0);
+        return [{
+          ...candidates[index]!,
+          matched: hit.matched_terms ?? [],
+          score: hit.score * 100 + structuralBoost,
+          index,
+          retrievalRank: rank,
+          retrievalHit: hit
+        }];
+      }).sort((left, right) => right.score - left.score || left.retrievalRank - right.retrievalRank)
+    : scoreTypedFactPassages(candidates, queryTerms, itemMatchedTerms, focusTerms)
+        .filter((candidate) => candidate.score > 0)
+        .map((candidate) => {
+          const fact = metadata.facts[candidate.index];
+          const structuralBoost = (wantsState && fact?.supersedes ? 12 : 0) +
+            (wantsTemporal && fact?.canonical_time ? 6 : 0);
+          return { ...candidate, score: candidate.score + structuralBoost };
+        })
+        .sort((left, right) => right.score - left.score || left.index - right.index);
   if (scored.length === 0) return undefined;
   const passages: TurnKnowledgePassage[] = [];
   const seen = new Set<string>();
   for (const candidate of scored) {
     const fact = metadata.facts[candidate.index];
     if (!fact) continue;
+    const retrievalHit = "retrievalHit" in candidate ? candidate.retrievalHit as DerivedFactPlanHit | undefined : undefined;
+    const temporalTime = fact.canonical_time ?? (retrievalHit?.temporal_time?.answerable ? retrievalHit.temporal_time : undefined);
     const evidence = fact.evidence_refs.length > 0 ? ` | Evidence: ${fact.evidence_refs.join(", ")}` : "";
     const text = [
       `Atomic fact: ${fact.text}${evidence}`,
-      ...(wantsTemporal && fact.canonical_time ? [`Canonical time: ${fact.canonical_time.raw}`] : []),
+      ...(wantsTemporal && temporalTime
+        ? [fact.canonical_time
+            ? `Canonical time: ${fact.canonical_time.raw}`
+            : `Event-series time: ${temporalTime.raw}${temporalTime.original_expression ? ` (normalized from ${temporalTime.original_expression})` : ""}`]
+        : []),
+      ...(wantsTemporal && retrievalHit?.series_relation && retrievalHit.series_relation !== "seed"
+        ? [`Event-series expansion: ${retrievalHit.series_relation}${retrievalHit.series_distance !== undefined && retrievalHit.series_distance < 99 ? `, distance ${retrievalHit.series_distance}` : ""}`]
+        : []),
       ...(wantsState && fact.supersedes ? [`Supersedes: ${fact.supersedes.text}${evidence}`] : [])
     ].join("\n");
     const bounded = boundText(text, maxPassageChars);
@@ -560,8 +948,10 @@ function selectFactMetadataPassages(
       ...(fact.parent_heading ? { heading: fact.parent_heading } : {}),
       text: bounded,
       matched_terms: candidate.matched.slice(0, 12),
+      fact_id: fact.fact_id,
+      parent_id: fact.parent_id,
       score: candidate.score + 4 +
-        (wantsTemporal && fact.canonical_time ? 6 : 0) +
+        (wantsTemporal && temporalTime ? 6 : 0) +
         (wantsState && fact.supersedes ? 8 : 0)
     });
     if (passages.length >= maxPassages) break;
@@ -735,7 +1125,7 @@ export function selectPassages(
   retrievalFallback?: string,
   maxPassages = MAX_PASSAGES_PER_ENTRY,
   maxPassageChars = MAX_PASSAGE_CHARS,
-  passageWindow: TurnKnowledgePolicy["passageWindow"] = "head"
+  passageWindow: TurnKnowledgePolicy["passageWindow"] = "matched"
 ): TurnKnowledgePassage[] {
   const candidates = markdownPassages(
     content,
@@ -748,6 +1138,11 @@ export function selectPassages(
     ? positiveCandidates.filter((candidate) => passageContainsAnyTerm(candidate, discriminative))
     : positiveCandidates;
   const ranked = focusedCandidates.sort((left, right) => right.score - left.score || left.index - right.index);
+  // Preserve the user's matching statement before verbose assistant suggestions crowd it out.
+  const userStatements = positiveCandidates.filter(candidate => /^(?:user|user_agent|用户)\s*[:：]/iu.test(candidate.text))
+    .sort((left, right) => right.score - left.score || left.index - right.index);
+  const userIndexes = new Set(userStatements.map(candidate => candidate.index));
+  ranked.splice(0, ranked.length, ...userStatements, ...ranked.filter(candidate => !userIndexes.has(candidate.index)));
   const positive = expandStructuredPassageContext(ranked, scored, queryTerms, maxPassages)
     .map((candidate) => toPassage(candidate, maxPassageChars, passageWindow));
   if (positive.length > 0) return positive;
@@ -925,7 +1320,7 @@ export function markdownPassages(content: string, maxPassageChars = MAX_PASSAGE_
 function toPassage(
   candidate: PassageCandidate & { matched: string[]; score: number },
   maxPassageChars = MAX_PASSAGE_CHARS,
-  passageWindow: TurnKnowledgePolicy["passageWindow"] = "head"
+  passageWindow: TurnKnowledgePolicy["passageWindow"] = "matched"
 ): TurnKnowledgePassage {
   return {
     ...(candidate.heading ? { heading: candidate.heading } : {}),
@@ -997,7 +1392,7 @@ function normalizePolicy(input: Partial<TurnKnowledgePolicy> | undefined): TurnK
     supportingSelection: input?.supportingSelection === "balanced" || input?.supportingSelection === "score"
       ? input.supportingSelection
       : DEFAULT_TURN_KNOWLEDGE_POLICY.supportingSelection,
-    passageWindow: input?.passageWindow === "matched" ? "matched" : DEFAULT_TURN_KNOWLEDGE_POLICY.passageWindow,
+    passageWindow: input?.passageWindow === "head" ? "head" : input?.passageWindow === "matched" ? "matched" : DEFAULT_TURN_KNOWLEDGE_POLICY.passageWindow,
     trustAdmittedArchitecture: input?.trustAdmittedArchitecture ?? DEFAULT_TURN_KNOWLEDGE_POLICY.trustAdmittedArchitecture,
     trustAdmittedSupporting: input?.trustAdmittedSupporting ?? DEFAULT_TURN_KNOWLEDGE_POLICY.trustAdmittedSupporting
   };

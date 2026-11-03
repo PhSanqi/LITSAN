@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import {materializeCurrentState} from "./memora-state.mjs";
 import { readFile, readdir, writeFile, mkdir } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -28,13 +29,12 @@ for (const [id, file, stateMode] of systems) {
     const forgottenFacts = factStrings(question.forgetting_evidence, true);
     const retrievedTexts = stateMode === "hydrated"
       ? (row.retrieved_state_keys ?? []).map((key) => {
-          const entry = persona.stateByKey.get(key);
-          if (!entry) return "";
+          const entry = requireStateEntry(persona, key, file);
           const source = persona.sessionText.get(entry.sessionId) ?? "";
           return `${entry.text}\n${matchedWindow(source, row.question, entry.item)}`;
         })
       : stateMode
-        ? (row.retrieved_state_keys ?? []).map((key) => persona.stateByKey.get(key)?.text ?? "")
+        ? (row.retrieved_state_keys ?? []).map((key) => requireStateEntry(persona, key, file).text)
         : (row.retrieved_ids ?? []).map((sessionId) => persona.sessionText.get(Number(sessionId)) ?? "");
     rows.push({ task_type: row.task_type, current_fact_count: currentFacts.length, forgotten_fact_count: forgottenFacts.length,
       ...factMetrics(retrievedTexts, currentFacts, forgottenFacts) });
@@ -110,83 +110,12 @@ function groupSummary(rows) {
   return Object.fromEntries([...new Set(rows.map((row) => row.task_type))].sort().map((task) => [task, summarize(rows.filter((row) => row.task_type === task))]));
 }
 
-function materializeCurrentState(sessions) {
-  const active = new Map();
-  for (const session of [...sessions].sort((a, b) => Number(a.session_id) - Number(b.session_id))) {
-    if (!session.operation) continue;
-    const details = session.operation_details ?? {};
-    const type = session.session_type ?? "memory";
-    const item = canonicalItem(details.item) || contentAnchor(details.content_data);
-    const oldItem = canonicalItem(details.old_item);
-    const key = stateKey(type, details, item);
-    const oldKey = oldItem ? stateKey(type, details, oldItem) : "";
-    if (session.operation === "update") {
-      if (oldKey && oldKey !== key) active.delete(oldKey);
-      if (key) active.delete(key);
-    }
-    if (session.operation === "delete") {
-      if (key) active.delete(key);
-      if (oldKey) active.delete(oldKey);
-    }
-    if (details.moved_to_completed === true && !hasContent(details.content_data)) {
-      if (key) active.delete(key);
-      continue;
-    }
-    const hasResidualState = session.operation !== "delete" || hasContent(details.content_data);
-    if (!key || !hasResidualState) continue;
-    active.set(key, { key, sessionId: Number(session.session_id), item, text: stateText(session, details, item) });
-  }
-  return [...active.values()];
-}
 
-function stateKey(type, details, item) {
-  if (!item) return "";
-  return [type, details.category ?? "", details.subcategory ?? "", normalize(item)].join(":");
-}
 
-function stateText(session, details, item) {
-  return [
-    `type: ${session.session_type ?? "memory"}`,
-    details.category ? `category: ${details.category}` : "",
-    details.subcategory ? `subcategory: ${details.subcategory}` : "",
-    item ? `item: ${item}` : "",
-    details.preference ? `preference: ${details.preference}` : "",
-    hasContent(details.content_data) ? `content: ${flatten(details.content_data)}` : "",
-    `operation: ${session.operation}`
-  ].filter(Boolean).join("\n");
-}
-
-function canonicalItem(value) {
-  if (typeof value === "string") return value;
-  if (!value || typeof value !== "object") return "";
-  for (const key of ["description", "title", "name", "task", "goal", "event"]) {
-    if (typeof value[key] === "string") return value[key];
-  }
-  return flatten(value);
-}
-
-function contentAnchor(value) {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return "";
-  for (const key of ["meeting_title", "project_title", "title", "email_subject", "email_purpose", "event_title", "name"]) {
-    if (typeof value[key] === "string" && value[key].trim()) return value[key].trim();
-  }
-  return "";
-}
-
-function flatten(value) {
-  if (value == null) return "";
-  if (["string", "number", "boolean"].includes(typeof value)) return String(value);
-  if (Array.isArray(value)) return value.map(flatten).filter(Boolean).join("; ");
-  if (typeof value === "object") return Object.entries(value).map(([key, child]) => `${key}: ${flatten(child)}`).join("; ");
-  return "";
-}
-
-function hasContent(value) {
-  if (value == null) return false;
-  if (typeof value === "string") return value.trim().length > 0;
-  if (Array.isArray(value)) return value.length > 0;
-  if (typeof value === "object") return Object.keys(value).length > 0;
-  return true;
+function requireStateEntry(persona, key, file) {
+  const entry = persona.stateByKey.get(key);
+  if (!entry) throw new Error(`Stale state key in ${file}: ${key}. Regenerate the retrieval report before scoring.`);
+  return entry;
 }
 
 function normalize(value) {

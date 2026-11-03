@@ -8,7 +8,8 @@ import {
   listDistillationJobs
 } from "../dist/distillation-jobs.js";
 import { submitDistillationControl } from "../dist/distillation-submit.js";
-import { hydrateMemoryEvidence } from "../dist/memory-hydration.js";
+import { extractDistilledFactMetadata } from "../dist/fact-metadata.js";
+import { hydrateMemoryEvidence, resetExactRevisionHydrationCacheForTests } from "../dist/memory-hydration.js";
 
 const root = await mkdtemp(join(tmpdir(), "memhub-fact-metadata-submit-"));
 const accountId = "fact-metadata-submit-account";
@@ -132,6 +133,62 @@ try {
   });
   assert.deepEqual(aliasHydrated.fact_metadata?.facts.map((fact) => fact.evidence_refs[0]),
     ["l1:merged-history", "l1:move-1"]);
+
+  const legacyRoot = join(root, "legacy-empty-provenance");
+  const legacyEvidence = [{
+    ref: "l1:legacy-electrical", kind: "turn", layer: "L1", timestamp: "2023-01-23T16:06:00.000Z",
+    project_id: projectId, user_text: "Jolene: I finished an electrical engineering project last week - took a lot of work, but it's done now.",
+    assistant_text: "Deborah: Congrats!"
+  }];
+  const legacyContent = [
+    "# Timeline / 时间线",
+    "## 23 January 2023 — Engineering project",
+    "- Atomic fact: Jolene completed an electrical engineering project during the prior week. | Evidence: l1:legacy-electrical"
+  ].join("\n");
+  const currentLegacyMetadata = extractDistilledFactMetadata("l2", legacyContent);
+  assert.equal(currentLegacyMetadata?.facts.length, 1);
+  const staleLegacyMetadata = {
+    ...currentLegacyMetadata,
+    facts: currentLegacyMetadata.facts.map((fact) => ({ ...fact, evidence_refs: [] })),
+    parents: currentLegacyMetadata.parents.map((parent) => ({ ...parent, evidence_refs: [] }))
+  };
+  const legacyJob = await recordCompletedDistillationRevision({
+    stateRoot: legacyRoot, accountId, target: "l2", projectId, evidence: legacyEvidence,
+    resultId: "legacy-project-timeline", content: legacyContent, committedAt: "2023-01-23T16:06:01.000Z",
+    factMetadata: staleLegacyMetadata
+  });
+  resetExactRevisionHydrationCacheForTests();
+  const legacyHydrated = await hydrateMemoryEvidence({
+    stateRoot: legacyRoot, accountId, evidenceRef: `l2:${legacyJob.result_id}:${legacyJob.job_id}`
+  });
+  assert.equal(legacyHydrated.fact_metadata?.facts.length, 1);
+  assert.deepEqual(legacyHydrated.fact_metadata?.facts[0]?.evidence_refs, ["l1:legacy-electrical"]);
+
+  const ungroundedRoot = join(root, "legacy-ungrounded");
+  const ungroundedContent = [
+    "# Timeline / 时间线",
+    "## 23 January 2023 — Unsupported claim",
+    "- Atomic fact: Jolene secretly moved to another country."
+  ].join("\n");
+  const ungroundedMetadata = {
+    ...currentLegacyMetadata,
+    facts: currentLegacyMetadata.facts.map((fact) => ({
+      ...fact,
+      text: "Jolene secretly moved to another country.",
+      evidence_refs: []
+    })),
+    parents: currentLegacyMetadata.parents.map((parent) => ({ ...parent, evidence_refs: [] }))
+  };
+  const ungroundedJob = await recordCompletedDistillationRevision({
+    stateRoot: ungroundedRoot, accountId, target: "l2", projectId, evidence: legacyEvidence,
+    resultId: "legacy-ungrounded-timeline", content: ungroundedContent, committedAt: "2023-01-23T16:06:02.000Z",
+    factMetadata: ungroundedMetadata
+  });
+  resetExactRevisionHydrationCacheForTests();
+  const ungroundedHydrated = await hydrateMemoryEvidence({
+    stateRoot: ungroundedRoot, accountId, evidenceRef: `l2:${ungroundedJob.result_id}:${ungroundedJob.job_id}`
+  });
+  assert.equal(ungroundedHydrated.fact_metadata, undefined);
   console.log("fact-metadata-submit-e2e: ok");
 } finally {
   await rm(root, { recursive: true, force: true });
