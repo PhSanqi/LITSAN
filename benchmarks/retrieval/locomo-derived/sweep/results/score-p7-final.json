@@ -1,0 +1,275 @@
+{
+ "n": 184,
+ "suffix": "fin",
+ "base": "N4200",
+ "k_declared": 5,
+ "arms": {
+  "N4200": {
+   "complete_raw": 122,
+   "complete_raw_or_cited": 131,
+   "mean_bytes": 8248,
+   "raw_recall": 0.7628,
+   "p50_ms": 222,
+   "p95_ms": 292,
+   "buckets": {
+    "cat1": [
+     28,
+     74
+    ],
+    "cat2": [
+     94,
+     110
+    ],
+    "gold1": [
+     90,
+     102
+    ],
+    "gold2": [
+     25,
+     47
+    ],
+    "gold3+": [
+     7,
+     35
+    ]
+   },
+   "frontier_loo": null,
+   "excess_over_frontier": null
+  },
+  "ci8-b4200-r0.5": {
+   "complete_raw": 127,
+   "complete_raw_or_cited": 133,
+   "mean_bytes": 9161,
+   "raw_recall": 0.7938,
+   "p50_ms": 226,
+   "p95_ms": 295,
+   "buckets": {
+    "cat1": [
+     31,
+     74
+    ],
+    "cat2": [
+     96,
+     110
+    ],
+    "gold1": [
+     92,
+     102
+    ],
+    "gold2": [
+     26,
+     47
+    ],
+    "gold3+": [
+     9,
+     35
+    ]
+   },
+   "vs_base": {
+    "gained": 5,
+    "lost": 0,
+    "net": 5,
+    "p": 0.0625,
+    "cluster95_pp": [
+     0.52,
+     5.56
+    ],
+    "p_holm": 0.0625
+   },
+   "frontier_loo": 126.26,
+   "excess_over_frontier": 0.74,
+   "gain_pp_per_extra_kb": 2.978
+  },
+  "ci8-b6000": {
+   "complete_raw": 137,
+   "complete_raw_or_cited": 137,
+   "mean_bytes": 11464,
+   "raw_recall": 0.8498,
+   "p50_ms": 230,
+   "p95_ms": 293,
+   "buckets": {
+    "cat1": [
+     34,
+     74
+    ],
+    "cat2": [
+     103,
+     110
+    ],
+    "gold1": [
+     99,
+     102
+    ],
+    "gold2": [
+     28,
+     47
+    ],
+    "gold3+": [
+     10,
+     35
+    ]
+   },
+   "vs_base": {
+    "gained": 15,
+    "lost": 0,
+    "net": 15,
+    "p": 6e-05,
+    "cluster95_pp": [
+     5.03,
+     12.07
+    ],
+    "p_holm": 0.00012
+   },
+   "frontier_loo": 134.39,
+   "excess_over_frontier": 2.61,
+   "gain_pp_per_extra_kb": 2.535
+  },
+  "R4": {
+   "complete_raw": 145,
+   "complete_raw_or_cited": 147,
+   "mean_bytes": 14772,
+   "raw_recall": 0.8795,
+   "p50_ms": 143,
+   "p95_ms": 198,
+   "buckets": {
+    "cat1": [
+     39,
+     74
+    ],
+    "cat2": [
+     106,
+     110
+    ],
+    "gold1": [
+     100,
+     102
+    ],
+    "gold2": [
+     29,
+     47
+    ],
+    "gold3+": [
+     16,
+     35
+    ]
+   },
+   "vs_base": {
+    "gained": 23,
+    "lost": 0,
+    "net": 23,
+    "p": 0.0,
+    "cluster95_pp": [
+     9.18,
+     17.05
+    ],
+    "p_holm": 0.0
+   },
+   "frontier_loo": 143.51,
+   "excess_over_frontier": 1.49,
+   "gain_pp_per_extra_kb": 1.916
+  },
+  "in4-b16000-r0.5": {
+   "complete_raw": 145,
+   "complete_raw_or_cited": 147,
+   "mean_bytes": 15533,
+   "raw_recall": 0.8824,
+   "p50_ms": 241,
+   "p95_ms": 296,
+   "buckets": {
+    "cat1": [
+     39,
+     74
+    ],
+    "cat2": [
+     106,
+     110
+    ],
+    "gold1": [
+     100,
+     102
+    ],
+    "gold2": [
+     29,
+     47
+    ],
+    "gold3+": [
+     16,
+     35
+    ]
+   },
+   "vs_base": {
+    "gained": 23,
+    "lost": 0,
+    "net": 23,
+    "p": 0.0,
+    "cluster95_pp": [
+     9.18,
+     17.05
+    ],
+    "p_holm": 0.0
+   },
+   "frontier_loo": null,
+   "excess_over_frontier": null,
+   "gain_pp_per_extra_kb": 1.716
+  }
+ },
+ "frontier": [
+  {
+   "arm": "N4200",
+   "bytes": 8248,
+   "raw": [
+    8248.04347826087,
+    122
+   ]
+  },
+  {
+   "arm": "ci8-b4200-r0.5",
+   "bytes": 9161,
+   "raw": [
+    9160.608695652174,
+    127
+   ]
+  },
+  {
+   "arm": "ci8-b6000",
+   "bytes": 11464,
+   "raw": [
+    11463.728260869566,
+    137
+   ]
+  },
+  {
+   "arm": "R4",
+   "bytes": 14772,
+   "raw": [
+    14772.41304347826,
+    145
+   ]
+  }
+ ],
+ "picks": {
+  "Lean": {
+   "arm": "ci8-b4200-r0.5",
+   "budget": 10000,
+   "complete_raw": 127,
+   "mean_bytes": 9161
+  },
+  "Mid": {
+   "arm": "ci8-b6000",
+   "budget": 13000,
+   "complete_raw": 137,
+   "mean_bytes": 11464
+  },
+  "Max": {
+   "arm": "R4",
+   "budget": 17000,
+   "complete_raw": 145,
+   "mean_bytes": 14772
+  }
+ },
+ "determinism_vs_N4200w": {
+  "identical": 0,
+  "of": 184
+ },
+ "discordance_mid": 0.0815
+}

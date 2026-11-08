@@ -1,0 +1,37 @@
+{
+ "n_final": 183,
+ "picks": {
+  "Lean": {
+   "arm": "ci8-b4200-r0.5",
+   "budget": 10000,
+   "tuning_complete_raw": 470,
+   "tuning_mean_bytes": 9029,
+   "tuning_gained": 24,
+   "tuning_lost": 0,
+   "expected_gain_final": 6.8,
+   "power_p_holm_le_0.01": 0.143
+  },
+  "Mid": {
+   "arm": "ci8-b6000",
+   "budget": 13000,
+   "tuning_complete_raw": 509,
+   "tuning_mean_bytes": 11310,
+   "tuning_gained": 63,
+   "tuning_lost": 0,
+   "expected_gain_final": 17.8,
+   "power_p_holm_le_0.01": 0.986
+  },
+  "Max": {
+   "arm": "in4-b16000-r0.5",
+   "budget": 17000,
+   "tuning_complete_raw": 539,
+   "tuning_mean_bytes": 15793,
+   "tuning_gained": 93,
+   "tuning_lost": 0,
+   "expected_gain_final": 26.2,
+   "power_p_holm_le_0.01": 1.0
+  }
+ },
+ "reference_arm": "R4",
+ "base": "N4200"
+}

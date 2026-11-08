@@ -1,0 +1,4400 @@
+{
+ "C1": [
+  "LongMemEval:184da446",
+  "LongMemEval:2311e44b",
+  "LongMemEval:2311e44b_abs",
+  "LongMemEval:28dc39ac",
+  "LongMemEval:2ce6a0f2",
+  "LongMemEval:2ebe6c90",
+  "LongMemEval:4dfccbf7",
+  "LongMemEval:5a7937c8",
+  "LongMemEval:5c40ec5b",
+  "LongMemEval:6b168ec8",
+  "LongMemEval:72e3ee87",
+  "LongMemEval:80ec1f4f",
+  "LongMemEval:81507db6",
+  "LongMemEval:88432d0a",
+  "LongMemEval:88432d0a_abs",
+  "LongMemEval:8e9d538c",
+  "LongMemEval:8fb83627",
+  "LongMemEval:95bcc1c8",
+  "LongMemEval:982b5123",
+  "LongMemEval:9ee3ecd6",
+  "LongMemEval:a08a253f",
+  "LongMemEval:a1eacc2a",
+  "LongMemEval:a3838d2b",
+  "LongMemEval:af8d2e46",
+  "LongMemEval:b6019101",
+  "LongMemEval:bbf86515",
+  "LongMemEval:edced276",
+  "LongMemEval:edced276_abs",
+  "LongMemEval:gpt4_1916e0ea",
+  "LongMemEval:gpt4_2f8be40d",
+  "LongMemEval:gpt4_2f91af09",
+  "LongMemEval:gpt4_31ff4165",
+  "LongMemEval:gpt4_468eb063",
+  "LongMemEval:gpt4_4cd9eba1",
+  "LongMemEval:gpt4_4ef30696",
+  "LongMemEval:gpt4_4fc4f797",
+  "LongMemEval:gpt4_74aed68e",
+  "LongMemEval:gpt4_7bc6cf22",
+  "LongMemEval:gpt4_8279ba02",
+  "LongMemEval:gpt4_a56e767c",
+  "LongMemEval:gpt4_af6db32f",
+  "LongMemEval:gpt4_e05b82a6"
+ ],
+ "C2": [
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "2",
+   "id": "LongMemEval:00ca467f",
+   "qtype": "multi-session",
+   "question": "How many doctor's appointments did I go to in March?",
+   "question_date": "2023/03/27 (Mon) 23:35"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "25",
+   "id": "LongMemEval:01493427",
+   "qtype": "knowledge-update",
+   "question": "How many new postcards have I added to my collection since I started collecting again?",
+   "question_date": "2023/12/21 (Thu) 21:31"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "When you just started your new role as Senior Software Engineer, you led 4 engineers. Now, you lead 5 engineers",
+   "id": "LongMemEval:031748ae",
+   "qtype": "knowledge-update",
+   "question": "How many engineers do I lead when I just started my new role as Senior Software Engineer? How many engineers do I lead now?",
+   "question_date": "2023/11/10 (Fri) 04:20"
+  },
+  {
+   "abstention": true,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "The information provided is not enough. You mentioned starting the role as Senior Software Engineer but not Software Engineer Manager.",
+   "id": "LongMemEval:031748ae_abs",
+   "qtype": "knowledge-update",
+   "question": "How many engineers do I lead when I just started my new role as Software Engineer Manager?",
+   "question_date": "2023/06/06 (Tue) 08:19"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "5",
+   "id": "LongMemEval:06db6396",
+   "qtype": "knowledge-update",
+   "question": "How many projects have I completed since starting painting classes?",
+   "question_date": "2023/11/08 (Wed) 09:08"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "30 days. 31 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:08f4fc43",
+   "qtype": "temporal-reasoning",
+   "question": "How many days had passed between the Sunday mass at St. Mary's Church and the Ash Wednesday service at the cathedral?",
+   "question_date": "2023/02/20 (Mon) 21:26"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "7 days. 8 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:0bb5a684",
+   "qtype": "temporal-reasoning",
+   "question": "How many days before the team meeting I was preparing for did I attend the workshop on 'Effective Communication in the Workplace'?",
+   "question_date": "2023/01/13 (Fri) 12:09"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "18 days. 19 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:0db4c65d",
+   "qtype": "temporal-reasoning",
+   "question": "How many days had passed since I finished reading 'The Seven Husbands of Evelyn Hugo' when I attended the book reading event at the local library, where the author of 'The Silent Patient' is discussing her latest thriller novel?",
+   "question_date": "2023/02/10 (Fri) 18:44"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "15",
+   "id": "LongMemEval:0ddfec37",
+   "qtype": "knowledge-update",
+   "question": "How many autographed baseballs have I added to my collection in the first three months of collection?",
+   "question_date": "2024/01/08 (Mon) 09:27"
+  },
+  {
+   "abstention": true,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "The information provided is not enough. You mentioned collecting autographed baseball but not football.",
+   "id": "LongMemEval:0ddfec37_abs",
+   "qtype": "knowledge-update",
+   "question": "How many autographed football have I added to my collection in the first three months of collection?",
+   "question_date": "2023/06/07 (Wed) 08:31"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "120",
+   "id": "LongMemEval:0f05491a",
+   "qtype": "knowledge-update",
+   "question": "How many stars do I need to reach the gold level on my Starbucks Rewards app?",
+   "question_date": "2023/08/01 (Tue) 22:29"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3 days",
+   "id": "LongMemEval:10d9b85a",
+   "qtype": "multi-session",
+   "question": "How many days did I spend attending workshops, lectures, and conferences in April?",
+   "question_date": "2023/05/01 (Mon) 23:15"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "7",
+   "id": "LongMemEval:10e09553",
+   "qtype": "knowledge-update",
+   "question": "How many largemouth bass did I catch with Alex on the earlier fishing trip to Lake Michigan before the 7/22 trip?",
+   "question_date": "2023/12/06 (Wed) 11:18"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "43",
+   "id": "LongMemEval:157a136e",
+   "qtype": "multi-session",
+   "question": "How many years older is my grandma than me?",
+   "question_date": "2024/02/05 (Mon) 23:49"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "12",
+   "id": "LongMemEval:21436231",
+   "qtype": "single-session-user",
+   "question": "How many largemouth bass did I catch on my fishing trip to Lake Michigan?",
+   "question_date": "2023/05/30 (Tue) 19:25"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "2",
+   "id": "LongMemEval:21d02d0d",
+   "qtype": "multi-session",
+   "question": "How many fun runs did I miss in March due to work commitments?",
+   "question_date": "2023/04/26 (Wed) 23:58"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "five",
+   "id": "LongMemEval:26bdc477",
+   "qtype": "knowledge-update",
+   "question": "How many trips have I taken my Canon EOS 80D camera on?",
+   "question_date": "2023/06/06 (Tue) 18:27"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "5",
+   "id": "LongMemEval:2788b940",
+   "qtype": "multi-session",
+   "question": "How many fitness classes do I attend in a typical week?",
+   "question_date": "2023/05/30 (Tue) 20:00"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "21 days. 22 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:2a1811e2",
+   "qtype": "temporal-reasoning",
+   "question": "How many days had passed between the Hindu festival of Holi and the Sunday mass at St. Mary's Church?",
+   "question_date": "2023/03/26 (Sun) 12:05"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "14 days. 15 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:2c63a862",
+   "qtype": "temporal-reasoning",
+   "question": "How many days did it take for me to find a house I loved after starting to work with Rachel?",
+   "question_date": "2022/03/02 (Wed) 10:19"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "5",
+   "id": "LongMemEval:2e6d26dc",
+   "qtype": "multi-session",
+   "question": "How many babies were born to friends and family members in the last few months?",
+   "question_date": "2023/05/13 (Sat) 23:55"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "10",
+   "id": "LongMemEval:311778f1",
+   "qtype": "single-session-user",
+   "question": "How many hours did I spend watching documentaries on Netflix last month?",
+   "question_date": "2023/05/30 (Tue) 15:40"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "15",
+   "id": "LongMemEval:370a8ff4",
+   "qtype": "temporal-reasoning",
+   "question": "How many weeks had passed since I recovered from the flu when I went on my 10th jog outdoors?",
+   "question_date": "2023/10/15 (Sun) 17:53"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3",
+   "id": "LongMemEval:45dc21b6",
+   "qtype": "knowledge-update",
+   "question": "How many of Emma's recipes have I tried out?",
+   "question_date": "2023/06/16 (Fri) 17:33"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3",
+   "id": "LongMemEval:46a3abf7",
+   "qtype": "multi-session",
+   "question": "How many tanks do I currently have, including the one I set up for my friend's kid?",
+   "question_date": "2023/05/30 (Tue) 21:36"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "five",
+   "id": "LongMemEval:4b24c848",
+   "qtype": "knowledge-update",
+   "question": "How many tops have I bought from H&M so far?",
+   "question_date": "2023/10/20 (Fri) 08:09"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "25",
+   "id": "LongMemEval:4d6b87c8",
+   "qtype": "knowledge-update",
+   "question": "How many titles are currently on my to-watch list?",
+   "question_date": "2023/06/03 (Sat) 15:47"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "5",
+   "id": "LongMemEval:4f54b7c9",
+   "qtype": "multi-session",
+   "question": "How many antique items did I inherit or acquire from my family members?",
+   "question_date": "2023/05/30 (Tue) 23:47"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "15",
+   "id": "LongMemEval:5831f84d",
+   "qtype": "knowledge-update",
+   "question": "How many Crash Course videos have I watched in the past few weeks?",
+   "question_date": "2023/10/05 (Thu) 05:19"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3",
+   "id": "LongMemEval:5e1b23de",
+   "qtype": "temporal-reasoning",
+   "question": "How many months ago did I attend the photography workshop?",
+   "question_date": "2024/02/01 (Thu) 18:06"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "2",
+   "id": "LongMemEval:60472f9c",
+   "qtype": "multi-session",
+   "question": "How many projects have I been working on simultaneously, excluding my thesis?",
+   "question_date": "2023/05/30 (Tue) 23:41"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "5 days. 6 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:60bf93ed",
+   "qtype": "multi-session",
+   "question": "How many days did it take for my laptop backpack to arrive after I bought it?",
+   "question_date": "2023/01/24 (Tue) 23:56"
+  },
+  {
+   "abstention": true,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "The information provided is not enough. You did not mention buying an iPad case.",
+   "id": "LongMemEval:60bf93ed_abs",
+   "qtype": "multi-session",
+   "question": "How many days did it take for my iPad case to arrive after I bought it?",
+   "question_date": "2023/01/24 (Tue) 23:58"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "8",
+   "id": "LongMemEval:6456829e",
+   "qtype": "multi-session",
+   "question": "How many plants did I initially plant for tomatoes and cucumbers?",
+   "question_date": "2023/05/30 (Tue) 23:46"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "2",
+   "id": "LongMemEval:6613b389",
+   "qtype": "temporal-reasoning",
+   "question": "How many months before my anniversary did Rachel get engaged?",
+   "question_date": "2023/07/07 (Fri) 13:04"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "2",
+   "id": "LongMemEval:681a1674",
+   "qtype": "multi-session",
+   "question": "How many Marvel movies did I re-watch?",
+   "question_date": "2023/05/30 (Tue) 21:31"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "30",
+   "id": "LongMemEval:6a27ffc2",
+   "qtype": "knowledge-update",
+   "question": "How many videos of Corey Schafer's Python programming series have I completed so far?",
+   "question_date": "2023/06/09 (Fri) 01:44"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "four",
+   "id": "LongMemEval:6aeb4375",
+   "qtype": "knowledge-update",
+   "question": "How many Korean restaurants have I tried in my city?",
+   "question_date": "2023/10/22 (Sun) 15:38"
+  },
+  {
+   "abstention": true,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "The information provided is not enough. You mentioned trying Korean restaurants but not Italian restaurants.",
+   "id": "LongMemEval:6aeb4375_abs",
+   "qtype": "knowledge-update",
+   "question": "How many Italian restaurants have I tried in my city?",
+   "question_date": "2023/06/15 (Thu) 13:37"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "17 days",
+   "id": "LongMemEval:6cb6f249",
+   "qtype": "multi-session",
+   "question": "How many days did I take social media breaks in total?",
+   "question_date": "2023/03/14 (Tue) 23:56"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3",
+   "id": "LongMemEval:6e984301",
+   "qtype": "temporal-reasoning",
+   "question": "How many weeks have I been taking sculpting classes when I invested in my own set of sculpting tools?",
+   "question_date": "2023/04/01 (Sat) 18:55"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "0.5 hours",
+   "id": "LongMemEval:7024f17c",
+   "qtype": "multi-session",
+   "question": "How many hours of jogging and yoga did I do last week?",
+   "question_date": "2023/05/30 (Tue) 21:24"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "Two",
+   "id": "LongMemEval:7401057b",
+   "qtype": "knowledge-update",
+   "question": "How many free night's stays can I redeem at any Hilton property with my accumulated points?",
+   "question_date": "2023/06/16 (Fri) 09:50"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "26 days. 27 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:8077ef71",
+   "qtype": "temporal-reasoning",
+   "question": "How many days ago did I attend a networking event?",
+   "question_date": "2022/04/04 (Mon) 21:03"
+  },
+  {
+   "abstention": true,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "0. You did not mention visitng any museum in December",
+   "id": "LongMemEval:80ec1f4f_abs",
+   "qtype": "multi-session",
+   "question": "How many different museums or galleries did I visit in December?",
+   "question_date": "2023/03/03 (Fri) 23:44"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "7 days. 8 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:8c18457d",
+   "qtype": "temporal-reasoning",
+   "question": "How many days had passed between the day I bought a gift for my brother's graduation ceremony and the day I bought a birthday gift for my best friend?",
+   "question_date": "2023/03/29 (Wed) 13:43"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "21 days. 22 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:9a707b81",
+   "qtype": "temporal-reasoning",
+   "question": "How many days ago did I attend a baking class at a local culinary school when I made my friend's birthday cake?",
+   "question_date": "2022/04/15 (Fri) 18:46"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3",
+   "id": "LongMemEval:9d25d4e0",
+   "qtype": "multi-session",
+   "question": "How many pieces of jewelry did I acquire in the last two months?",
+   "question_date": "2023/05/30 (Tue) 15:43"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "1300",
+   "id": "LongMemEval:a2f3aa27",
+   "qtype": "knowledge-update",
+   "question": "How many followers do I have on Instagram now?",
+   "question_date": "2023/06/15 (Thu) 23:26"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "7 days. 8 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:a3045048",
+   "qtype": "temporal-reasoning",
+   "question": "How many days before my best friend's birthday party did I order her gift?",
+   "question_date": "2022/05/15 (Sun) 13:45"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "12",
+   "id": "LongMemEval:a346bb18",
+   "qtype": "multi-session",
+   "question": "How many minutes did I exceed my target time by in the marathon?",
+   "question_date": "2023/05/30 (Tue) 22:30"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "50",
+   "id": "LongMemEval:a4996e51",
+   "qtype": "multi-session",
+   "question": "How many hours do I work in a typical week during peak campaign seasons?",
+   "question_date": "2023/05/30 (Tue) 15:17"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "2",
+   "id": "LongMemEval:a9f6b44c",
+   "qtype": "multi-session",
+   "question": "How many bikes did I service or plan to service in March?",
+   "question_date": "2023/03/20 (Mon) 23:57"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "5 days. 6 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:b3c15d39",
+   "qtype": "multi-session",
+   "question": "How many days did it take for me to receive the new remote shutter release after I ordered it?",
+   "question_date": "2023/03/01 (Wed) 23:48"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "2",
+   "id": "LongMemEval:b46e15ed",
+   "qtype": "temporal-reasoning",
+   "question": "How many months have passed since I participated in two charity events in a row, on consecutive days?",
+   "question_date": "2023/04/18 (Tue) 03:31"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "33",
+   "id": "LongMemEval:ba358f49",
+   "qtype": "multi-session",
+   "question": "How many years will I be when my friend Rachel gets married?",
+   "question_date": "2022/09/01 (Thu) 23:52"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "4",
+   "id": "LongMemEval:bcbe585f",
+   "qtype": "temporal-reasoning",
+   "question": "How many weeks ago did I attend a bird watching workshop at the local Audubon society?",
+   "question_date": "2023/05/01 (Mon) 23:16"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3",
+   "id": "LongMemEval:bf659f65",
+   "qtype": "multi-session",
+   "question": "How many music albums or EPs have I purchased or downloaded?",
+   "question_date": "2023/05/30 (Tue) 21:58"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "7",
+   "id": "LongMemEval:c18a7dc8",
+   "qtype": "multi-session",
+   "question": "How many years older am I than when I graduated from college?",
+   "question_date": "2023/05/30 (Tue) 23:37"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "5",
+   "id": "LongMemEval:c2ac3c61",
+   "qtype": "multi-session",
+   "question": "How many online courses have I completed in total?",
+   "question_date": "2023/05/30 (Tue) 16:30"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "7 days. 8 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:c8090214",
+   "qtype": "temporal-reasoning",
+   "question": "How many days before I bought the iPhone 13 Pro did I attend the Holiday Market?",
+   "question_date": "2023/12/10 (Sun) 17:17"
+  },
+  {
+   "abstention": true,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "The information provided is not enough. You mentioned getting the iPhone 13 Pro and attending the market, but you did not mention buying an iPad.",
+   "id": "LongMemEval:c8090214_abs",
+   "qtype": "temporal-reasoning",
+   "question": "How many days before I bought my iPad did I attend the Holiday Market?",
+   "question_date": "2023/05/30 (Tue) 05:17"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "20",
+   "id": "LongMemEval:c960da58",
+   "qtype": "single-session-user",
+   "question": "How many playlists do I have on Spotify?",
+   "question_date": "2023/05/30 (Tue) 18:45"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "4",
+   "id": "LongMemEval:d23cf73b",
+   "qtype": "multi-session",
+   "question": "How many different cuisines have I learned to cook or tried out in the past few months?",
+   "question_date": "2023/05/30 (Tue) 16:04"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3",
+   "id": "LongMemEval:d682f1a2",
+   "qtype": "multi-session",
+   "question": "How many different types of food delivery services have I used recently?",
+   "question_date": "2023/05/30 (Tue) 23:30"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "14 days. 15 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:dcfa8644",
+   "qtype": "temporal-reasoning",
+   "question": "How many days had passed since I bought my Adidas running shoes when I realized one of the shoelaces on my old Converse sneakers had broken?",
+   "question_date": "2023/02/03 (Fri) 17:43"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "99",
+   "id": "LongMemEval:e3038f8c",
+   "qtype": "multi-session",
+   "question": "How many rare items do I have in total?",
+   "question_date": "2023/05/30 (Tue) 20:48"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "19 days ago. 20 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:eac54adc",
+   "qtype": "temporal-reasoning",
+   "question": "How many days ago did I launch my website when I signed a contract with my first client?",
+   "question_date": "2023/03/25 (Sat) 19:57"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "20",
+   "id": "LongMemEval:ed4ddc30",
+   "qtype": "knowledge-update",
+   "question": "How many dozen eggs do we currently have stocked up in our refrigerator?",
+   "question_date": "2023/03/16 (Thu) 14:24"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "17",
+   "id": "LongMemEval:eeda8a6d",
+   "qtype": "multi-session",
+   "question": "How many fish are there in total in both of my aquariums?",
+   "question_date": "2023/05/30 (Tue) 20:36"
+  },
+  {
+   "abstention": true,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "The information provided is not enough. You did not mention that you have a 30-gallon tank.",
+   "id": "LongMemEval:eeda8a6d_abs",
+   "qtype": "multi-session",
+   "question": "How many fish are there in my 30-gallon tank?",
+   "question_date": "2023/05/30 (Tue) 19:56"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "two",
+   "id": "LongMemEval:ef66a6e5",
+   "qtype": "multi-session",
+   "question": "How many sports have I played competitively in the past?",
+   "question_date": "2023/05/30 (Tue) 20:36"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "five",
+   "id": "LongMemEval:f9e8c073",
+   "qtype": "knowledge-update",
+   "question": "How many sessions of the bereavement support group did I attend?",
+   "question_date": "2023/11/07 (Tue) 04:54"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "4",
+   "id": "LongMemEval:gpt4_15e38248",
+   "qtype": "multi-session",
+   "question": "How many pieces of furniture did I buy, assemble, sell, or fix in the past few months?",
+   "question_date": "2023/05/30 (Tue) 15:31"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "I currently own 4 musical instruments. I've had the Fender Stratocaster electric guitar for 5 years, the Yamaha FG800 acoustic guitar for 8 years, the 5-piece Pearl Export drum set for an unspecified amount of time, and the Korg B1 piano for 3 years.",
+   "id": "LongMemEval:gpt4_194be4b3",
+   "qtype": "multi-session",
+   "question": "How many musical instruments do I currently own?",
+   "question_date": "2023/05/30 (Tue) 23:29"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "24 days. 25 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_1d4ab0c9",
+   "qtype": "temporal-reasoning",
+   "question": "How many days passed between the day I started watering my herb garden and the day I harvested my first batch of fresh herbs?",
+   "question_date": "2023/04/18 (Tue) 10:43"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "2 days. 3 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_1d80365e",
+   "qtype": "temporal-reasoning",
+   "question": "How many days did I spend on my solo camping trip to Yosemite National Park?",
+   "question_date": "2023/06/01 (Thu) 17:17"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "6 days. 7 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_1e4a8aeb",
+   "qtype": "temporal-reasoning",
+   "question": "How many days passed between the day I attended the gardening workshop and the day I planted the tomato saplings?",
+   "question_date": "2023/05/08 (Mon) 06:05"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "10 years",
+   "id": "LongMemEval:gpt4_372c3eed",
+   "qtype": "multi-session",
+   "question": "How many years in total did I spend in formal education from high school to the completion of my Bachelor's degree?",
+   "question_date": "2021/08/20 (Fri) 23:34"
+  },
+  {
+   "abstention": true,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "The information provided is not enough. You mentioned 4 years in high school (2010-2014), 2 years at PCC (2014-2016), and 4 years at UCLA (2016-2020). But you didn't mention the number of years you spend getting the Master's degree",
+   "id": "LongMemEval:gpt4_372c3eed_abs",
+   "qtype": "multi-session",
+   "question": "How many years in total did I spend in formal education from high school to the completion of my Master's degree?",
+   "question_date": "2023/08/20 (Sun) 23:54"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "7 days. 8 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_59149c77",
+   "qtype": "temporal-reasoning",
+   "question": "How many days passed between my visit to the Museum of Modern Art (MoMA) and the 'Ancient Civilizations' exhibit at the Metropolitan Museum of Art?",
+   "question_date": "2023/02/01 (Wed) 10:20"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "4 months ago",
+   "id": "LongMemEval:gpt4_6dc9b45b",
+   "qtype": "temporal-reasoning",
+   "question": "How many months ago did I attend the Seattle International Film Festival?",
+   "question_date": "2021/10/02 (Sat) 03:56"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "1 week",
+   "id": "LongMemEval:gpt4_7a0daae1",
+   "qtype": "temporal-reasoning",
+   "question": "How many weeks passed between the day I bought my new tennis racket and the day I received it?",
+   "question_date": "2023/04/15 (Sat) 22:38"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3 days ago. 4 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_7ddcf75f",
+   "qtype": "temporal-reasoning",
+   "question": "How many days ago did I go on a whitewater rafting trip in the Oregon mountains?",
+   "question_date": "2023/06/20 (Tue) 16:30"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "I viewed four properties before making an offer on the townhouse in the Brookside neighborhood. The reasons I didn't make an offer on them were: the kitchen of the bungalow needed serious renovation, the property in Cedar Creek was out of my budget, the noise from the highway was a deal-breaker for the 1-bedroom condo, and my offer on the 2-bedroom condo was rejected due to a higher bid.",
+   "id": "LongMemEval:gpt4_7fce9456",
+   "qtype": "multi-session",
+   "question": "How many properties did I view before making an offer on the townhouse in the Brookside neighborhood?",
+   "question_date": "2023/03/08 (Wed) 23:58"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3 weeks ago",
+   "id": "LongMemEval:gpt4_85da3956",
+   "qtype": "temporal-reasoning",
+   "question": "How many weeks ago did I attend the 'Summer Nights' festival at Universal Studios Hollywood?",
+   "question_date": "2023/08/05 (Sat) 08:21"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "14 days. 15 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_8e165409",
+   "qtype": "temporal-reasoning",
+   "question": "How many days passed between the day I repotted the previous spider plant and the day I gave my neighbor, Mrs. Johnson, a few cuttings from my spider plant?",
+   "question_date": "2023/03/26 (Sun) 15:53"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "2 weeks for 'The Nightingale', 4 weeks for 'Sapiens: A Brief History of Humankind', and 2 weeks for 'The Power', so a total of 8 weeks.",
+   "id": "LongMemEval:gpt4_a1b77f9c",
+   "qtype": "temporal-reasoning",
+   "question": "How many weeks in total do I spent on reading 'The Nightingale' and listening to 'Sapiens: A Brief History of Humankind' and 'The Power'?",
+   "question_date": "2022/04/30 (Sat) 13:22"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3 days ago. 4 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_a2d1d1f6",
+   "qtype": "temporal-reasoning",
+   "question": "How many days ago did I harvest my first batch of fresh herbs from the herb garden kit?",
+   "question_date": "2023/04/18 (Tue) 01:48"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "I replaced or fixed five items: the kitchen faucet, the kitchen mat, the toaster, the coffee maker, and the kitchen shelves.",
+   "id": "LongMemEval:gpt4_ab202e7f",
+   "qtype": "multi-session",
+   "question": "How many kitchen items did I replace or fix?",
+   "question_date": "2023/05/30 (Tue) 22:20"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "7 days ago. 8 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_b0863698",
+   "qtype": "temporal-reasoning",
+   "question": "How many days ago did I participate in the 5K charity run?",
+   "question_date": "2023/03/26 (Sun) 04:13"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "4 days.",
+   "id": "LongMemEval:gpt4_b5700ca9",
+   "qtype": "temporal-reasoning",
+   "question": "How many days ago did I attend the Maundy Thursday service at the Episcopal Church?",
+   "question_date": "2023/04/10 (Mon) 10:28"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3 weeks ago",
+   "id": "LongMemEval:gpt4_e072b769",
+   "qtype": "temporal-reasoning",
+   "question": "How many weeks ago did I start using the cashback app 'Ibotta'?",
+   "question_date": "2023/05/06 (Sat) 09:18"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "4 days. 5 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_e414231e",
+   "qtype": "temporal-reasoning",
+   "question": "How many days passed between the day I fixed my mountain bike and the day I decided to upgrade my road bike's pedals?",
+   "question_date": "2023/04/10 (Mon) 20:29"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "6 days. 7 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_fa19884c",
+   "qtype": "temporal-reasoning",
+   "question": "How many days passed between the day I started playing along to my favorite songs on my old keyboard and the day I discovered a bluegrass band?",
+   "question_date": "2023/04/05 (Wed) 09:11"
+  }
+ ],
+ "G": [
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "$12",
+   "id": "LongMemEval:0100672e",
+   "qtype": "multi-session",
+   "question": "How much did I spend on each coffee mug for my coworkers?",
+   "question_date": "2023/05/30 (Tue) 03:16"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The user would prefer dinner suggestions that incorporate their homegrown cherry tomatoes and herbs like basil and mint, highlighting recipes that showcase their garden produce. They might not prefer suggestions that do not utilize these specific ingredients or do not emphasize the use of homegrown elements.",
+   "id": "LongMemEval:06f04340",
+   "qtype": "single-session-preference",
+   "question": "What should I serve for dinner this weekend with my homegrown ingredients?",
+   "question_date": "2023/05/30 (Tue) 21:35"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "under my bed",
+   "id": "LongMemEval:07741c44",
+   "qtype": "knowledge-update",
+   "question": "Where do I initially keep my old sneakers?",
+   "question_date": "2023/11/30 (Thu) 23:52"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "9 months",
+   "id": "LongMemEval:08e075c7",
+   "qtype": "knowledge-update",
+   "question": "How long have I been using my Fitbit Charge 3?",
+   "question_date": "2023/09/04 (Mon) 17:07"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Instant Pot",
+   "id": "LongMemEval:0977f2af",
+   "qtype": "knowledge-update",
+   "question": "What new kitchen gadget did I invest in before getting the Air Fryer?",
+   "question_date": "2023/05/31 (Wed) 07:54"
+  },
+  {
+   "abstention": true,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The information provided is not enough. You did not mention how much will the bus take.",
+   "id": "LongMemEval:09ba9854_abs",
+   "qtype": "multi-session",
+   "question": "How much will I save by taking the bus from the airport to my hotel instead of a taxi?",
+   "question_date": "2023/05/30 (Tue) 22:56"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The user would prefer responses that build upon their previous mention of purchasing a portable power bank, such as suggestions on how to optimize its use, like ensuring it's fully charged before use. They might also appreciate tips on utilizing battery-saving features on their phone. The user may not prefer responses that suggest alternative solutions or unrelated advice.",
+   "id": "LongMemEval:09d032c9",
+   "qtype": "single-session-preference",
+   "question": "I've been having trouble with the battery life on my phone lately. Any tips?",
+   "question_date": "2023/05/30 (Tue) 16:42"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "132 points",
+   "id": "LongMemEval:0e4e4c46",
+   "qtype": "knowledge-update",
+   "question": "What is my current highest score in Ticket to Ride?",
+   "question_date": "2023/06/10 (Sat) 16:46"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "an hour and a half",
+   "id": "LongMemEval:1192316e",
+   "qtype": "multi-session",
+   "question": "What is the total time it takes I to get ready and commute to work?",
+   "question_date": "2023/05/30 (Tue) 19:00"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "I recommended using a Pilsner or Lager for the recipe.",
+   "id": "LongMemEval:16c90bf4",
+   "qtype": "single-session-assistant",
+   "question": "I'm looking back at our previous conversation about the Seco de Cordero recipe from Ancash. You mentioned using a light or medium-bodied beer, but I was wondering if you could remind me what type of beer you specifically recommended?",
+   "question_date": "2023/05/30 (Tue) 22:48"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "220",
+   "id": "LongMemEval:184da446",
+   "qtype": "knowledge-update",
+   "question": "How many pages of 'A Short History of Nearly Everything' have I read so far?",
+   "question_date": "2023/06/17 (Sat) 04:02"
+  },
+  {
+   "abstention": true,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "You did not mention this information. You mentioned staying in Japan, but not in Korea.",
+   "id": "LongMemEval:19b5f2b3_abs",
+   "qtype": "single-session-user",
+   "question": "How long was I in Korea for?",
+   "question_date": "2023/05/30 (Tue) 17:14"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The user would prefer suggestions related to listening to new podcasts or audiobooks, especially the genre beyond true crime or self-improvement, such as history. They may not be interested in activities that require visual attention, such as reading or watching videos, as they are commuting. The user would not prefer general podcast topics such as true crime or self-improvement, as the user wants to explore other topics.",
+   "id": "LongMemEval:1c0ddc50",
+   "qtype": "single-session-preference",
+   "question": "Can you suggest some activities I can do during my commute to work?",
+   "question_date": "2023/05/30 (Tue) 13:09"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Veja",
+   "id": "LongMemEval:1de5cff2",
+   "qtype": "single-session-assistant",
+   "question": "I was going through our previous conversation about high-end fashion brands, and I was wondering if you could remind me of the brand that uses wild rubber sourced from the Amazon rainforest?",
+   "question_date": "2023/05/30 (Tue) 19:49"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Denver",
+   "id": "LongMemEval:1faac195",
+   "qtype": "single-session-user",
+   "question": "Where does my sister Emily live?",
+   "question_date": "2023/05/30 (Tue) 19:50"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "190",
+   "id": "LongMemEval:2311e44b",
+   "qtype": "multi-session",
+   "question": "How many pages do I have left to read in 'The Nightingale'?",
+   "question_date": "2023/05/30 (Tue) 22:55"
+  },
+  {
+   "abstention": true,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "The information provided is not enough. You did not mention how many paged do you have left to read in 'Sapiens'.",
+   "id": "LongMemEval:2311e44b_abs",
+   "qtype": "multi-session",
+   "question": "How many pages do I have left to read in 'Sapiens'?",
+   "question_date": "2023/05/30 (Tue) 18:25"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "$270",
+   "id": "LongMemEval:2318644b",
+   "qtype": "multi-session",
+   "question": "How much more did I spend on accommodations per night in Hawaii compared to Tokyo?",
+   "question_date": "2023/05/30 (Tue) 22:16"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "every week",
+   "id": "LongMemEval:2698e78f",
+   "qtype": "knowledge-update",
+   "question": "How often do I see my therapist, Dr. Smith?",
+   "question_date": "2023/11/10 (Fri) 00:38"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "10%",
+   "id": "LongMemEval:27016adc",
+   "qtype": "multi-session",
+   "question": "What percentage of the countryside property's price is the cost of the renovations I plan to do on my current house?",
+   "question_date": "2023/05/30 (Tue) 18:29"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "140 hours",
+   "id": "LongMemEval:28dc39ac",
+   "qtype": "multi-session",
+   "question": "How many hours have I spent playing games in total?",
+   "question_date": "2023/05/30 (Tue) 23:42"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "30 minutes",
+   "id": "LongMemEval:29f2956b",
+   "qtype": "single-session-user",
+   "question": "How much time do I dedicate to practicing guitar every day?",
+   "question_date": "2023/05/30 (Tue) 20:45"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Chapter 4 of Book 1, titled 'Vocal Prayer and Meditation'.",
+   "id": "LongMemEval:2bf43736",
+   "qtype": "single-session-assistant",
+   "question": "I was going through our previous chat and I wanted to clarify something about the prayer of beginners in Tanqueray's Spiritual Life treatise. Can you remind me which chapter of the second part discusses vocal prayer and meditation?",
+   "question_date": "2023/05/30 (Tue) 21:49"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "4",
+   "id": "LongMemEval:2ce6a0f2",
+   "qtype": "multi-session",
+   "question": "How many different art-related events did I attend in the past month?",
+   "question_date": "2023/03/08 (Wed) 23:27"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "21 days. 22 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:2ebe6c90",
+   "qtype": "temporal-reasoning",
+   "question": "How many days did it take me to finish 'The Nightingale' by Kristin Hannah?",
+   "question_date": "2023/05/01 (Mon) 21:05"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Absinthe",
+   "id": "LongMemEval:3249768e",
+   "qtype": "single-session-assistant",
+   "question": "I'm looking back at our previous conversation about building a cocktail bar. You recommended five bottles to make the widest variety of gin-based cocktails. Can you remind me what the fifth bottle was?",
+   "question_date": "2023/05/30 (Tue) 18:11"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "bronchitis",
+   "id": "LongMemEval:36580ce8",
+   "qtype": "single-session-user",
+   "question": "What health issue did I initially think was just a cold?",
+   "question_date": "2023/05/30 (Tue) 22:09"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Ford F-150 pickup truck",
+   "id": "LongMemEval:3ba21379",
+   "qtype": "knowledge-update",
+   "question": "What type of vehicle model am I currently working on?",
+   "question_date": "2023/06/01 (Thu) 05:09"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "a coffee shop in the city",
+   "id": "LongMemEval:3d86fd0a",
+   "qtype": "single-session-user",
+   "question": "Where did I meet Sophia?",
+   "question_date": "2023/05/30 (Tue) 11:59"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Sarah",
+   "id": "LongMemEval:3f1e9474",
+   "qtype": "single-session-user",
+   "question": "Who did I have a conversation with about destiny?",
+   "question_date": "2023/05/30 (Tue) 22:08"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "a 70-200mm zoom lens",
+   "id": "LongMemEval:41698283",
+   "qtype": "knowledge-update",
+   "question": "What type of camera lens did I purchase most recently?",
+   "question_date": "2023/09/21 (Thu) 08:41"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Andy was wearing an untidy, stained white shirt.",
+   "id": "LongMemEval:4388e9dd",
+   "qtype": "single-session-assistant",
+   "question": "I was going through our previous chat and I was wondering, what was Andy wearing in the script you wrote for the comedy movie scene?",
+   "question_date": "2023/05/30 (Tue) 20:43"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The Chiefs played the Jaguars 12 times at Arrowhead Stadium.",
+   "id": "LongMemEval:4baee567",
+   "qtype": "single-session-assistant",
+   "question": "I was looking back at our previous chat and I wanted to confirm, how many times did the Chiefs play the Jaguars at Arrowhead Stadium?",
+   "question_date": "2023/05/30 (Tue) 23:21"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "24 days. 25 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:4dfccbf7",
+   "qtype": "temporal-reasoning",
+   "question": "How many days had passed since I started taking ukulele lessons when I decided to take my acoustic guitar to the guitar tech for servicing?",
+   "question_date": "2023/04/01 (Sat) 00:42"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Premier Silver",
+   "id": "LongMemEval:50635ada",
+   "qtype": "knowledge-update",
+   "question": "What was my previous frequent flyer status on United Airlines before I got the current status?",
+   "question_date": "2023/06/29 (Thu) 04:09"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Nu, pogodi!",
+   "id": "LongMemEval:51b23612",
+   "qtype": "single-session-assistant",
+   "question": "I was going through our previous conversation about political propaganda and humor, and I was wondering if you could remind me of that Soviet cartoon you mentioned that mocked Western culture?",
+   "question_date": "2023/05/30 (Tue) 20:38"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "February 1st",
+   "id": "LongMemEval:51c32626",
+   "qtype": "multi-session",
+   "question": "When did I submit my research paper on sentiment analysis?",
+   "question_date": "2023/05/30 (Tue) 16:23"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "According to Borges, 'The Library is a sphere whose exact center is any one of its hexagons and whose circumference is inaccessible.'",
+   "id": "LongMemEval:58470ed2",
+   "qtype": "single-session-assistant",
+   "question": "I was going through our previous conversation about The Library of Babel, and I wanted to confirm - what did Borges say about the center and circumference of the Library?",
+   "question_date": "2023/05/30 (Tue) 23:56"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "TechCorp",
+   "id": "LongMemEval:5a4f22c0",
+   "qtype": "knowledge-update",
+   "question": "What company is Rachel, an old colleague from my previous company, currently working at?",
+   "question_date": "2023/06/21 (Wed) 13:02"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3 days.",
+   "id": "LongMemEval:5a7937c8",
+   "qtype": "multi-session",
+   "question": "How many days did I spend participating in faith-related activities in December?",
+   "question_date": "2024/01/10 (Wed) 23:41"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "We've met up twice.",
+   "id": "LongMemEval:5c40ec5b",
+   "qtype": "knowledge-update",
+   "question": "How many times have I met up with Alex from Germany?",
+   "question_date": "2023/10/30 (Mon) 13:39"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Marketing specialist at a small startup",
+   "id": "LongMemEval:5d3d2817",
+   "qtype": "single-session-user",
+   "question": "What was my previous occupation?",
+   "question_date": "2023/05/30 (Tue) 20:08"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "10 minutes",
+   "id": "LongMemEval:61f8c8f8",
+   "qtype": "multi-session",
+   "question": "How much faster did I finish the 5K run compared to my previous year's time?",
+   "question_date": "2023/10/01 (Sun) 23:53"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "20",
+   "id": "LongMemEval:67e0d0f2",
+   "qtype": "multi-session",
+   "question": "What is the total number of online courses I've completed?",
+   "question_date": "2023/05/30 (Tue) 23:23"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "25 minutes and 50 seconds (or 25:50)",
+   "id": "LongMemEval:6a1eabeb",
+   "qtype": "knowledge-update",
+   "question": "What was my personal best time in the charity 5K run?",
+   "question_date": "2023/06/25 (Sun) 13:22"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Atmospheric distillation, fluid catalytic cracking (FCC), alkylation, and hydrotreating.",
+   "id": "LongMemEval:6ae235be",
+   "qtype": "single-session-assistant",
+   "question": "I remember you told me about the refining processes at CITGO's three refineries earlier. Can you remind me what kind of processes are used at the Lake Charles Refinery?",
+   "question_date": "2023/05/30 (Tue) 23:41"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "three",
+   "id": "LongMemEval:6b168ec8",
+   "qtype": "single-session-user",
+   "question": "How many bikes do I own?",
+   "question_date": "2023/05/30 (Tue) 20:24"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The user would prefer responses that build upon their existing sources of inspiration, such as revisiting Instagram art accounts or exploring new techniques from online tutorials. They might also appreciate suggestions that revisit previous themes they found enjoyable, like painting flowers. The user would not prefer generic or vague suggestions for finding inspiration, and would likely appreciate responses that utilize their recent 30-day painting challenge experience.",
+   "id": "LongMemEval:6b7dfb22",
+   "qtype": "single-session-preference",
+   "question": "I've been feeling a bit stuck with my paintings lately. Do you have any ideas on how I can find new inspiration?",
+   "question_date": "2023/05/30 (Tue) 13:57"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "my aunt",
+   "id": "LongMemEval:71017277",
+   "qtype": "temporal-reasoning",
+   "question": "I received a piece of jewelry last Saturday from whom?",
+   "question_date": "2023/03/09 (Thu) 15:47"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "$75",
+   "id": "LongMemEval:720133ac",
+   "qtype": "multi-session",
+   "question": "What is the total cost of Lola's vet visit and flea medication?",
+   "question_date": "2023/05/30 (Tue) 18:40"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "10%",
+   "id": "LongMemEval:726462e0",
+   "qtype": "single-session-user",
+   "question": "What was the discount I got on my first purchase from the new clothing brand?",
+   "question_date": "2023/05/30 (Tue) 23:15"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "50",
+   "id": "LongMemEval:72e3ee87",
+   "qtype": "knowledge-update",
+   "question": "How many episodes of the Science series have I completed on Crash Course?",
+   "question_date": "2023/06/27 (Tue) 19:26"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "9:00 AM",
+   "id": "LongMemEval:73d42213",
+   "qtype": "multi-session",
+   "question": "What time did I reach the clinic on Monday?",
+   "question_date": "2023/05/30 (Tue) 22:10"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "55-inch",
+   "id": "LongMemEval:76d63226",
+   "qtype": "single-session-user",
+   "question": "What size is my new Samsung TV?",
+   "question_date": "2023/05/30 (Tue) 16:56"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "International Budget Hostel",
+   "id": "LongMemEval:7e00a6cb",
+   "qtype": "single-session-assistant",
+   "question": "I'm planning my trip to Amsterdam again and I was wondering, what was the name of that hostel near the Red Light District that you recommended last time?",
+   "question_date": "2023/05/30 (Tue) 21:40"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "2",
+   "id": "LongMemEval:80ec1f4f",
+   "qtype": "multi-session",
+   "question": "How many different museums or galleries did I visit in the month of February?",
+   "question_date": "2023/03/03 (Fri) 23:25"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "3",
+   "id": "LongMemEval:81507db6",
+   "qtype": "multi-session",
+   "question": "How many graduation ceremonies have I attended in the past three months?",
+   "question_date": "2023/07/21 (Fri) 23:33"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "lavender gin fizz",
+   "id": "LongMemEval:8550ddae",
+   "qtype": "single-session-user",
+   "question": "What type of cocktail recipe did I try last weekend?",
+   "question_date": "2023/05/30 (Tue) 23:51"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "$50",
+   "id": "LongMemEval:85fa3a3f",
+   "qtype": "multi-session",
+   "question": "What is the total cost of the new food bowl, measuring cup, dental chews, and flea and tick collar I got for Max?",
+   "question_date": "2023/05/30 (Tue) 19:55"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The 27th parameter was 'Sound effects (e.g., ambient, diegetic, non-diegetic, etc.)'.",
+   "id": "LongMemEval:8752c811",
+   "qtype": "single-session-assistant",
+   "question": "I remember you provided a list of 100 prompt parameters that I can specify to influence your output. Can you remind me what was the 27th parameter on that list?",
+   "question_date": "2023/05/30 (Tue) 21:25"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "4",
+   "id": "LongMemEval:88432d0a",
+   "qtype": "multi-session",
+   "question": "How many times did I bake something in the past two weeks?",
+   "question_date": "2023/05/30 (Tue) 23:45"
+  },
+  {
+   "abstention": true,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "The information provided is not enough. You did not mention baking egg tarts.",
+   "id": "LongMemEval:88432d0a_abs",
+   "qtype": "multi-session",
+   "question": "How many times did I bake egg tarts in the past two weeks?",
+   "question_date": "2023/05/30 (Tue) 23:40"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The Plesiosaur had a blue scaly body.",
+   "id": "LongMemEval:89527b6b",
+   "qtype": "single-session-assistant",
+   "question": "I'm going back to our previous conversation about the children's book on dinosaurs. Can you remind me what color was the scaly body of the Plesiosaur in the image?",
+   "question_date": "2023/05/30 (Tue) 23:39"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Yes. (You have a road bike too.)",
+   "id": "LongMemEval:89941a94",
+   "qtype": "knowledge-update",
+   "question": "Before I purchased the gravel bike, do I have other bikes in addition to my mountain bike and my commuter bike?",
+   "question_date": "2023/06/21 (Wed) 02:24"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "17",
+   "id": "LongMemEval:8e9d538c",
+   "qtype": "single-session-user",
+   "question": "How many skeins of worsted weight yarn did I find in my stash?",
+   "question_date": "2023/05/30 (Tue) 18:03"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "Five",
+   "id": "LongMemEval:8fb83627",
+   "qtype": "knowledge-update",
+   "question": "How many issues of National Geographic have I finished reading?",
+   "question_date": "2023/08/14 (Mon) 23:19"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "$5,150",
+   "id": "LongMemEval:91b15a6e",
+   "qtype": "multi-session",
+   "question": "What is the minimum amount I could get if I sold the vintage diamond necklace and the antique vanity?",
+   "question_date": "2023/05/30 (Tue) 20:17"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Three times a week.",
+   "id": "LongMemEval:945e3d21",
+   "qtype": "knowledge-update",
+   "question": "How often do I attend yoga classes to help with my anxiety?",
+   "question_date": "2023/12/14 (Thu) 06:32"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "4 hours",
+   "id": "LongMemEval:94f70d80",
+   "qtype": "single-session-user",
+   "question": "How long did it take me to assemble the IKEA bookshelf?",
+   "question_date": "2023/05/30 (Tue) 23:11"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The user would prefer responses that highlight the differences between Fender Stratocaster and Gibson Les Paul electric guitars, such as the feel of the neck, weight, and sound profile. They might not prefer general tips on buying an electric guitar or suggestions that do not take into account their current guitar and desired upgrade.",
+   "id": "LongMemEval:95228167",
+   "qtype": "single-session-preference",
+   "question": "I'm getting excited about my visit to the music store this weekend. Any tips on what to look for in a new guitar?",
+   "question_date": "2023/05/30 (Tue) 21:04"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "10",
+   "id": "LongMemEval:95bcc1c8",
+   "qtype": "single-session-user",
+   "question": "How many amateur comedians did I watch perform at the open mic night?",
+   "question_date": "2023/05/30 (Tue) 22:04"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "Five months ago",
+   "id": "LongMemEval:982b5123",
+   "qtype": "temporal-reasoning",
+   "question": "How many months ago did I book the Airbnb in San Francisco?",
+   "question_date": "2023/05/21 (Sun) 10:30"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "$0.75",
+   "id": "LongMemEval:9aaed6a3",
+   "qtype": "multi-session",
+   "question": "How much cashback did I earn at SaveMart last Thursday?",
+   "question_date": "2023/05/30 (Tue) 23:17"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "level 100",
+   "id": "LongMemEval:9bbe84a2",
+   "qtype": "knowledge-update",
+   "question": "What was my previous goal for my Apex Legends level before I updated my goal?",
+   "question_date": "2023/10/08 (Sun) 15:29"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "100",
+   "id": "LongMemEval:9ee3ecd6",
+   "qtype": "multi-session",
+   "question": "How many points do I need to earn to redeem a free skincare product at Sephora?",
+   "question_date": "2023/05/30 (Tue) 21:46"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "4 days.",
+   "id": "LongMemEval:a08a253f",
+   "qtype": "multi-session",
+   "question": "How many days a week do I attend fitness classes?",
+   "question_date": "2023/05/30 (Tue) 23:16"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "100",
+   "id": "LongMemEval:a11281a2",
+   "qtype": "multi-session",
+   "question": "What was the approximate increase in Instagram followers I experienced in two weeks?",
+   "question_date": "2023/05/30 (Tue) 23:16"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "11",
+   "id": "LongMemEval:a1cc6108",
+   "qtype": "multi-session",
+   "question": "How old was I when Alex was born?",
+   "question_date": "2023/05/30 (Tue) 20:23"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "seven",
+   "id": "LongMemEval:a1eacc2a",
+   "qtype": "knowledge-update",
+   "question": "How many short stories have I written since I started writing regularly?",
+   "question_date": "2023/06/20 (Tue) 17:03"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "4",
+   "id": "LongMemEval:a3838d2b",
+   "qtype": "temporal-reasoning",
+   "question": "How many charity events did I participate in before the 'Run for the Cure' event?",
+   "question_date": "2023/11/29 (Wed) 03:31"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Dark Souls 3 DLC",
+   "id": "LongMemEval:a82c026e",
+   "qtype": "single-session-user",
+   "question": "What game did I finally beat last weekend?",
+   "question_date": "2023/05/30 (Tue) 21:26"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "7",
+   "id": "LongMemEval:af8d2e46",
+   "qtype": "single-session-user",
+   "question": "How many shirts did I pack for my 5-day trip to Costa Rica?",
+   "question_date": "2023/05/30 (Tue) 14:18"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "the 'Walk for Hunger' charity event",
+   "id": "LongMemEval:b46e15ee",
+   "qtype": "temporal-reasoning",
+   "question": "What charity event did I participate in a month ago?",
+   "question_date": "2023/04/18 (Tue) 18:34"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "5",
+   "id": "LongMemEval:b6019101",
+   "qtype": "knowledge-update",
+   "question": "How many MCU films did I watch in the last 3 months?",
+   "question_date": "2023/06/17 (Sat) 16:20"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "$300",
+   "id": "LongMemEval:bb7c3b45",
+   "qtype": "multi-session",
+   "question": "How much did I save on the Jimmy Choo heels?",
+   "question_date": "2023/05/30 (Tue) 23:31"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "4 days.",
+   "id": "LongMemEval:bbf86515",
+   "qtype": "temporal-reasoning",
+   "question": "How many days before the 'Rack Fest' did I participate in the 'Turbocharged Tuesdays' event?",
+   "question_date": "2023/06/28 (Wed) 22:12"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Trader Joe's",
+   "id": "LongMemEval:c14c00dd",
+   "qtype": "single-session-user",
+   "question": "What brand of shampoo do I currently use?",
+   "question_date": "2023/05/30 (Tue) 19:01"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Yes",
+   "id": "LongMemEval:c4ea545c",
+   "qtype": "knowledge-update",
+   "question": "Do I go to the gym more frequently than I did previously?",
+   "question_date": "2023/09/01 (Fri) 19:15"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Miss Bee Providore",
+   "id": "LongMemEval:c4f10528",
+   "qtype": "single-session-assistant",
+   "question": "I'm planning to visit Bandung again and I was wondering if you could remind me of the name of that restaurant in Cihampelas Walk that serves a great Nasi Goreng?",
+   "question_date": "2023/05/30 (Tue) 23:00"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Nostalgia",
+   "id": "LongMemEval:c7cf7dfd",
+   "qtype": "single-session-assistant",
+   "question": "I'm going back to our previous conversation about traditional Indian embroidery and tailoring techniques. Can you remind me of the name of that online store based in India that sells traditional Indian fabrics, threads, and embellishments?",
+   "question_date": "2023/05/30 (Tue) 20:59"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Pennsylvania",
+   "id": "LongMemEval:c8f1aeed",
+   "qtype": "single-session-assistant",
+   "question": "I wanted to follow up on our previous conversation about fracking in the Marcellus Shale region. You mentioned that some states require fracking companies to monitor groundwater quality at nearby wells before drilling and for a certain period after drilling is complete. Can you remind me which state you mentioned as an example that has this requirement?",
+   "question_date": "2023/05/30 (Tue) 13:40"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "2 months",
+   "id": "LongMemEval:c9f37c46",
+   "qtype": "temporal-reasoning",
+   "question": "How long had I been watching stand-up comedy specials regularly when I attended the open mic night at the local comedy club?",
+   "question_date": "2023/05/20 (Sat) 00:44"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "about two hours",
+   "id": "LongMemEval:cc5ded98",
+   "qtype": "knowledge-update",
+   "question": "How much time do I dedicate to coding exercises each day?",
+   "question_date": "2023/06/13 (Tue) 01:30"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Two months",
+   "id": "LongMemEval:cc6d1ec1",
+   "qtype": "temporal-reasoning",
+   "question": "How long had I been bird watching when I attended the bird watching workshop?",
+   "question_date": "2023/05/21 (Sun) 19:31"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "10 pounds",
+   "id": "LongMemEval:cf22b7bf",
+   "qtype": "knowledge-update",
+   "question": "How much weight have I lost since I started going to the gym consistently?",
+   "question_date": "2023/06/23 (Fri) 03:15"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The user would prefer responses that draw upon their personal experiences and memories, specifically their positive high school experiences such as being part of the debate team and taking advanced placement courses. They would prefer suggestions that highlight the potential benefits of attending the reunion, such as reconnecting with old friends and revisiting favorite subjects like history and economics. The user might not prefer generic or vague responses that do not take into account their individual experiences and interests.",
+   "id": "LongMemEval:d6233ab6",
+   "qtype": "single-session-preference",
+   "question": "I've been feeling nostalgic lately. Do you think it would be a good idea to attend my high school reunion?",
+   "question_date": "2023/05/30 (Tue) 01:29"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Hoop Dance",
+   "id": "LongMemEval:dc439ea3",
+   "qtype": "single-session-assistant",
+   "question": "I was looking back at our previous conversation about Native American powwows and I was wondering, which traditional game did you say was often performed by skilled dancers at powwows?",
+   "question_date": "2023/05/30 (Tue) 17:54"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Patagonia",
+   "id": "LongMemEval:e48988bc",
+   "qtype": "single-session-assistant",
+   "question": "I was looking back at our previous conversation about environmentally responsible supply chain practices, and I was wondering if you could remind me of the company you mentioned that's doing a great job with sustainability?",
+   "question_date": "2023/05/30 (Tue) 23:26"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Two weeks",
+   "id": "LongMemEval:e4e14d04",
+   "qtype": "temporal-reasoning",
+   "question": "How long had I been a member of 'Book Lovers Unite' when I attended the meetup?",
+   "question_date": "2023/05/28 (Sun) 15:46"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "$5",
+   "id": "LongMemEval:e56a43b9",
+   "qtype": "multi-session",
+   "question": "How much discount will I get on my next purchase at FreshMart?",
+   "question_date": "2023/05/30 (Tue) 18:15"
+  },
+  {
+   "abstention": true,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The information provided is not enough. You mentioned purchasing a headphone, but you did not mention the iPad.",
+   "id": "LongMemEval:e5ba910e_abs",
+   "qtype": "multi-session",
+   "question": "What is the total cost of my recently purchased headphones and the iPad?",
+   "question_date": "2023/05/30 (Tue) 17:19"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "9 months",
+   "id": "LongMemEval:e61a7584",
+   "qtype": "knowledge-update",
+   "question": "How long have I had my cat, Luna?",
+   "question_date": "2023/11/30 (Thu) 12:46"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "2-3 eggs",
+   "id": "LongMemEval:e8a79c70",
+   "qtype": "single-session-assistant",
+   "question": "I was going through our previous conversation about making a classic French omelette, and I wanted to confirm - how many eggs did you say we need for the recipe?",
+   "question_date": "2023/05/30 (Tue) 08:29"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Oahu",
+   "id": "LongMemEval:eace081b",
+   "qtype": "knowledge-update",
+   "question": "Where am I planning to stay for my birthday trip to Hawaii?",
+   "question_date": "2023/06/06 (Tue) 04:18"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "15 days",
+   "id": "LongMemEval:edced276",
+   "qtype": "multi-session",
+   "question": "How many days did I spend in total traveling in Hawaii and in New York City?",
+   "question_date": "2023/05/30 (Tue) 14:53"
+  },
+  {
+   "abstention": true,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "The information provided is not enough. You mentioned traveling for 10 days in Hawaii but did not mention abything about the trip to Seattle.",
+   "id": "LongMemEval:edced276_abs",
+   "qtype": "multi-session",
+   "question": "How many days did I spend in total traveling in Hawaii and in Seattle?",
+   "question_date": "2023/05/30 (Tue) 20:59"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "$300",
+   "id": "LongMemEval:ef9cf60a",
+   "qtype": "multi-session",
+   "question": "How much did I spend on gifts for my sister?",
+   "question_date": "2023/05/30 (Tue) 22:48"
+  },
+  {
+   "abstention": true,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "You did not mention this information. You mentioned receiving a birthday gift from your sister, but not your dad.",
+   "id": "LongMemEval:f4f1d8a4_abs",
+   "qtype": "single-session-user",
+   "question": "What did my dad gave me as a birthday gift?",
+   "question_date": "2023/05/30 (Tue) 21:51"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Previously, you play tennis with your friends at the local park every week (on Sunday). Currently, you play tennis every other week (on Sunday).",
+   "id": "LongMemEval:f685340e",
+   "qtype": "knowledge-update",
+   "question": "How often do I play tennis with my friends at the local park previously? How often do I play now?",
+   "question_date": "2023/07/31 (Mon) 11:43"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "24 hours",
+   "id": "LongMemEval:faba32e5",
+   "qtype": "single-session-user",
+   "question": "How long did Alex marinate the BBQ ribs in special sauce?",
+   "question_date": "2023/05/30 (Tue) 22:10"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "the woman selling jam at the farmer's market",
+   "id": "LongMemEval:gpt4_0a05b494",
+   "qtype": "temporal-reasoning",
+   "question": "Who did I meet first, the woman selling jam at the farmer's market or the tourist from Australia?",
+   "question_date": "2023/05/23 (Tue) 00:30"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "54 days. 55 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_1916e0ea",
+   "qtype": "temporal-reasoning",
+   "question": "How many days passed between the day I cancelled my FarmFresh subscription and the day I did my online grocery shopping from Instacart?",
+   "question_date": "2023/03/18 (Sat) 00:06"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The meeting with Rachel",
+   "id": "LongMemEval:gpt4_1a1dc16d",
+   "qtype": "temporal-reasoning",
+   "question": "Which event happened first, the meeting with Rachel or the pride parade?",
+   "question_date": "2023/05/09 (Tue) 10:01"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "planting 12 new tomato saplings",
+   "id": "LongMemEval:gpt4_1e4a8aec",
+   "qtype": "temporal-reasoning",
+   "question": "What gardening-related activity did I do two weeks ago?",
+   "question_date": "2023/05/05 (Fri) 16:42"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Thrive Market",
+   "id": "LongMemEval:gpt4_2ba83207",
+   "qtype": "multi-session",
+   "question": "Which grocery store did I spend the most money at in the past month?",
+   "question_date": "2023/05/30 (Tue) 22:59"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "6:45 AM",
+   "id": "LongMemEval:gpt4_2c50253f",
+   "qtype": "temporal-reasoning",
+   "question": "What time do I wake up on Tuesdays and Thursdays?",
+   "question_date": "2023/05/27 (Sat) 19:21"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "'The Hate U Give'",
+   "id": "LongMemEval:gpt4_2d58bcd6",
+   "qtype": "temporal-reasoning",
+   "question": "Which book did I finish reading first, 'The Hate U Give' or 'The Nightingale'?",
+   "question_date": "2023/05/30 (Tue) 22:18"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "I attended three weddings. The couples were Rachel and Mike, Emily and Sarah, and Jen and Tom.",
+   "id": "LongMemEval:gpt4_2f8be40d",
+   "qtype": "multi-session",
+   "question": "How many weddings have I attended in this year?",
+   "question_date": "2023/10/15 (Sun) 23:47"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "23",
+   "id": "LongMemEval:gpt4_2f91af09",
+   "qtype": "multi-session",
+   "question": "How many total pieces of writing have I completed since I started writing again three weeks ago, including short stories, poems, and pieces for the writing challenge?",
+   "question_date": "2023/05/30 (Tue) 17:14"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "4",
+   "id": "LongMemEval:gpt4_31ff4165",
+   "qtype": "multi-session",
+   "question": "How many health-related devices do I use in a day?",
+   "question_date": "2023/05/30 (Tue) 23:38"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "First, I attended a NBA game at the Staples Center, then I watched the College Football National Championship game, and finally, I watched the NFL playoffs.",
+   "id": "LongMemEval:gpt4_45189cb4",
+   "qtype": "temporal-reasoning",
+   "question": "What is the order of the sports events I watched in January?",
+   "question_date": "2023/01/30 (Mon) 01:53"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "9 days ago. 10 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_468eb063",
+   "qtype": "temporal-reasoning",
+   "question": "How many days ago did I meet Emma?",
+   "question_date": "2023/04/20 (Thu) 10:12"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "'Game of Thrones'",
+   "id": "LongMemEval:gpt4_483dd43c",
+   "qtype": "temporal-reasoning",
+   "question": "Which show did I start watching first, 'The Crown' or 'Game of Thrones'?",
+   "question_date": "2023/05/29 (Mon) 08:33"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "one week",
+   "id": "LongMemEval:gpt4_4cd9eba1",
+   "qtype": "temporal-reasoning",
+   "question": "How many weeks have I been accepted into the exchange program when I started attending the pre-departure orientation sessions?",
+   "question_date": "2023/04/19 (Wed) 00:38"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "June 3rd",
+   "id": "LongMemEval:gpt4_4edbafa2",
+   "qtype": "temporal-reasoning",
+   "question": "What was the date on which I attended the first BBQ event in June?",
+   "question_date": "2023/07/01 (Sat) 02:36"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "1 day. 2 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_4ef30696",
+   "qtype": "temporal-reasoning",
+   "question": "How many days passed between the day I finished reading 'The Nightingale' and the day I started reading 'The Hitchhiker's Guide to the Galaxy'?",
+   "question_date": "2022/05/01 (Sun) 04:58"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "38 days. 39 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_4fc4f797",
+   "qtype": "temporal-reasoning",
+   "question": "How many days passed between the day I received feedback about my car's suspension and the day I tested my new suspension setup?",
+   "question_date": "2023/06/01 (Thu) 21:22"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Spanish classes",
+   "id": "LongMemEval:gpt4_5438fa52",
+   "qtype": "temporal-reasoning",
+   "question": "Which event happened first, my attendance at a cultural festival or the start of my Spanish classes?",
+   "question_date": "2023/05/27 (Sat) 16:21"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "TikTok",
+   "id": "LongMemEval:gpt4_5501fe77",
+   "qtype": "multi-session",
+   "question": "Which social media platform did I gain the most followers on over the past month?",
+   "question_date": "2023/05/30 (Tue) 22:43"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "You posted a recipe for vegan chili on Instagram using the hashtag #FoodieAdventures first.",
+   "id": "LongMemEval:gpt4_68e94287",
+   "qtype": "temporal-reasoning",
+   "question": "Which event happened first, my participation in the #PlankChallenge or my post about vegan chili recipe?",
+   "question_date": "2023/04/12 (Wed) 12:00"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Training pads for Luna",
+   "id": "LongMemEval:gpt4_6ed717ea",
+   "qtype": "temporal-reasoning",
+   "question": "Which item did I purchase first, the dog bed for Max or the training pads for Luna?",
+   "question_date": "2023/05/29 (Mon) 08:51"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "29 days. 30 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_74aed68e",
+   "qtype": "temporal-reasoning",
+   "question": "How many days passed between the day I replaced my spark plugs and the day I participated in the Turbocharged Tuesdays auto racking event?",
+   "question_date": "2023/04/01 (Sat) 21:42"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Science Museum, Museum of Contemporary Art, Metropolitan Museum of Art, Museum of History, Modern Art Museum, Natural History Museum",
+   "id": "LongMemEval:gpt4_7abb270c",
+   "qtype": "temporal-reasoning",
+   "question": "What is the order of the six museums I visited from earliest to latest?",
+   "question_date": "2023/03/10 (Fri) 08:15"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "12 days ago. 13 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_7bc6cf22",
+   "qtype": "temporal-reasoning",
+   "question": "How many days ago did I read the March 15th issue of The New Yorker?",
+   "question_date": "2023/04/01 (Sat) 08:36"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Persistent cough",
+   "id": "LongMemEval:gpt4_7de946e7",
+   "qtype": "temporal-reasoning",
+   "question": "Which health issue did I deal with first, the persistent cough or the skin tag removal?",
+   "question_date": "2023/02/28 (Tue) 18:07"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "10 days ago. 11 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_8279ba02",
+   "qtype": "temporal-reasoning",
+   "question": "How many days ago did I buy a smoker?",
+   "question_date": "2023/03/25 (Sat) 02:46"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The solo trip to Thailand",
+   "id": "LongMemEval:gpt4_8c8961ae",
+   "qtype": "temporal-reasoning",
+   "question": "Which trip did I take first, the one to Europe with family or the solo trip to Thailand?",
+   "question_date": "2023/05/28 (Sun) 13:10"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "4 years and 9 months",
+   "id": "LongMemEval:gpt4_93159ced",
+   "qtype": "temporal-reasoning",
+   "question": "How long have I been working before I started my current job at NovaTech?",
+   "question_date": "2023/05/25 (Thu) 19:17"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "I participated in the charity bake sale first.",
+   "id": "LongMemEval:gpt4_98f46fc6",
+   "qtype": "temporal-reasoning",
+   "question": "Which event did I participate in first, the charity gala or the charity bake sale?",
+   "question_date": "2023/05/01 (Mon) 12:15"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "United Airlines",
+   "id": "LongMemEval:gpt4_9a159967",
+   "qtype": "temporal-reasoning",
+   "question": "Which airline did I fly with the most in March and April?",
+   "question_date": "2023/04/27 (Thu) 05:28"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "I attended four movie festivals.",
+   "id": "LongMemEval:gpt4_a56e767c",
+   "qtype": "multi-session",
+   "question": "How many movie festivals that I attended?",
+   "question_date": "2023/05/30 (Tue) 20:53"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "17 days ago. 18 days (including the last day) is also acceptable.",
+   "id": "LongMemEval:gpt4_af6db32f",
+   "qtype": "temporal-reasoning",
+   "question": "How many days ago did I watch the Super Bowl?",
+   "question_date": "2023/03/01 (Wed) 19:28"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Two weeks",
+   "id": "LongMemEval:gpt4_cd90e484",
+   "qtype": "temporal-reasoning",
+   "question": "How long did I use my new binoculars before I saw the American goldfinches returning to the area?",
+   "question_date": "2023/05/20 (Sat) 09:28"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "my parents",
+   "id": "LongMemEval:gpt4_d6585ce9",
+   "qtype": "temporal-reasoning",
+   "question": "Who did I go with to the music event last Saturday?",
+   "question_date": "2023/04/22 (Sat) 08:01"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "new router",
+   "id": "LongMemEval:gpt4_d9af6064",
+   "qtype": "temporal-reasoning",
+   "question": "Which device did I set up first, the smart thermostat or the new router?",
+   "question_date": "2023/03/28 (Tue) 01:25"
+  },
+  {
+   "abstention": false,
+   "count": true,
+   "dataset": "LongMemEval",
+   "gold": "10 times",
+   "id": "LongMemEval:gpt4_e05b82a6",
+   "qtype": "multi-session",
+   "question": "How many times did I ride rollercoasters across all the events I attended from July to October?",
+   "question_date": "2023/11/04 (Sat) 23:49"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "I first completed the Spring Sprint Triathlon, then took part in the Midsummer 5K Run, and finally participated in the company's annual charity soccer tournament.",
+   "id": "LongMemEval:gpt4_e061b84f",
+   "qtype": "temporal-reasoning",
+   "question": "What is the order of the three sports events I participated in during the past month, from earliest to latest?",
+   "question_date": "2023/07/01 (Sat) 20:43"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "The company's annual charity soccer tournament.",
+   "id": "LongMemEval:gpt4_e061b84g",
+   "qtype": "temporal-reasoning",
+   "question": "I mentioned participating in a sports event two weeks ago. What was the event?",
+   "question_date": "2023/07/01 (Sat) 13:38"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "American Airlines",
+   "id": "LongMemEval:gpt4_f420262d",
+   "qtype": "temporal-reasoning",
+   "question": "What was the airline that I flied with on Valentine's day?",
+   "question_date": "2023/03/02 (Thu) 08:00"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "a bluegrass band that features a banjo player",
+   "id": "LongMemEval:gpt4_fa19884d",
+   "qtype": "temporal-reasoning",
+   "question": "What is the artist that I started to listen to last Friday?",
+   "question_date": "2023/04/05 (Wed) 19:25"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D1:13"
+   ],
+   "gold": "action and sci-fi",
+   "id": "LoCoMo:conv-42:96",
+   "question": "What type of movies does Nate enjoy watching the most?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D22:1"
+   ],
+   "gold": "Knee injury",
+   "id": "LoCoMo:conv-44:100",
+   "question": "What was the reason Audrey couldn't walk her dogs for a period of time?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D7:5"
+   ],
+   "gold": "Bright and bold - like him",
+   "id": "LoCoMo:conv-42:110",
+   "question": "Why did Nate choose the hair color he did?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D4:26"
+   ],
+   "gold": "why he keeps hustling as a musician",
+   "id": "LoCoMo:conv-50:78",
+   "question": "What was the necklace Calvin received meant to remind him of?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D28:13"
+   ],
+   "gold": "gaming content",
+   "id": "LoCoMo:conv-42:188",
+   "question": "What is Nate creating for YouTube on 9 November, 2022?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D25:14"
+   ],
+   "gold": "Communication and bonding",
+   "id": "LoCoMo:conv-43:158",
+   "question": "In which area has John's team seen the most growth during training?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-47",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D27:6"
+   ],
+   "gold": "Witcher 3",
+   "id": "LoCoMo:conv-47:138",
+   "question": "What inspired James to create his game?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D8:9"
+   ],
+   "gold": "many people wanting to create loving homes for children in need",
+   "id": "LoCoMo:conv-26:113",
+   "question": "What did Caroline see at the council meeting for adoption?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-47",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D24:4"
+   ],
+   "gold": "books, movies, dreams",
+   "id": "LoCoMo:conv-47:127",
+   "question": "Where does James get his ideas from?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-49",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D18:8"
+   ],
+   "gold": "Yoga",
+   "id": "LoCoMo:conv-49:131",
+   "question": "What did Sam suggest Evan try for stress relief and flexibility?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D22:25"
+   ],
+   "gold": "From the shelter",
+   "id": "LoCoMo:conv-48:163",
+   "question": "How did Deborah get Luna, one of her cats?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D1:5"
+   ],
+   "gold": "The Minnesota Wolves",
+   "id": "LoCoMo:conv-43:71",
+   "question": "Which team did John sign with on 21 May, 2023?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-30",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D1:26"
+   ],
+   "gold": "They look graceful",
+   "id": "LoCoMo:conv-30:44",
+   "question": "What does Gina say about the dancers in the photo?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D23:11"
+   ],
+   "gold": "fixing things",
+   "id": "LoCoMo:conv-50:124",
+   "question": "What activity does Dave find fulfilling, similar to Calvin's passion for music festivals?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D1:15"
+   ],
+   "gold": "A few months",
+   "id": "LoCoMo:conv-50:71",
+   "question": "How long did Calvin plan to stay in Japan?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D29:7"
+   ],
+   "gold": "Cooking",
+   "id": "LoCoMo:conv-48:185",
+   "question": "What was Deborah's mom passionate about?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-30",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D15:3"
+   ],
+   "gold": "a dance studio",
+   "id": "LoCoMo:conv-30:70",
+   "question": "What is Jon working on opening?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D5:8"
+   ],
+   "gold": "Yes",
+   "id": "LoCoMo:conv-26:101",
+   "question": "Did Melanie make the black and white bowl in the photo?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D22:13"
+   ],
+   "gold": "\"A Dance with Dragons\"",
+   "id": "LoCoMo:conv-43:149",
+   "question": "What book did Tim just finish reading on 8th December, 2023?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D10:3"
+   ],
+   "gold": "regular walks together",
+   "id": "LoCoMo:conv-50:88",
+   "question": "What did Calvin and his friends arrange for in the park?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D2:20",
+    "D2:22"
+   ],
+   "gold": "Susie, Seraphim",
+   "id": "LoCoMo:conv-48:16",
+   "question": "What are the names of Jolene's snakes?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D28:1"
+   ],
+   "gold": "Ireland",
+   "id": "LoCoMo:conv-43:172",
+   "question": "Where will Tim be going for a semester abroad?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-49",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D24:17"
+   ],
+   "gold": "swimming, yoga, walking",
+   "id": "LoCoMo:conv-49:150",
+   "question": "What suggestions did Evan give for low-impact exercises?"
+  },
+  {
+   "category": 3,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D10:13",
+    "D10:23"
+   ],
+   "gold": "chicken",
+   "id": "LoCoMo:conv-44:20",
+   "question": "Which meat does Audrey prefer eating more than others?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-30",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D1:28"
+   ],
+   "gold": "Glad",
+   "id": "LoCoMo:conv-30:45",
+   "question": "What is Jon's attitude towards being part of the dance festival?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D21:13"
+   ],
+   "gold": "chocolate cake with raspberries",
+   "id": "LoCoMo:conv-42:158",
+   "question": "What kind of cake did Joanna share a photo of that she likes making for birthdays and special days?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D28:31"
+   ],
+   "gold": "Music videos, concerts, documentaries about artists and their creative process",
+   "id": "LoCoMo:conv-50:145",
+   "question": "What type of videos does Calvin usually watch on his television?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D30:5"
+   ],
+   "gold": "A vintage camera",
+   "id": "LoCoMo:conv-50:152",
+   "question": "What new item did Dave buy recently?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-49",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D5:9"
+   ],
+   "gold": "tracks progress and serves as a constant reminder to keep going",
+   "id": "LoCoMo:conv-49:95",
+   "question": "What does the smartwatch help Evan with?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D27:12"
+   ],
+   "gold": "a card game about cats",
+   "id": "LoCoMo:conv-48:179",
+   "question": "What did Jolene recently play that she described to Deb?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D30:12"
+   ],
+   "gold": "Nature helps us appreciate life",
+   "id": "LoCoMo:conv-50:157",
+   "question": "What positive impact does Calvin mention nature has on tough times?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D30:9"
+   ],
+   "gold": "Nature - sunsets, beaches, waves",
+   "id": "LoCoMo:conv-50:153",
+   "question": "What type of photos does Dave like to capture with his new camera?"
+  },
+  {
+   "category": 3,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D18:7",
+    "D16:2",
+    "D7:1"
+   ],
+   "gold": "yes",
+   "id": "LoCoMo:conv-50:37",
+   "question": "Does Calvin love music tours?"
+  },
+  {
+   "category": 3,
+   "conv": "conv-47",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D8:36"
+   ],
+   "gold": "Mafia",
+   "id": "LoCoMo:conv-47:17",
+   "question": "What is the board game where you have to find the imposter that John mentions to James?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D10:4",
+    "D10:8"
+   ],
+   "gold": "tasty soup with sage",
+   "id": "LoCoMo:conv-43:103",
+   "question": "What kind of soup did John make recently?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-41",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D12:5"
+   ],
+   "gold": "education reform and infrastructure development",
+   "id": "LoCoMo:conv-41:90",
+   "question": "What was the focus of John's recent research and writing on his blog?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D3:1"
+   ],
+   "gold": "40 points",
+   "id": "LoCoMo:conv-43:77",
+   "question": "What was the highest number of points John scored in a game recently?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D26:36"
+   ],
+   "gold": "\"The Wheel of Time\"",
+   "id": "LoCoMo:conv-43:162",
+   "question": "What new fantasy TV series is Tim excited about?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D8:14"
+   ],
+   "gold": "about an hour",
+   "id": "LoCoMo:conv-44:76",
+   "question": "How long does Audrey typically walk her dogs for?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D16:15"
+   ],
+   "gold": "A gentle flow routine focused on breathing and grounding",
+   "id": "LoCoMo:conv-48:146",
+   "question": "What kind of yoga routine does Deborah recommend to Jolene?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-41",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D1:10"
+   ],
+   "gold": "Seeing how lack of education and crumbling infrastructure affected his neighborhood while growing up.",
+   "id": "LoCoMo:conv-41:66",
+   "question": "What sparked John's interest in improving education and infrastructure in the community?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D8:5"
+   ],
+   "gold": "painting",
+   "id": "LoCoMo:conv-26:111",
+   "question": "What creative project do Mel and her kids do together besides pottery?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-49",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D20:9"
+   ],
+   "gold": "Your worth is not defined by your weight",
+   "id": "LoCoMo:conv-49:136",
+   "question": "According to Evan, what is important for Sam to believe in concerning his weight?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D27:24"
+   ],
+   "gold": "Aragorn",
+   "id": "LoCoMo:conv-43:167",
+   "question": "According to John, who is his favorite character from Lord of the Rings?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D27:9"
+   ],
+   "gold": "experiencing a new level of joy and happiness",
+   "id": "LoCoMo:conv-48:177",
+   "question": "How did Jolene feel about her progress in practicing mindfulness and gratitude?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-49",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D21:21"
+   ],
+   "gold": "put a GPS sensor on them",
+   "id": "LoCoMo:conv-49:139",
+   "question": "What did Sam suggest Evan should do with his keys?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D14:2"
+   ],
+   "gold": "Agility classes",
+   "id": "LoCoMo:conv-44:85",
+   "question": "What type of classes did Audrey start with her pups recently on 4 August, 2023?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D27:5"
+   ],
+   "gold": "releasing expectations and judgments and savoring the present",
+   "id": "LoCoMo:conv-48:176",
+   "question": "What was the main focus of the session that stood out to Jolene during the retreat?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-30",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D5:15"
+   ],
+   "gold": "Freedom and expressing herself through dance",
+   "id": "LoCoMo:conv-30:55",
+   "question": "What does Gina's tattoo symbolize?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D13:7"
+   ],
+   "gold": "engine swaps, suspension modifications, and body modifications",
+   "id": "LoCoMo:conv-50:95",
+   "question": "What kind of modifications has Dave been working on in the car mod workshop?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D25:8"
+   ],
+   "gold": "California or salmon roll",
+   "id": "LoCoMo:conv-44:113",
+   "question": "Which type of sushi did Audrey suggest trying first to someone new to sushi?"
+  },
+  {
+   "category": 3,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D10:17"
+   ],
+   "gold": "beach",
+   "id": "LoCoMo:conv-48:40",
+   "question": "Does Deborah live close to the beach or the mountains?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D13:6"
+   ],
+   "gold": "oldest is relaxed, second is playful, third can be naughty but loves cuddles, youngest is full of life",
+   "id": "LoCoMo:conv-44:84",
+   "question": "What are some of the personalities of Audrey's four fur babies?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-30",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D1:7",
+    "D1:6"
+   ],
+   "gold": "by dancing",
+   "id": "LoCoMo:conv-30:2",
+   "question": "How do Jon and Gina both like to destress?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-47",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D29:8",
+    "D29:10"
+   ],
+   "gold": "To move in together",
+   "id": "LoCoMo:conv-47:143",
+   "question": "What decision did James and Samantha make on 31 October, 2022?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D7:6"
+   ],
+   "gold": "Fixing up things",
+   "id": "LoCoMo:conv-50:83",
+   "question": "What gives Dave a sense of achievement and purpose?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D15:3"
+   ],
+   "gold": "helping and pushing each other during runs",
+   "id": "LoCoMo:conv-48:138",
+   "question": "What made being part of the running group easy for Deborah to stay motivated?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D20:25"
+   ],
+   "gold": "about animals, plants, and ecosystems and how they work together",
+   "id": "LoCoMo:conv-44:96",
+   "question": "What did Andrew learn from reading books about ecological systems?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-30",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D2:8"
+   ],
+   "gold": "Marley flooring",
+   "id": "LoCoMo:conv-30:46",
+   "question": "What kind of flooring is Jon looking for in his dance studio?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-30",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D3:2"
+   ],
+   "gold": "The perfect spot for her store",
+   "id": "LoCoMo:conv-30:47",
+   "question": "What did Gina find for her clothing store on 1 February, 2023?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D13:5"
+   ],
+   "gold": "interning at a well-known engineering firm",
+   "id": "LoCoMo:conv-48:133",
+   "question": "What is Jolene currently doing in June 2023?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D24:19"
+   ],
+   "gold": "Shibuya Crossing",
+   "id": "LoCoMo:conv-50:126",
+   "question": "Which part of Tokyo is described as Tokyo's Times Square by Calvin?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-49",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D25:2"
+   ],
+   "gold": "for a drunken night",
+   "id": "LoCoMo:conv-49:154",
+   "question": "Why did Evan apologize to his partner?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D14:6"
+   ],
+   "gold": "one year",
+   "id": "LoCoMo:conv-48:134",
+   "question": "For how long has Jolene had Seraphim as a pet?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D17:10"
+   ],
+   "gold": "\"That\"",
+   "id": "LoCoMo:conv-43:134",
+   "question": "What is one of Tim's favorite fantasy TV shows, as mentioned on November 11, 2023?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D18:5"
+   ],
+   "gold": "She was happy and thankful",
+   "id": "LoCoMo:conv-26:148",
+   "question": "What was Melanie's reaction to her children enjoying the Grand Canyon?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D24:15"
+   ],
+   "gold": "respect Joanna for being able to bounce back",
+   "id": "LoCoMo:conv-42:172",
+   "question": "How does Nate feel about Joanna's ability to bounce back from setbacks?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-49",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D3:6"
+   ],
+   "gold": "flavored seltzer water and dark chocolate with high cocoa content",
+   "id": "LoCoMo:conv-49:91",
+   "question": "What did Sam agree to try instead of soda and candy?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-41",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D26:1"
+   ],
+   "gold": "volunteered at a homeless shelter",
+   "id": "LoCoMo:conv-41:131",
+   "question": "What community service did Maria mention that she was involved in on 31 July, 2023?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D8:2"
+   ],
+   "gold": "pots",
+   "id": "LoCoMo:conv-26:109",
+   "question": "What did Mel and her kids make during the pottery workshop?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D18:7"
+   ],
+   "gold": "Knowing that her writing can make a difference",
+   "id": "LoCoMo:conv-42:146",
+   "question": "What motivates Joanna to keep writing even on tough days?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-47",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D16:13"
+   ],
+   "gold": "July 20",
+   "id": "LoCoMo:conv-47:105",
+   "question": "When did James plan to return from his trip to Toronto and Vancouver?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D27:6"
+   ],
+   "gold": "Spanish",
+   "id": "LoCoMo:conv-43:164",
+   "question": "What language does Tim know besides German?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-30",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D9:10"
+   ],
+   "gold": "a trophy",
+   "id": "LoCoMo:conv-30:61",
+   "question": "What did Gina receive from a dance contest?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D17:8"
+   ],
+   "gold": "Woodhaven's interesting past and people",
+   "id": "LoCoMo:conv-42:140",
+   "question": "What inspired Joanna's new script in July 2022?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D27:33"
+   ],
+   "gold": "a map of Middle-earth from LOTR",
+   "id": "LoCoMo:conv-43:171",
+   "question": "What map does Tim show to his friend John?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D14:6"
+   ],
+   "gold": "comforted",
+   "id": "LoCoMo:conv-48:135",
+   "question": "How does Jolene feel when spending time with Seraphim?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D3:17"
+   ],
+   "gold": "\"Little Women\"",
+   "id": "LoCoMo:conv-42:103",
+   "question": "What did Joanna recently watch and recommend to Nate on February 7, 2022?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D17:19"
+   ],
+   "gold": "\"Trans Lives Matter\"",
+   "id": "LoCoMo:conv-26:140",
+   "question": "What did the posters at the poetry reading say?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D7:11"
+   ],
+   "gold": "\"Becoming Nicole\"",
+   "id": "LoCoMo:conv-26:104",
+   "question": "What book did Caroline recommend to Melanie?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D19:20"
+   ],
+   "gold": "Peruvian Lilies",
+   "id": "LoCoMo:conv-44:95",
+   "question": "What kind of flowers does Audrey take care of?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-49",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D8:1"
+   ],
+   "gold": "bowl of spinach, avocado, and strawberries",
+   "id": "LoCoMo:conv-49:104",
+   "question": "What food did Sam share a photo of on 19 August, 2023?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D26:10",
+    "D26:12"
+   ],
+   "gold": "coffee and fresh pastries",
+   "id": "LoCoMo:conv-48:74",
+   "question": "What do Deborah and Jolene plan to try when they meet in a new cafe?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-47",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D25:7"
+   ],
+   "gold": "making his first mobile game",
+   "id": "LoCoMo:conv-47:132",
+   "question": "What career milestone did John achieve recently in September 2022?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D20:28"
+   ],
+   "gold": "near his hometown",
+   "id": "LoCoMo:conv-43:145",
+   "question": "Where was the forest picture shared by John on December 1,2023 taken?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-49",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D5:17"
+   ],
+   "gold": "motivates him to keep going through tough times",
+   "id": "LoCoMo:conv-49:97",
+   "question": "Why did Evan decide to get the bonsai tree?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-41",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D27:9"
+   ],
+   "gold": "Had a meaningful experience at a military memorial",
+   "id": "LoCoMo:conv-41:133",
+   "question": "What did John do the week before August 3, 2023 involving his kids?"
+  },
+  {
+   "category": 3,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D2:23"
+   ],
+   "gold": "Hairless cats or pigs,since they don't have fur, which is one of the main causes of Joanna's allergy.",
+   "id": "LoCoMo:conv-42:4",
+   "question": "What pets wouldn't cause any discomfort to Joanna?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D10:23"
+   ],
+   "gold": "Roasted Chicken",
+   "id": "LoCoMo:conv-44:80",
+   "question": "What dish is one of Audrey's favorite dishes that includes garlic and is shared with Andrew on 3 July, 2023?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D9:4"
+   ],
+   "gold": "Four years",
+   "id": "LoCoMo:conv-43:100",
+   "question": "How long did John and his high school basketball teammates play together?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-41",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D18:7"
+   ],
+   "gold": "Like being in a fairy tale",
+   "id": "LoCoMo:conv-41:108",
+   "question": "What did Maria say it was like being at the waterfall in Oregon?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-47",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D19:7"
+   ],
+   "gold": "The Witcher 3",
+   "id": "LoCoMo:conv-47:111",
+   "question": "Which RPG game is John playing and enjoying on 10 August, 2022?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D28:10"
+   ],
+   "gold": "Take them to a nearby park",
+   "id": "LoCoMo:conv-44:121",
+   "question": "What is Andrew planning to do with Scout, Toby, and Buddy?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-49",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D9:2"
+   ],
+   "gold": "Twisted knee",
+   "id": "LoCoMo:conv-49:110",
+   "question": "What injury did Evan suffer from in August 2023?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-30",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D15:18",
+    "D15:19"
+   ],
+   "gold": "excitement",
+   "id": "LoCoMo:conv-30:76",
+   "question": "What is the general sentiment about the upcoming grand opening?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D26:20"
+   ],
+   "gold": "picnic date",
+   "id": "LoCoMo:conv-44:114",
+   "question": "What type of date is Andrew going on Sunday?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D24:16"
+   ],
+   "gold": "It was a huge success.",
+   "id": "LoCoMo:conv-43:155",
+   "question": "How did John feel after being able to jog without pain?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D6:10"
+   ],
+   "gold": "\"Charlotte's Web\"",
+   "id": "LoCoMo:conv-26:103",
+   "question": "What was Melanie's favorite book from her childhood?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-47",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D3:11"
+   ],
+   "gold": "CS:GO",
+   "id": "LoCoMo:conv-47:74",
+   "question": "What game did John play in an intense tournament at the gaming convention in March 2022?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D16:8"
+   ],
+   "gold": "vegan ice cream",
+   "id": "LoCoMo:conv-42:132",
+   "question": "What did Nate make and share with his vegan diet group?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-47",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D23:13"
+   ],
+   "gold": "Omelette",
+   "id": "LoCoMo:conv-47:125",
+   "question": "What did James prepare for the first time in the cooking class?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D3:17"
+   ],
+   "gold": "Sisterhood, love, and reaching for your dreams",
+   "id": "LoCoMo:conv-42:104",
+   "question": "What is \"Little Women\" about according to Joanna?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D16:11"
+   ],
+   "gold": "make it for her family",
+   "id": "LoCoMo:conv-42:135",
+   "question": "What did Joanna plan to do with the recipe Nate promised to share?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D23:9"
+   ],
+   "gold": "A tranquil spot by a pond",
+   "id": "LoCoMo:conv-48:166",
+   "question": "What type of place does Jolene visit to meditate?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D4:21"
+   ],
+   "gold": "chat with people while dogs make new friends",
+   "id": "LoCoMo:conv-44:65",
+   "question": "What does Audrey do during dog playdates in the park?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D1:18",
+    "D",
+    "D1:20"
+   ],
+   "gold": "\"Eternal Sunshineof the Spotless Mind\"",
+   "id": "LoCoMo:conv-42:88",
+   "question": "What is one of Joanna's favorite movies?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D23:1",
+    "D23:3",
+    "D23:18"
+   ],
+   "gold": "yes",
+   "id": "LoCoMo:conv-48:97",
+   "question": "Have Deborah and Jolene been to Rio de Janeiro?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D18:6"
+   ],
+   "gold": "Visualizing goals and success",
+   "id": "LoCoMo:conv-43:135",
+   "question": "How does Tim stay motivated during difficult study sessions?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D2:15"
+   ],
+   "gold": "she thinks Caroline is doing something amazing and will be an awesome mom",
+   "id": "LoCoMo:conv-26:89",
+   "question": "What does Melanie think about Caroline's decision to adopt?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-47",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D2:19"
+   ],
+   "gold": "help find the perfect pet",
+   "id": "LoCoMo:conv-47:71",
+   "question": "What did James offer to do for John regarding pets?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-41",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D7:7"
+   ],
+   "gold": "divorce, job loss, homelessness",
+   "id": "LoCoMo:conv-41:75",
+   "question": "What did Jean go through before meeting Maria?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-30",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D3:6"
+   ],
+   "gold": "personal style and customer comfort",
+   "id": "LoCoMo:conv-30:51",
+   "question": "What made Gina choose the furniture and decor for her store?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D23:18"
+   ],
+   "gold": "gripping with great actors",
+   "id": "LoCoMo:conv-42:166",
+   "question": "How did Joanna describe the classic movie he watched?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D27:2"
+   ],
+   "gold": "Joined a dog owners group",
+   "id": "LoCoMo:conv-44:117",
+   "question": "What did Audrey do in November 2023 to better take care of her dogs?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D27:22",
+    "D27:23"
+   ],
+   "gold": "Xenoblade Chronicles",
+   "id": "LoCoMo:conv-42:95",
+   "question": "What is Nate's favorite video game?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D27:14"
+   ],
+   "gold": "puzzles, training, hide-and-seek",
+   "id": "LoCoMo:conv-44:120",
+   "question": "What type of activities does Audrey suggest for mental stimulation of the dogs?"
+  },
+  {
+   "category": 3,
+   "conv": "conv-47",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D5:1"
+   ],
+   "gold": "Connecticut.",
+   "id": "LoCoMo:conv-47:7",
+   "question": "In which state is the shelter from which James adopted the puppy?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D27:23"
+   ],
+   "gold": "\"Xenoblade Chronicles\"",
+   "id": "LoCoMo:conv-42:183",
+   "question": "What game is Nate currently playing and recommends to others on November 7, 2022?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D14:17"
+   ],
+   "gold": "a stained glass window",
+   "id": "LoCoMo:conv-26:127",
+   "question": "What did Caroline make for a local church?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-41",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D13:5"
+   ],
+   "gold": "More energy, gains in strength and endurance",
+   "id": "LoCoMo:conv-41:93",
+   "question": "How has John's fitness improved since starting boot camps with his family?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-47",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D23:15"
+   ],
+   "gold": "$10",
+   "id": "LoCoMo:conv-47:122",
+   "question": "How much does James pay per cooking class?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D18:3"
+   ],
+   "gold": "bullet journal",
+   "id": "LoCoMo:conv-48:148",
+   "question": "What journal has Jolene been using to help track tasks and stay organized?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D16:6"
+   ],
+   "gold": "She adopted her two years ago when feeling lonely.",
+   "id": "LoCoMo:conv-48:144",
+   "question": "How did Jolene come to have her pet, Susie?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D12:14"
+   ],
+   "gold": "to never forget his dreams",
+   "id": "LoCoMo:conv-50:93",
+   "question": "What is Dave's advice to Calvin regarding his dreams?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-30",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D1:8"
+   ],
+   "gold": "Contemporary",
+   "id": "LoCoMo:conv-30:40",
+   "question": "What is Jon's favorite style of dance?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D19:21"
+   ],
+   "gold": "peace and gratitude",
+   "id": "LoCoMo:conv-48:154",
+   "question": "What feeling does Deborah get when she thinks about the time spent with her mom at their special spot?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D9:14"
+   ],
+   "gold": "Adventures and magic",
+   "id": "LoCoMo:conv-42:114",
+   "question": "What kind of books does Nate enjoy?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D11:13"
+   ],
+   "gold": "write a whole movie",
+   "id": "LoCoMo:conv-42:119",
+   "question": "What does Nate feel he could do when out in cool places like Whispering Falls?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D1:11"
+   ],
+   "gold": "fitting into the new team's style of play",
+   "id": "LoCoMo:conv-43:73",
+   "question": "What challenge did John encounter during pre-season training?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D8:12"
+   ],
+   "gold": "They remind her to appreciate the small moments and were a part of her wedding decor",
+   "id": "LoCoMo:conv-26:115",
+   "question": "Why are flowers important to Melanie?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D29:6"
+   ],
+   "gold": "crazy feeling, sense of accomplishment",
+   "id": "LoCoMo:conv-43:176",
+   "question": "What was Johns's reaction to sealing the deal with the beverage company?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D4:13"
+   ],
+   "gold": "LGBTQ+ counseling workshop",
+   "id": "LoCoMo:conv-26:97",
+   "question": "What workshop did Caroline attend recently?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D26:21"
+   ],
+   "gold": "youth sports and fair chances in sports",
+   "id": "LoCoMo:conv-43:161",
+   "question": "What is one cause that John supports with his influence and resources?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D10:18"
+   ],
+   "gold": "in awe of the universe",
+   "id": "LoCoMo:conv-26:119",
+   "question": "How did Melanie feel while watching the meteor shower?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D2:24"
+   ],
+   "gold": "A year ago",
+   "id": "LoCoMo:conv-48:101",
+   "question": "When did Jolene buy her pet snake?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D11:3"
+   ],
+   "gold": "Matt Patterson",
+   "id": "LoCoMo:conv-26:121",
+   "question": "Who performed at the concert at Melanie's daughter's birthday?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D15:3"
+   ],
+   "gold": "Spider-Man",
+   "id": "LoCoMo:conv-42:128",
+   "question": "What superhero is Joanna a fan of?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D15:34"
+   ],
+   "gold": "write it down and mail it",
+   "id": "LoCoMo:conv-43:129",
+   "question": "How will John share the honey garlic chicken recipe with the other person?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D14:6"
+   ],
+   "gold": "Everyone was so into it and sang along",
+   "id": "LoCoMo:conv-50:98",
+   "question": "How did the audience in Tokyo react when Calvin sang one of his songs?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-41",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D13:18"
+   ],
+   "gold": "Salads, sandwiches, homemade desserts",
+   "id": "LoCoMo:conv-41:94",
+   "question": "What kind of food did Maria have on her dinner spread iwth her mother?"
+  },
+  {
+   "category": 3,
+   "conv": "conv-49",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D9:1 D4:4 D4:6"
+   ],
+   "gold": "Their experiences likely lead them to view challenges as opportunities for growth and change. They both have embraced healthier lifestyles, indicating a proactive approach to managing stress and challenges.",
+   "id": "LoCoMo:conv-49:31",
+   "question": "How might Evan and Sam's experiences with health and lifestyle changes influence their approach to stress and challenges?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-44",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D23:24"
+   ],
+   "gold": "Exploring the great outdoors",
+   "id": "LoCoMo:conv-44:109",
+   "question": "What kind of experiences are Audrey's dogs the best companions for?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D24:2"
+   ],
+   "gold": "relationship with her partner",
+   "id": "LoCoMo:conv-48:169",
+   "question": "What has Jolene been focusing on lately besides studying?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-42",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D14:20"
+   ],
+   "gold": "A gaming party",
+   "id": "LoCoMo:conv-42:124",
+   "question": "What event is Nate organizing in June 2022?"
+  },
+  {
+   "category": 3,
+   "conv": "conv-43",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D10:9"
+   ],
+   "gold": "California or Florida",
+   "id": "LoCoMo:conv-43:32",
+   "question": "Which US states might Tim be in during September 2023 based on his plans of visiting Universal Studios?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-50",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D21:15"
+   ],
+   "gold": "Hard work and determination",
+   "id": "LoCoMo:conv-50:118",
+   "question": "What do Calvin and Dave use to reach their goals?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-26",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D18:7"
+   ],
+   "gold": "They were scared but resilient",
+   "id": "LoCoMo:conv-26:146",
+   "question": "How did Melanie's children handle the accident?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D10:17"
+   ],
+   "gold": "They realized they inspire each other",
+   "id": "LoCoMo:conv-48:123",
+   "question": "What did Jolene and Anna discuss while watching the sunset by the sea?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-30",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D7:5"
+   ],
+   "gold": "build relationships with customers, create a strong brand image, stay positive",
+   "id": "LoCoMo:conv-30:57",
+   "question": "What advice does Gina give to Jon about running a successful business?"
+  },
+  {
+   "category": 4,
+   "conv": "conv-48",
+   "count": false,
+   "dataset": "LoCoMo",
+   "evidence": [
+    "D5:3"
+   ],
+   "gold": "A confidence boost",
+   "id": "LoCoMo:conv-48:108",
+   "question": "What new outlook did Jolene gain after her mini retreat on 9 February, 2023?"
+  }
+ ],
+ "S": [
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "photography and cooking",
+   "id": "LongMemEval:5025383b",
+   "qtype": "multi-session",
+   "question": "What are the two hobbies that led me to join online communities?",
+   "question_date": "2023/05/30 (Tue) 19:49"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Kansas City Masterpiece",
+   "id": "LongMemEval:18bc8abd",
+   "qtype": "knowledge-update",
+   "question": "What brand of BBQ sauce am I currently obsessed with?",
+   "question_date": "2023/07/15 (Sat) 07:37"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "$300",
+   "id": "LongMemEval:e25c3b8d",
+   "qtype": "multi-session",
+   "question": "How much did I save on the designer handbag at TK Maxx?",
+   "question_date": "2023/05/30 (Tue) 15:02"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "Roscioli",
+   "id": "LongMemEval:8464fc84",
+   "qtype": "single-session-assistant",
+   "question": "I'm planning to visit the Vatican again and I was wondering if you could remind me of the name of that famous deli near the Vatican that serves the best cured meats and cheeses?",
+   "question_date": "2023/05/30 (Tue) 23:01"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "You participated in a social media challenge called #PlankChallenge.",
+   "id": "LongMemEval:gpt4_68e94288",
+   "qtype": "temporal-reasoning",
+   "question": "What was the social media activity I participated 5 days ago?",
+   "question_date": "2023/03/20 (Mon) 11:50"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "2.5 years",
+   "id": "LongMemEval:3c1045c8",
+   "qtype": "multi-session",
+   "question": "How much older am I than the average age of employees in my department?",
+   "question_date": "2023/05/30 (Tue) 23:08"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "5-2",
+   "id": "LongMemEval:c7dc5443",
+   "qtype": "knowledge-update",
+   "question": "What is my current record in the recreational volleyball league?",
+   "question_date": "2023/07/21 (Fri) 20:30"
+  },
+  {
+   "abstention": false,
+   "count": false,
+   "dataset": "LongMemEval",
+   "gold": "500 Mbps",
+   "id": "LongMemEval:ad7109d1",
+   "qtype": "single-session-user",
+   "question": "What speed is my new internet plan?",
+   "question_date": "2023/05/30 (Tue) 21:56"
+  }
+ ],
+ "seeds": {
+  "G_locomo": 20261108,
+  "S": 20261109
+ }
+}

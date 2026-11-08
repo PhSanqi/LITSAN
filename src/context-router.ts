@@ -1,3 +1,4 @@
+import { env } from "./brand.mjs";
 import type { WorkstreamHint } from "./contracts/branches.js";
 import { deriveWorkstreamKey, parseWorkstreamHint } from "./core/workstream/binding.js";
 import { buildInFlightBlock } from "./core/workstream/in-flight.js";
@@ -191,7 +192,9 @@ export class ContextRouter {
       detail: input.detail,
       maxContentBytes: input.maxContentBytes,
       maxItemContentBytes: input.maxItemContentBytes,
-      query: retrievalQuery
+      query: retrievalQuery,
+      // LITSAN_CONTEXT_RESERVE_L2=0 restores the old budget order (kill switch).
+      reserveL2Timeline: env("CONTEXT_RESERVE_L2")?.trim() !== "0"
     });
   }
 

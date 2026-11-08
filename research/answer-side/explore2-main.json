@@ -1,0 +1,54 @@
+{
+ "note": "post hoc; exploratory only",
+ "n": 220,
+ "k_gate": 173,
+ "G": 0.9133,
+ "R1": 0.9242,
+ "k_refusal": 190,
+ "R2": 0.8842,
+ "gate_at_k_refusal": 0.8637,
+ "k_R3": 169,
+ "R3": 0.929,
+ "R1_minus_G": 0.0109,
+ "R1_minus_G_ci": [
+  -0.0278,
+  0.0456
+ ],
+ "R2_minus_gate_same_k": 0.0205,
+ "R2_minus_gate_same_k_ci": [
+  -0.0131,
+  0.0545
+ ],
+ "R3_minus_G": 0.0157,
+ "R3_minus_G_ci": [
+  -0.0131,
+  0.047
+ ],
+ "LongMemEval": {
+  "k_gate": 43,
+  "G": 0.9302,
+  "R1": 0.9651,
+  "k_refusal": 52,
+  "R2": 0.8846,
+  "gate_at_k_refusal": 0.8654,
+  "k_R3": 40,
+  "R3": 0.975
+ },
+ "LoCoMo": {
+  "k_gate": 130,
+  "G": 0.9077,
+  "R1": 0.9103,
+  "k_refusal": 138,
+  "R2": 0.8841,
+  "gate_at_k_refusal": 0.8696,
+  "k_R3": 129,
+  "R3": 0.9147
+ },
+ "refusals": {
+  "SC": 30,
+  "SC_refusal_correct": 4,
+  "SC_refusals_gate_insufficient": 26,
+  "gate_insufficient_not_refused": 21,
+  "abstention_questions": 4
+ }
+}

@@ -141,10 +141,31 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
         }
       }
       const derivedModeRaw = env("DERIVED_FACT_RETRIEVAL")?.trim().toLocaleLowerCase();
+      // 13-24 is an experimental range for the fact lane; unset keeps 12.
+      const factsMaxRaw = Math.trunc(Number(env("DERIVED_FACTS_MAX")));
+      const derivedFactsMax = factsMaxRaw >= 13 && factsMaxRaw <= 24 ? factsMaxRaw : 12;
       const derivedMode = derivedModeRaw === "semantic" || derivedModeRaw === "lexical" ? derivedModeRaw : null;
       const eventSeriesRaw = env("EVENT_SERIES_TEMPORAL")?.trim().toLocaleLowerCase();
       const eventSeriesEnabled = eventSeriesRaw === "1" || eventSeriesRaw === "true" || eventSeriesRaw === "on";
       const temporalQuery = eventSeriesEnabled && queryNeedsEventSeries(query);
+      // Facts as keys, raw text as values: once an L2 exists, distilled turns reach the
+      // Harness only through derived facts. "always" returns the exact turns behind the
+      // selected facts even when the fact bundle already looks sufficient.
+      const rawEvidenceAlways = env("DERIVED_RAW_EVIDENCE")?.trim().toLocaleLowerCase() === "always";
+      const rawOrderRaw = env("DERIVED_RAW_EVIDENCE_ORDER")?.trim().toLocaleLowerCase();
+      const rawEvidenceOrder = rawOrderRaw === "cited_first" || rawOrderRaw === "fused" || rawOrderRaw === "interleave" ? rawOrderRaw : undefined;
+      // A byte budget for raw turn text replaces the slot count: turns are kept in priority
+      // order while they fit, and are emitted as one compact entry.
+      const rawEvidenceBytes = Math.trunc(Number(env("DERIVED_RAW_EVIDENCE_BYTES")) || 0);
+      // Adaptive budget: a smaller raw budget when the derived facts already look sufficient,
+      // and a relative-score floor for the semantic lane (the first SEMANTIC_LEAD candidates).
+      const rawEvidenceBytesSufficient = Math.trunc(Number(env("DERIVED_RAW_EVIDENCE_BYTES_SUFFICIENT")) || 0);
+      const rawEvidenceMinRatio = Number(env("DERIVED_RAW_EVIDENCE_MIN_RATIO")) || 0;
+      const contextLean = env("CONTEXT_LEAN")?.trim() === "1";
+      const rawEvidenceMax = Math.trunc(Number(env("DERIVED_RAW_EVIDENCE_MAX")));
+      // 17-48 is an experimental range for byte-matched controls; unset keeps 8.
+      const alwaysRawMax = rawEvidenceMax >= 1 && rawEvidenceMax <= 48 ? rawEvidenceMax : 8;
+      const rawEvidenceSemanticLead = Math.max(0, Math.trunc(Number(env("DERIVED_RAW_EVIDENCE_SEMANTIC_LEAD")) || 0));
       let adaptiveEvidence: Array<{ evidence_ref: string; text: string; score: number; matched_terms: string[] }> = [];
       if (derivedMode) {
         const baseDerived = await retrieveDerivedRevisionEvidence({
@@ -153,7 +174,7 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
           query,
           revisions: exactProjectRevisions,
           mode: derivedMode,
-          maxFacts: 12
+          maxFacts: derivedFactsMax
         });
         const explicitSeriesQuery = temporalQuery && queryNeedsSeriesExpansion(query);
         const pointTemporalQuery = temporalQuery && queryNeedsPointTemporalEvidence(query);
@@ -162,7 +183,7 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
           !baseDerived.facts.slice(0, 4).some((fact) => fact.canonical_time?.precision === "date");
         const seriesExpansionNeeded = temporalQuery &&
           (explicitSeriesQuery || baseDerived.evidence_sufficiency.status === "insufficient");
-        const needsRawEvidence = seriesExpansionNeeded || pointTemporalNeedsRaw || relativeTemporalQuery ||
+        const needsRawEvidence = rawEvidenceAlways || seriesExpansionNeeded || pointTemporalNeedsRaw || relativeTemporalQuery ||
           baseDerived.evidence_sufficiency.status !== "sufficient";
         const derived = needsRawEvidence
           ? await retrieveDerivedRevisionEvidence({
@@ -171,9 +192,10 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
               query,
               revisions: exactProjectRevisions,
               mode: derivedMode,
-              maxFacts: 12,
+              maxFacts: derivedFactsMax,
               includeRawEvidence: true,
-              maxRawEvidence: seriesExpansionNeeded ? 8 : pointTemporalNeedsRaw || relativeTemporalQuery ? 4 : 6,
+              maxRawEvidence: rawEvidenceAlways ? alwaysRawMax : seriesExpansionNeeded ? 8 : pointTemporalNeedsRaw || relativeTemporalQuery ? 4 : 6,
+              ...(rawEvidenceOrder ? { rawEvidenceOrder, rawEvidenceSemanticLead } : {}),
               ...(temporalQuery ? { annotateTemporalEvidence: true } : {}),
               ...(pointTemporalQuery ? { bindEventIdentity: true } : {}),
               ...((pointTemporalNeedsRaw || relativeTemporalQuery) && baseDerived.evidence_sufficiency.status === "sufficient" && !seriesExpansionNeeded
@@ -206,7 +228,23 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
             }
           };
         }
-        adaptiveEvidence = derived.raw_evidence.map((hit) => ({
+        let packedRaw = derived.raw_evidence;
+        if (rawEvidenceAlways && rawEvidenceBytes > 0) {
+          const budget = rawEvidenceBytesSufficient > 0 && baseDerived.evidence_sufficiency.status === "sufficient"
+            ? rawEvidenceBytesSufficient
+            : rawEvidenceBytes;
+          const semanticLead = rawEvidenceOrder ? rawEvidenceSemanticLead : derived.raw_evidence.length;
+          const topSemantic = Math.max(0, ...derived.raw_evidence.slice(0, Math.max(1, semanticLead)).map((hit) => hit.score));
+          let used = 0;
+          packedRaw = derived.raw_evidence.filter((hit, index) => {
+            if (index > 0 && index < semanticLead && rawEvidenceMinRatio > 0 && hit.score < rawEvidenceMinRatio * topSemantic) return false;
+            const size = Buffer.byteLength(hit.text);
+            if (index > 0 && used + size > budget) return false;
+            used += size;
+            return true;
+          });
+        }
+        adaptiveEvidence = packedRaw.map((hit) => ({
           evidence_ref: hit.evidence_ref,
           text: hit.text,
           score: hit.score,
@@ -223,6 +261,8 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
         detail,
         dedupe: true,
         ...(adaptiveEvidence.length > 0 ? { adaptiveEvidence } : {}),
+        ...(rawEvidenceAlways && alwaysRawMax > 8 ? { maxAdaptiveSupportingEntries: alwaysRawMax + 1 } : {}),
+        ...(rawEvidenceAlways && rawEvidenceBytes > 0 ? { compactAdaptiveEvidence: true } : {}),
         hydrateEvidence: async (evidenceRef) => {
           const item = await hydrateExact(evidenceRef);
           return {
@@ -378,6 +418,7 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
         turnKnowledgePlan: publicTurnKnowledgePlan,
         projectCandidates: finalProjectCandidates
       };
+      if (contextLean && detail !== "full") leanContextPayload(responsePayload);
       if (capsule.branchContext && capsule.resolvedProjectId) {
         const draft = await branchDraftContext(stateRoot, runtime.accountId, capsule.resolvedProjectId, capsule.branchContext.branchId);
         if (draft) responsePayload.branchDraft = draft;
@@ -406,4 +447,31 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
     }
   });
   return tools;
+}
+
+/**
+ * Brief-mode diet for the Harness: drop bytes that carry no evidence. Retrieval
+ * diagnostics go (detail=full keeps them); project memory already expanded as a
+ * plan entry becomes a pointer; passages lose ranking fields and repeated headings.
+ */
+function leanContextPayload(payload: Record<string, unknown>): void {
+  delete payload.retrievalDiagnostics;
+  const plan = payload.turnKnowledgePlan as { supporting?: Array<Record<string, unknown>> } | undefined;
+  const planned = new Set((plan?.supporting ?? []).map((entry) => String(entry.id)));
+  if (Array.isArray(payload.projectMemory)) {
+    payload.projectMemory = (payload.projectMemory as Array<Record<string, unknown>>).map((item) => planned.has(String(item.id))
+      ? { id: item.id, authority: item.authority, scope: item.scope, projectId: item.projectId,
+          content: "Expanded in turnKnowledgePlan.supporting under the same id." }
+      : item);
+  }
+  for (const entry of plan?.supporting ?? []) {
+    const passages = entry.passages as Array<Record<string, unknown>> | undefined;
+    if (!passages?.length) continue;
+    if (passages.every((passage) => passage.heading)) delete entry.passage_headings;
+    for (const passage of passages) {
+      delete passage.matched_terms;
+      delete passage.score;
+      delete passage.parent_id;
+    }
+  }
 }

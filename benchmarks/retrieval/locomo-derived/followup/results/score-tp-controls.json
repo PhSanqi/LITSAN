@@ -1,0 +1,269 @@
+{
+ "n": 649,
+ "suffix": "tp",
+ "arms": {
+  "N4200w": {
+   "complete_raw": 446,
+   "complete_raw_or_cited": 485,
+   "raw_recall": 0.7533,
+   "mean_bytes": 8236,
+   "p50_retrieval_ms": 134,
+   "p95_retrieval_ms": 155,
+   "mean_retrieval_ms": 137.3
+  }
+ },
+ "controls": {
+  "R1": {
+   "complete_raw": 489,
+   "complete_raw_or_cited": 496,
+   "raw_recall": 0.8106,
+   "mean_bytes": 9881,
+   "p50_retrieval_ms": 148,
+   "p95_retrieval_ms": 214,
+   "mean_retrieval_ms": 155.0,
+   "vs_base_raw": {
+    "base": 446,
+    "arm": 489,
+    "gained": 43,
+    "lost": 0,
+    "net": 43,
+    "p": 0.0,
+    "diff_pp": 6.63,
+    "wald95_pp": [
+     4.71,
+     8.54
+    ],
+    "boot95_pp": [
+     4.78,
+     8.63
+    ]
+   },
+   "vs_base_any": {
+    "base": 485,
+    "arm": 496,
+    "gained": 11,
+    "lost": 0,
+    "net": 11,
+    "p": 0.00098,
+    "diff_pp": 1.69,
+    "wald95_pp": [
+     0.7,
+     2.69
+    ],
+    "boot95_pp": [
+     0.77,
+     2.77
+    ]
+   },
+   "net_vs_base_by_category": {
+    "1": 8,
+    "2": 3,
+    "3": 3,
+    "4": 29
+   }
+  },
+  "R2": {
+   "complete_raw": 504,
+   "complete_raw_or_cited": 506,
+   "raw_recall": 0.8344,
+   "mean_bytes": 11284,
+   "p50_retrieval_ms": 149,
+   "p95_retrieval_ms": 218,
+   "mean_retrieval_ms": 158.3,
+   "vs_base_raw": {
+    "base": 446,
+    "arm": 504,
+    "gained": 58,
+    "lost": 0,
+    "net": 58,
+    "p": 0.0,
+    "diff_pp": 8.94,
+    "wald95_pp": [
+     6.74,
+     11.13
+    ],
+    "boot95_pp": [
+     6.78,
+     11.25
+    ]
+   },
+   "vs_base_any": {
+    "base": 485,
+    "arm": 506,
+    "gained": 21,
+    "lost": 0,
+    "net": 21,
+    "p": 0.0,
+    "diff_pp": 3.24,
+    "wald95_pp": [
+     1.87,
+     4.6
+    ],
+    "boot95_pp": [
+     2.0,
+     4.62
+    ]
+   },
+   "net_vs_base_by_category": {
+    "1": 11,
+    "2": 5,
+    "3": 4,
+    "4": 38
+   }
+  },
+  "R3": {
+   "complete_raw": 521,
+   "complete_raw_or_cited": 523,
+   "raw_recall": 0.8557,
+   "mean_bytes": 13061,
+   "p50_retrieval_ms": 163,
+   "p95_retrieval_ms": 246,
+   "mean_retrieval_ms": 173.6,
+   "vs_base_raw": {
+    "base": 446,
+    "arm": 521,
+    "gained": 75,
+    "lost": 0,
+    "net": 75,
+    "p": 0.0,
+    "diff_pp": 11.56,
+    "wald95_pp": [
+     9.1,
+     14.02
+    ],
+    "boot95_pp": [
+     9.09,
+     14.02
+    ]
+   },
+   "vs_base_any": {
+    "base": 485,
+    "arm": 523,
+    "gained": 38,
+    "lost": 0,
+    "net": 38,
+    "p": 0.0,
+    "diff_pp": 5.86,
+    "wald95_pp": [
+     4.05,
+     7.66
+    ],
+    "boot95_pp": [
+     4.16,
+     7.7
+    ]
+   },
+   "net_vs_base_by_category": {
+    "1": 19,
+    "2": 5,
+    "3": 6,
+    "4": 45
+   }
+  },
+  "R4": {
+   "complete_raw": 534,
+   "complete_raw_or_cited": 537,
+   "raw_recall": 0.8719,
+   "mean_bytes": 14832,
+   "p50_retrieval_ms": 181,
+   "p95_retrieval_ms": 289,
+   "mean_retrieval_ms": 194.9,
+   "vs_base_raw": {
+    "base": 446,
+    "arm": 534,
+    "gained": 88,
+    "lost": 0,
+    "net": 88,
+    "p": 0.0,
+    "diff_pp": 13.56,
+    "wald95_pp": [
+     10.93,
+     16.19
+    ],
+    "boot95_pp": [
+     10.94,
+     16.33
+    ]
+   },
+   "vs_base_any": {
+    "base": 485,
+    "arm": 537,
+    "gained": 52,
+    "lost": 0,
+    "net": 52,
+    "p": 0.0,
+    "diff_pp": 8.01,
+    "wald95_pp": [
+     5.92,
+     10.1
+    ],
+    "boot95_pp": [
+     6.01,
+     10.17
+    ]
+   },
+   "net_vs_base_by_category": {
+    "1": 24,
+    "2": 6,
+    "3": 7,
+    "4": 51
+   }
+  },
+  "R5": {
+   "complete_raw": 537,
+   "complete_raw_or_cited": 541,
+   "raw_recall": 0.8802,
+   "mean_bytes": 15764,
+   "p50_retrieval_ms": 184,
+   "p95_retrieval_ms": 295,
+   "mean_retrieval_ms": 200.1,
+   "vs_base_raw": {
+    "base": 446,
+    "arm": 537,
+    "gained": 91,
+    "lost": 0,
+    "net": 91,
+    "p": 0.0,
+    "diff_pp": 14.02,
+    "wald95_pp": [
+     11.35,
+     16.69
+    ],
+    "boot95_pp": [
+     11.4,
+     16.8
+    ]
+   },
+   "vs_base_any": {
+    "base": 485,
+    "arm": 541,
+    "gained": 56,
+    "lost": 0,
+    "net": 56,
+    "p": 0.0,
+    "diff_pp": 8.63,
+    "wald95_pp": [
+     6.47,
+     10.79
+    ],
+    "boot95_pp": [
+     6.63,
+     10.94
+    ]
+   },
+   "net_vs_base_by_category": {
+    "1": 24,
+    "2": 6,
+    "3": 7,
+    "4": 54
+   }
+  }
+ },
+ "followup_classes": {},
+ "plan_failures": {
+  "A": 0,
+  "B": 0
+ },
+ "eligible": [],
+ "pick": null
+}

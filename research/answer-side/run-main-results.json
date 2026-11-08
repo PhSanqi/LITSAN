@@ -1,0 +1,4465 @@
+{
+ "part": "main",
+ "order": [
+  "LongMemEval:a1eacc2a",
+  "LongMemEval:gpt4_e414231e",
+  "LongMemEval:a4996e51",
+  "LongMemEval:80ec1f4f_abs",
+  "LongMemEval:6b168ec8",
+  "LongMemEval:4d6b87c8",
+  "LongMemEval:4f54b7c9",
+  "LongMemEval:edced276",
+  "LongMemEval:a9f6b44c",
+  "LongMemEval:d682f1a2",
+  "LongMemEval:10d9b85a",
+  "LongMemEval:gpt4_4fc4f797",
+  "LongMemEval:2788b940",
+  "LongMemEval:08f4fc43",
+  "LongMemEval:5831f84d",
+  "LongMemEval:2e6d26dc",
+  "LongMemEval:gpt4_2f8be40d",
+  "LongMemEval:gpt4_1e4a8aeb",
+  "LongMemEval:gpt4_fa19884c",
+  "LongMemEval:60472f9c",
+  "LongMemEval:eac54adc",
+  "LongMemEval:edced276_abs",
+  "LongMemEval:4b24c848",
+  "LongMemEval:bbf86515",
+  "LongMemEval:2ce6a0f2",
+  "LongMemEval:c18a7dc8",
+  "LongMemEval:a08a253f",
+  "LongMemEval:95bcc1c8",
+  "LongMemEval:a346bb18",
+  "LongMemEval:gpt4_e05b82a6",
+  "LongMemEval:8c18457d",
+  "LongMemEval:gpt4_6dc9b45b",
+  "LongMemEval:gpt4_468eb063",
+  "LongMemEval:6aeb4375_abs",
+  "LongMemEval:6cb6f249",
+  "LongMemEval:06db6396",
+  "LongMemEval:6a27ffc2",
+  "LongMemEval:gpt4_74aed68e",
+  "LongMemEval:c960da58",
+  "LongMemEval:5c40ec5b",
+  "LongMemEval:gpt4_7a0daae1",
+  "LongMemEval:dcfa8644",
+  "LongMemEval:bcbe585f",
+  "LongMemEval:6e984301",
+  "LongMemEval:7401057b",
+  "LongMemEval:c2ac3c61",
+  "LongMemEval:a3838d2b",
+  "LongMemEval:6613b389",
+  "LongMemEval:af8d2e46",
+  "LongMemEval:gpt4_8e165409",
+  "LongMemEval:a3045048",
+  "LongMemEval:0f05491a",
+  "LongMemEval:60bf93ed_abs",
+  "LongMemEval:184da446",
+  "LongMemEval:gpt4_85da3956",
+  "LongMemEval:ed4ddc30",
+  "LongMemEval:ef66a6e5",
+  "LongMemEval:21436231",
+  "LongMemEval:982b5123",
+  "LongMemEval:00ca467f",
+  "LongMemEval:gpt4_b0863698",
+  "LongMemEval:gpt4_7bc6cf22",
+  "LongMemEval:gpt4_ab202e7f",
+  "LongMemEval:031748ae",
+  "LongMemEval:gpt4_372c3eed",
+  "LongMemEval:6aeb4375",
+  "LongMemEval:60bf93ed",
+  "LongMemEval:681a1674",
+  "LongMemEval:4dfccbf7",
+  "LongMemEval:01493427",
+  "LongMemEval:157a136e",
+  "LongMemEval:370a8ff4",
+  "LongMemEval:8e9d538c",
+  "LongMemEval:gpt4_e072b769",
+  "LongMemEval:c8090214",
+  "LongMemEval:2ebe6c90",
+  "LongMemEval:gpt4_af6db32f",
+  "LongMemEval:88432d0a_abs",
+  "LongMemEval:10e09553",
+  "LongMemEval:9ee3ecd6",
+  "LongMemEval:gpt4_4ef30696",
+  "LongMemEval:72e3ee87",
+  "LongMemEval:88432d0a",
+  "LongMemEval:gpt4_1916e0ea",
+  "LongMemEval:d23cf73b",
+  "LongMemEval:gpt4_a2d1d1f6",
+  "LongMemEval:2311e44b",
+  "LongMemEval:b46e15ed",
+  "LongMemEval:gpt4_a1b77f9c",
+  "LongMemEval:e3038f8c",
+  "LongMemEval:81507db6",
+  "LongMemEval:0bb5a684",
+  "LongMemEval:gpt4_1d4ab0c9",
+  "LongMemEval:gpt4_372c3eed_abs",
+  "LongMemEval:gpt4_a56e767c",
+  "LongMemEval:0db4c65d",
+  "LongMemEval:gpt4_59149c77",
+  "LongMemEval:45dc21b6",
+  "LongMemEval:9d25d4e0",
+  "LongMemEval:gpt4_31ff4165",
+  "LongMemEval:9a707b81",
+  "LongMemEval:gpt4_2f91af09",
+  "LongMemEval:gpt4_8279ba02",
+  "LongMemEval:031748ae_abs",
+  "LongMemEval:eeda8a6d_abs",
+  "LongMemEval:b3c15d39",
+  "LongMemEval:gpt4_194be4b3",
+  "LongMemEval:gpt4_15e38248",
+  "LongMemEval:bf659f65",
+  "LongMemEval:ba358f49",
+  "LongMemEval:gpt4_1d80365e",
+  "LongMemEval:8077ef71",
+  "LongMemEval:2a1811e2",
+  "LongMemEval:gpt4_7ddcf75f",
+  "LongMemEval:c8090214_abs",
+  "LongMemEval:gpt4_7fce9456",
+  "LongMemEval:46a3abf7",
+  "LongMemEval:a2f3aa27",
+  "LongMemEval:28dc39ac",
+  "LongMemEval:6456829e",
+  "LongMemEval:2c63a862",
+  "LongMemEval:f9e8c073",
+  "LongMemEval:5a7937c8",
+  "LongMemEval:0ddfec37_abs",
+  "LongMemEval:7024f17c",
+  "LongMemEval:311778f1",
+  "LongMemEval:26bdc477",
+  "LongMemEval:21d02d0d",
+  "LongMemEval:gpt4_b5700ca9",
+  "LongMemEval:2311e44b_abs",
+  "LongMemEval:80ec1f4f",
+  "LongMemEval:8fb83627",
+  "LongMemEval:b6019101",
+  "LongMemEval:5e1b23de",
+  "LongMemEval:0ddfec37",
+  "LongMemEval:gpt4_4cd9eba1",
+  "LongMemEval:eeda8a6d",
+  "LoCoMo:conv-47:111",
+  "LoCoMo:conv-48:16",
+  "LoCoMo:conv-41:108",
+  "LongMemEval:c8f1aeed",
+  "LoCoMo:conv-44:117",
+  "LoCoMo:conv-43:100",
+  "LongMemEval:b46e15ee",
+  "LoCoMo:conv-26:127",
+  "LoCoMo:conv-41:75",
+  "LongMemEval:19b5f2b3_abs",
+  "LongMemEval:1192316e",
+  "LongMemEval:73d42213",
+  "LoCoMo:conv-30:45",
+  "LoCoMo:conv-48:185",
+  "LoCoMo:conv-30:47",
+  "LongMemEval:29f2956b",
+  "LoCoMo:conv-41:94",
+  "LongMemEval:9aaed6a3",
+  "LongMemEval:8752c811",
+  "LoCoMo:conv-43:32",
+  "LoCoMo:conv-49:131",
+  "LongMemEval:gpt4_2ba83207",
+  "LongMemEval:51c32626",
+  "LoCoMo:conv-48:138",
+  "LongMemEval:09d032c9",
+  "LoCoMo:conv-47:138",
+  "LoCoMo:conv-42:158",
+  "LoCoMo:conv-43:73",
+  "LoCoMo:conv-48:133",
+  "LoCoMo:conv-48:179",
+  "LongMemEval:gpt4_e061b84f",
+  "LoCoMo:conv-44:80",
+  "LoCoMo:conv-26:103",
+  "LongMemEval:67e0d0f2",
+  "LoCoMo:conv-49:139",
+  "LoCoMo:conv-42:188",
+  "LoCoMo:conv-42:110",
+  "LoCoMo:conv-30:2",
+  "LoCoMo:conv-49:110",
+  "LoCoMo:conv-42:119",
+  "LongMemEval:gpt4_5501fe77",
+  "LoCoMo:conv-48:166",
+  "LoCoMo:conv-43:171",
+  "LongMemEval:4388e9dd",
+  "LongMemEval:9bbe84a2",
+  "LongMemEval:0977f2af",
+  "LongMemEval:2bf43736",
+  "LongMemEval:1faac195",
+  "LoCoMo:conv-49:154",
+  "LoCoMo:conv-48:101",
+  "LoCoMo:conv-26:97",
+  "LoCoMo:conv-50:145",
+  "LongMemEval:ef9cf60a",
+  "LoCoMo:conv-50:153",
+  "LoCoMo:conv-42:146",
+  "LongMemEval:gpt4_5438fa52",
+  "LongMemEval:726462e0",
+  "LongMemEval:41698283",
+  "LoCoMo:conv-44:76",
+  "LongMemEval:09ba9854_abs",
+  "LongMemEval:gpt4_d6585ce9",
+  "LoCoMo:conv-26:140",
+  "LoCoMo:conv-41:133",
+  "LoCoMo:conv-42:103",
+  "LoCoMo:conv-26:101",
+  "LongMemEval:3f1e9474",
+  "LongMemEval:8550ddae",
+  "LongMemEval:gpt4_0a05b494",
+  "LoCoMo:conv-44:114",
+  "LoCoMo:conv-41:90",
+  "LongMemEval:5d3d2817",
+  "LoCoMo:conv-48:154",
+  "LongMemEval:61f8c8f8",
+  "LoCoMo:conv-49:95",
+  "LongMemEval:gpt4_7de946e7",
+  "LongMemEval:gpt4_45189cb4",
+  "LongMemEval:c9f37c46",
+  "LongMemEval:0100672e",
+  "LongMemEval:a11281a2",
+  "LoCoMo:conv-50:157",
+  "LongMemEval:gpt4_1a1dc16d",
+  "LoCoMo:conv-42:96",
+  "LoCoMo:conv-42:140",
+  "LoCoMo:conv-48:176",
+  "LongMemEval:gpt4_483dd43c",
+  "LongMemEval:cc5ded98",
+  "LoCoMo:conv-50:37",
+  "LongMemEval:gpt4_2c50253f",
+  "LongMemEval:gpt4_d9af6064",
+  "LongMemEval:e48988bc",
+  "LoCoMo:conv-50:88",
+  "LongMemEval:cf22b7bf",
+  "LongMemEval:4baee567",
+  "LoCoMo:conv-43:158",
+  "LongMemEval:d6233ab6",
+  "LongMemEval:c7cf7dfd",
+  "LongMemEval:95228167",
+  "LongMemEval:f4f1d8a4_abs",
+  "LongMemEval:71017277",
+  "LoCoMo:conv-41:66",
+  "LongMemEval:gpt4_7abb270c",
+  "LongMemEval:3ba21379",
+  "LoCoMo:conv-50:71",
+  "LoCoMo:conv-47:125",
+  "LoCoMo:conv-26:89",
+  "LoCoMo:conv-49:91",
+  "LoCoMo:conv-26:111",
+  "LongMemEval:gpt4_9a159967",
+  "LongMemEval:07741c44",
+  "LoCoMo:conv-44:100",
+  "LongMemEval:89527b6b",
+  "LongMemEval:e56a43b9",
+  "LongMemEval:06f04340",
+  "LoCoMo:conv-48:146",
+  "LongMemEval:945e3d21",
+  "LoCoMo:conv-44:121",
+  "LongMemEval:c4f10528",
+  "LoCoMo:conv-42:4",
+  "LoCoMo:conv-47:132",
+  "LoCoMo:conv-49:150",
+  "LoCoMo:conv-44:96",
+  "LoCoMo:conv-50:124",
+  "LongMemEval:36580ce8",
+  "LoCoMo:conv-43:167",
+  "LoCoMo:conv-48:169",
+  "LoCoMo:conv-49:136",
+  "LoCoMo:conv-26:119",
+  "LoCoMo:conv-48:74",
+  "LongMemEval:c4ea545c",
+  "LongMemEval:e61a7584",
+  "LoCoMo:conv-47:122",
+  "LongMemEval:58470ed2",
+  "LongMemEval:85fa3a3f",
+  "LongMemEval:gpt4_e061b84g",
+  "LoCoMo:conv-50:78",
+  "LoCoMo:conv-42:128",
+  "LongMemEval:eace081b",
+  "LoCoMo:conv-30:55",
+  "LoCoMo:conv-50:98",
+  "LongMemEval:94f70d80",
+  "LoCoMo:conv-50:152",
+  "LoCoMo:conv-30:61",
+  "LongMemEval:gpt4_cd90e484",
+  "LongMemEval:bb7c3b45",
+  "LoCoMo:conv-30:57",
+  "LongMemEval:gpt4_4edbafa2",
+  "LoCoMo:conv-26:115",
+  "LoCoMo:conv-50:95",
+  "LongMemEval:16c90bf4",
+  "LoCoMo:conv-30:44",
+  "LoCoMo:conv-26:148",
+  "LoCoMo:conv-42:172",
+  "LoCoMo:conv-48:148",
+  "LoCoMo:conv-30:70",
+  "LongMemEval:7e00a6cb",
+  "LoCoMo:conv-43:129",
+  "LoCoMo:conv-42:114",
+  "LongMemEval:gpt4_98f46fc6",
+  "LongMemEval:dc439ea3",
+  "LoCoMo:conv-48:177",
+  "LoCoMo:conv-30:46",
+  "LoCoMo:conv-44:65",
+  "LongMemEval:27016adc",
+  "LoCoMo:conv-48:123",
+  "LoCoMo:conv-44:113",
+  "LongMemEval:1c0ddc50",
+  "LoCoMo:conv-43:161",
+  "LoCoMo:conv-48:40",
+  "LongMemEval:5a4f22c0",
+  "LongMemEval:e5ba910e_abs",
+  "LoCoMo:conv-43:134",
+  "LoCoMo:conv-42:166",
+  "LoCoMo:conv-26:104",
+  "LoCoMo:conv-43:71",
+  "LongMemEval:cc6d1ec1",
+  "LoCoMo:conv-44:120",
+  "LongMemEval:e4e14d04",
+  "LoCoMo:conv-26:146",
+  "LongMemEval:a82c026e",
+  "LongMemEval:1de5cff2",
+  "LoCoMo:conv-26:121",
+  "LongMemEval:f685340e",
+  "LoCoMo:conv-47:74",
+  "LoCoMo:conv-41:93",
+  "LoCoMo:conv-43:172",
+  "LoCoMo:conv-30:76",
+  "LoCoMo:conv-43:149",
+  "LongMemEval:6a1eabeb",
+  "LoCoMo:conv-48:97",
+  "LongMemEval:c14c00dd",
+  "LongMemEval:76d63226",
+  "LongMemEval:faba32e5",
+  "LoCoMo:conv-44:84",
+  "LongMemEval:6ae235be",
+  "LongMemEval:gpt4_6ed717ea",
+  "LongMemEval:51b23612",
+  "LongMemEval:720133ac",
+  "LoCoMo:conv-42:135",
+  "LoCoMo:conv-44:95",
+  "LongMemEval:50635ada",
+  "LongMemEval:gpt4_f420262d",
+  "LoCoMo:conv-43:77",
+  "LoCoMo:conv-47:127",
+  "LoCoMo:conv-43:103",
+  "LongMemEval:a1cc6108",
+  "LoCoMo:conv-49:31",
+  "LoCoMo:conv-47:71",
+  "LoCoMo:conv-47:7",
+  "LoCoMo:conv-48:135",
+  "LoCoMo:conv-41:131",
+  "LoCoMo:conv-48:144",
+  "LoCoMo:conv-50:118",
+  "LoCoMo:conv-43:155",
+  "LongMemEval:gpt4_68e94287",
+  "LoCoMo:conv-42:132",
+  "LoCoMo:conv-47:17",
+  "LongMemEval:3249768e",
+  "LongMemEval:0e4e4c46",
+  "LoCoMo:conv-26:113",
+  "LongMemEval:6b7dfb22",
+  "LoCoMo:conv-50:83",
+  "LoCoMo:conv-26:109",
+  "LongMemEval:91b15a6e",
+  "LoCoMo:conv-44:20",
+  "LoCoMo:conv-42:95",
+  "LoCoMo:conv-49:97",
+  "LoCoMo:conv-43:164",
+  "LoCoMo:conv-42:124",
+  "LoCoMo:conv-49:104",
+  "LoCoMo:conv-44:85",
+  "LongMemEval:2318644b",
+  "LoCoMo:conv-47:105",
+  "LoCoMo:conv-42:104",
+  "LoCoMo:conv-42:88",
+  "LoCoMo:conv-50:126",
+  "LoCoMo:conv-43:145",
+  "LoCoMo:conv-48:108",
+  "LongMemEval:89941a94",
+  "LongMemEval:08e075c7",
+  "LongMemEval:gpt4_93159ced",
+  "LoCoMo:conv-30:51",
+  "LongMemEval:3d86fd0a",
+  "LoCoMo:conv-48:134",
+  "LongMemEval:gpt4_8c8961ae",
+  "LoCoMo:conv-30:40",
+  "LoCoMo:conv-43:135",
+  "LongMemEval:gpt4_1e4a8aec",
+  "LoCoMo:conv-44:109",
+  "LongMemEval:2698e78f",
+  "LoCoMo:conv-43:176",
+  "LoCoMo:conv-48:163",
+  "LoCoMo:conv-50:93",
+  "LongMemEval:e8a79c70",
+  "LongMemEval:gpt4_2d58bcd6",
+  "LongMemEval:gpt4_fa19884d",
+  "LoCoMo:conv-42:183",
+  "LoCoMo:conv-43:162",
+  "LoCoMo:conv-47:143"
+ ],
+ "answers": {
+  "A": {
+   "LongMemEval:a1eacc2a": "7 short stories.",
+   "LongMemEval:gpt4_e414231e": "4 days.",
+   "LongMemEval:a4996e51": "50 hours per week.",
+   "LongMemEval:80ec1f4f_abs": "Insufficient evidence.",
+   "LongMemEval:6b168ec8": "3 bikes.",
+   "LongMemEval:4d6b87c8": "25 titles.",
+   "LongMemEval:4f54b7c9": "5 antique or heirloom items.",
+   "LongMemEval:edced276": "15 days in total: 5 days in New York City and 10 days in Hawaii.",
+   "LongMemEval:a9f6b44c": "2 bikes: the road bike was serviced in March, and the commuter bike was planned for a front-tire replacement in March.",
+   "LongMemEval:d682f1a2": "2 different services: Domino's Pizza and Fresh Fusion.",
+   "LongMemEval:10d9b85a": "3 days: a 1-day lecture on April 10 and a 2-day workshop on April 17–18.",
+   "LongMemEval:gpt4_4fc4f797": "38 days passed, from the feedback on March 17 to the planned suspension test on April 24.",
+   "LongMemEval:2788b940": "5 fitness classes: BodyPump, Zumba twice, Hip Hop Abs, and yoga.",
+   "LongMemEval:08f4fc43": "30 days.",
+   "LongMemEval:5831f84d": "15 Crash Course videos.",
+   "LongMemEval:2e6d26dc": "5 babies: Jasper, Max, Charlotte, Ava, and Lily. Aaliyah's birth timing is not specified.",
+   "LongMemEval:gpt4_2f8be40d": "At least 4 weddings: your cousin Rachel’s wedding, your cousin Emily’s wedding, your sister’s wedding, and your friend’s wedding. The cousin’s wedding on August 22 may be Rachel’s wedding, so it is not counted separately.",
+   "LongMemEval:gpt4_1e4a8aeb": "6 days.",
+   "LongMemEval:gpt4_fa19884c": "6 days.",
+   "LongMemEval:60472f9c": "2 projects: the Data Mining project and the Database Systems project.",
+   "LongMemEval:eac54adc": "19 days.",
+   "LongMemEval:edced276_abs": "10 days in Hawaii; the duration of the Seattle trip is not provided, so the total cannot be determined.",
+   "LongMemEval:bbf86515": "4 days.",
+   "LongMemEval:4b24c848": "5 tops.",
+   "LongMemEval:2ce6a0f2": "4 different art-related events.",
+   "LongMemEval:c18a7dc8": "Insufficient evidence.",
+   "LongMemEval:a08a253f": "3 days a week.",
+   "LongMemEval:95bcc1c8": "10 amateur comedians.",
+   "LongMemEval:a346bb18": "12 minutes.",
+   "LongMemEval:gpt4_e05b82a6": "10 times.",
+   "LongMemEval:8c18457d": "7 days.",
+   "LongMemEval:gpt4_6dc9b45b": "4 months ago.",
+   "LongMemEval:gpt4_468eb063": "9 days ago.",
+   "LongMemEval:6aeb4375_abs": "Insufficient evidence.",
+   "LongMemEval:6cb6f249": "17 days in total.",
+   "LongMemEval:06db6396": "5 projects.",
+   "LongMemEval:6a27ffc2": "30 videos.",
+   "LongMemEval:gpt4_74aed68e": "29 days.",
+   "LongMemEval:c960da58": "20 playlists.",
+   "LongMemEval:5c40ec5b": "2 times.",
+   "LongMemEval:gpt4_7a0daae1": "1 week.",
+   "LongMemEval:dcfa8644": "2 weeks.",
+   "LongMemEval:bcbe585f": "About 4 weeks ago (30 days).",
+   "LongMemEval:6e984301": "3 weeks.",
+   "LongMemEval:7401057b": "2 free nights.",
+   "LongMemEval:c2ac3c61": "At least 5 courses: 3 on Coursera and 2 on edX. The exact total is not supported because you also mentioned completing some other courses without specifying how many.",
+   "LongMemEval:a3838d2b": "4 charity events: Dance for a Cause, Walk for Wildlife, the charity golf tournament on July 17th, and Food for Thought.",
+   "LongMemEval:6613b389": "Rachel got engaged about 2 months before your July 22nd anniversary.",
+   "LongMemEval:af8d2e46": "7 shirts.",
+   "LongMemEval:gpt4_8e165409": "14 days.",
+   "LongMemEval:a3045048": "7 days.",
+   "LongMemEval:0f05491a": "120 stars.",
+   "LongMemEval:60bf93ed_abs": "Insufficient evidence.",
+   "LongMemEval:184da446": "220 pages.",
+   "LongMemEval:gpt4_85da3956": "3 weeks ago.",
+   "LongMemEval:ed4ddc30": "20 dozen eggs.",
+   "LongMemEval:ef66a6e5": "2 sports: swimming and tennis.",
+   "LongMemEval:21436231": "12 largemouth bass.",
+   "LongMemEval:982b5123": "Insufficient evidence to determine how many months ago you booked it.",
+   "LongMemEval:00ca467f": "2 doctor's appointments: Dr. Smith on March 3 and Dr. Thompson on March 20.",
+   "LongMemEval:gpt4_b0863698": "7 days ago.",
+   "LongMemEval:gpt4_7bc6cf22": "12 days ago.",
+   "LongMemEval:gpt4_ab202e7f": "4 kitchen items: the shelves, kitchen mat, faucet, and toaster.",
+   "LongMemEval:031748ae": "You led 4 engineers when you started the role, and you lead 5 engineers now.",
+   "LongMemEval:gpt4_372c3eed": "8 years in total: 4 years of high school and 4 years for your Bachelor's degree.",
+   "LongMemEval:6aeb4375": "4 Korean restaurants.",
+   "LongMemEval:60bf93ed": "It took 5 days, from January 15 to January 20.",
+   "LongMemEval:681a1674": "2 Marvel movies: Avengers: Endgame and Spider-Man: No Way Home.",
+   "LongMemEval:4dfccbf7": "24 days.",
+   "LongMemEval:01493427": "25 new postcards.",
+   "LongMemEval:157a136e": "Insufficient evidence.",
+   "LongMemEval:370a8ff4": "About 11 weeks and 4 days (81 days).",
+   "LongMemEval:8e9d538c": "17 skeins.",
+   "LongMemEval:gpt4_e072b769": "20 days ago, or 2 full weeks ago.",
+   "LongMemEval:c8090214": "7 days before.",
+   "LongMemEval:2ebe6c90": "21 days.",
+   "LongMemEval:gpt4_af6db32f": "17 days ago.",
+   "LongMemEval:88432d0a_abs": "Insufficient evidence.",
+   "LongMemEval:10e09553": "7 largemouth bass.",
+   "LongMemEval:9ee3ecd6": "300 points.",
+   "LongMemEval:gpt4_4ef30696": "1 day",
+   "LongMemEval:72e3ee87": "50 episodes",
+   "LongMemEval:88432d0a": "At least 4 times",
+   "LongMemEval:gpt4_1916e0ea": "Insufficient evidence: the date you cancelled the FarmFresh subscription is not specified.",
+   "LongMemEval:d23cf73b": "4 different cuisines: Thai, Ethiopian, Indian, and Korean.",
+   "LongMemEval:gpt4_a2d1d1f6": "3 days ago.",
+   "LongMemEval:2311e44b": "190 pages.",
+   "LongMemEval:b46e15ed": "About 2 months ago (the consecutive-day events were on February 14–15, 2023).",
+   "LongMemEval:gpt4_a1b77f9c": "8 weeks in total.",
+   "LongMemEval:e3038f8c": "At least 94 rare items: 12 figurines, 57 records, and 25 coins. Other rare items are mentioned but not counted.",
+   "LongMemEval:81507db6": "3 graduation ceremonies.",
+   "LongMemEval:0bb5a684": "7 days before the team meeting.",
+   "LongMemEval:gpt4_1d4ab0c9": "24 days.",
+   "LongMemEval:gpt4_372c3eed_abs": "Insufficient evidence: the context confirms 4 years of high school, 4 years for a bachelor's degree, and an associate's degree, but does not state that you completed a master's degree or its duration.",
+   "LongMemEval:gpt4_a56e767c": "3 movie festivals: Austin Film Festival, Portland Film Festival, and AFI Fest.",
+   "LongMemEval:0db4c65d": "18 days.",
+   "LongMemEval:gpt4_59149c77": "7 days.",
+   "LongMemEval:45dc21b6": "3 recipes.",
+   "LongMemEval:9d25d4e0": "At least 3 pieces: emerald earrings, a silver necklace, and an engagement ring.",
+   "LongMemEval:gpt4_31ff4165": "3 health-related devices: a Fitbit Versa 3, an Accu-Chek Aviva Nano system, and a nebulizer.",
+   "LongMemEval:9a707b81": "The baking class was on 20 March 2022, which was 26 days ago. The context does not establish that this was when you made your friend’s birthday cake.",
+   "LongMemEval:gpt4_2f91af09": "At least 23 pieces: 17 poems, 5 short stories, and 1 writing-challenge piece. The context does not confirm whether any pieces overlap across categories.",
+   "LongMemEval:gpt4_8279ba02": "You bought the smoker on 15 March 2023, which was 10 days ago.",
+   "LongMemEval:031748ae_abs": "Insufficient evidence for how many engineers you lead as a Software Engineer Manager. The context mentions leading 4 and later 5 engineers as a Senior Software Engineer.",
+   "LongMemEval:eeda8a6d_abs": "Insufficient evidence: the context describes fish in a 20-gallon tank, but does not establish how many fish are in your 30-gallon tank.",
+   "LongMemEval:b3c15d39": "5 days—from ordering it on February 5 to its arrival on February 10.",
+   "LongMemEval:gpt4_194be4b3": "3: a 5-piece Pearl Export drum set, a Korg B1 digital piano, and a guitar. The ukulele was only being considered, and the violin belongs to your niece.",
+   "LongMemEval:gpt4_15e38248": "At least 4 distinct pieces: a coffee table you bought, a mattress you ordered, a kitchen table you fixed, and an IKEA bookshelf you assembled. No furniture sale is documented.",
+   "LongMemEval:bf659f65": "2 albums or EPs: Billie Eilish’s \"Happier Than Ever\" (downloaded) and The Whiskey Wanderers’ \"Midnight Sky\" (purchased).",
+   "LongMemEval:ba358f49": "Insufficient evidence: your age is not provided.",
+   "LongMemEval:gpt4_1d80365e": "2 days.",
+   "LongMemEval:8077ef71": "26 days ago.",
+   "LongMemEval:2a1811e2": "21 days.",
+   "LongMemEval:gpt4_7ddcf75f": "3 days ago.",
+   "LongMemEval:c8090214_abs": "7 days before.",
+   "LongMemEval:gpt4_7fce9456": "5 properties.",
+   "LongMemEval:46a3abf7": "At least 3 tanks are supported: a 1-gallon tank for your friend's kid, a 5-gallon betta tank, and a 20-gallon community tank. It is unclear whether you still have the 5-gallon tank.",
+   "LongMemEval:a2f3aa27": "The latest confirmed count is 1,250 followers. You later said you thought you were close to 1,300, but that was not confirmed.",
+   "LongMemEval:28dc39ac": "140 hours in total, based on the recorded playtimes: 70 hours for Assassin's Creed Odyssey, 5 for Hyper Light Drifter, 30 and 25 for The Last of Us Part II playthroughs, and 10 for Celeste.",
+   "LongMemEval:6456829e": "You initially planted 5 tomato plants and 3 cucumber plants, for 8 plants total.",
+   "LongMemEval:2c63a862": "14 days.",
+   "LongMemEval:f9e8c073": "Five sessions. An earlier record mentioned three sessions, but the later recollection says five.",
+   "LongMemEval:5a7937c8": "3 days: December 10, 17, and 24.",
+   "LongMemEval:0ddfec37_abs": "Insufficient evidence. The records mention autographed baseballs, not autographed footballs.",
+   "LongMemEval:7024f17c": "Insufficient evidence. The context records a 30-minute jog on May 20, which was not last week, and does not record completed yoga hours for last week.",
+   "LongMemEval:311778f1": "10 hours.",
+   "LongMemEval:26bdc477": "5 trips.",
+   "LongMemEval:21d02d0d": "2 fun runs.",
+   "LongMemEval:gpt4_b5700ca9": "4 days ago.",
+   "LongMemEval:2311e44b_abs": "Insufficient evidence to determine how many pages you have left in \"Sapiens\".",
+   "LongMemEval:80ec1f4f": "2 different institutions: The Art Cube and the Natural History Museum.",
+   "LongMemEval:8fb83627": "You have finished 5 issues.",
+   "LongMemEval:b6019101": "5 MCU films.",
+   "LongMemEval:5e1b23de": "3 months ago.",
+   "LongMemEval:0ddfec37": "15 autographed baseballs.",
+   "LongMemEval:gpt4_4cd9eba1": "1 week.",
+   "LongMemEval:eeda8a6d": "17 fish in total: 16 in the 20-gallon tank and Bubbles the betta in the other tank.",
+   "LoCoMo:conv-47:111": "Insufficient evidence—the RPG's name is not stated.",
+   "LoCoMo:conv-48:16": "Susie and Seraphim.",
+   "LoCoMo:conv-41:108": "Maria said it felt like being in a fairy tale: the water sounded calming, the surroundings were beautiful, and it was truly magical.",
+   "LongMemEval:c8f1aeed": "Insufficient evidence.",
+   "LoCoMo:conv-44:117": "In November, Audrey joined a dog owners group to learn how to take better care of her dogs and took them to a pet salon for grooming.",
+   "LoCoMo:conv-43:100": "They played together for four years in high school.",
+   "LongMemEval:b46e15ee": "You participated in the “Walk for Hunger” charity event, walking 5 kilometers to raise money for a local food bank.",
+   "LoCoMo:conv-26:127": "Caroline made a stained-glass window for a local church.",
+   "LoCoMo:conv-41:75": "Before meeting Maria, Jean had gone through a divorce, lost her job, and become homeless.",
+   "LongMemEval:19b5f2b3_abs": "Insufficient evidence. The context says you spent two weeks traveling around Japan, but it does not state how long you were in Korea.",
+   "LongMemEval:1192316e": "It takes about 1 hour and 30 minutes total: 1 hour to get ready and 30 minutes to commute.",
+   "LongMemEval:73d42213": "Approximately 9:00 AM, based on leaving home at 7:00 AM and the recorded two-hour trip to the clinic.",
+   "LoCoMo:conv-30:45": "Jon is highly enthusiastic and passionate about participating in the dance festival. He is excited, proud of his dancers, and eager to share their creativity and skill.",
+   "LoCoMo:conv-48:185": "Deborah’s mom was passionate about travel, and she also had strong interests in art and cooking.",
+   "LoCoMo:conv-30:47": "On February 1, Gina found a promising new location for her clothing store after a wholesaler agreed to work with her.",
+   "LongMemEval:29f2956b": "30 minutes per day.",
+   "LoCoMo:conv-41:94": "Her dinner spread included salads, sandwiches, homemade desserts, and a banana split sundae.",
+   "LongMemEval:9aaed6a3": "$0.75, based on the $75 purchase and the 1% cashback rate.",
+   "LongMemEval:8752c811": "Insufficient evidence: the supplied context does not show the 27th parameter.",
+   "LoCoMo:conv-43:32": "California or Florida, since Universal Studios locations are in both states; the context does not specify which one Tim planned to visit.",
+   "LoCoMo:conv-49:131": "Sam suggested yoga for stress relief and flexibility.",
+   "LongMemEval:gpt4_2ba83207": "Walmart, where you spent around $120. The context also mentions about $150 spent at Thrive Market, but that is described as an online platform rather than a grocery store.",
+   "LongMemEval:51c32626": "You submitted it to ACL, but the submission date is not provided.",
+   "LoCoMo:conv-48:138": "The group members helped and pushed each other during runs, while cheering each other on and offering advice. Their shared passion for fitness and supportive community made staying motivated easier.",
+   "LongMemEval:09d032c9": "Try lowering screen brightness, shortening the screen timeout, disabling unnecessary background app refresh and location access, turning off unused connections such as Bluetooth, limiting push notifications, and enabling battery-saver mode. Also check battery usage for power-hungry apps and replace the battery if its health is poor.",
+   "LoCoMo:conv-47:138": "James was inspired by his love of gaming and storytelling, a childhood dream he had expressed through sketches, and the excitement of bringing his own ideas to life. His strategy-game interests and games such as Civilization, Total War, and The Witcher 3 also influenced his creations.",
+   "LoCoMo:conv-42:158": "She shared a dairy-free chocolate cake with raspberries, made with almond flour, coconut oil, chocolate, and raspberries. She said it was her favorite to make for birthdays and special days.",
+   "LoCoMo:conv-43:73": "John struggled to fit into his new team’s style of play.",
+   "LoCoMo:conv-48:133": "In June 2023, Jolene was doing an internship and working toward her goals; she had also just finished a major project.",
+   "LoCoMo:conv-48:179": "Jolene recently played the video game \"Detroit\" with her partner.",
+   "LongMemEval:gpt4_e061b84f": "Insufficient evidence to determine the order of three sports events. The context clearly supports participation in the Spring Sprint Triathlon, but it does not identify three completed events within the month before July 1, 2023.",
+   "LoCoMo:conv-44:80": "Roasted Chicken.",
+   "LoCoMo:conv-26:103": "Charlotte's Web.",
+   "LongMemEval:67e0d0f2": "20 courses in total: 8 on edX and 12 on Coursera.",
+   "LoCoMo:conv-49:139": "Sam suggested putting a GPS sensor on Evan's keys.",
+   "LoCoMo:conv-42:188": "Nate is creating gaming content for YouTube.",
+   "LoCoMo:conv-42:110": "He chose a bright, bold purple shade to stand out from regular options and because it felt like it matched his personality.",
+   "LoCoMo:conv-30:2": "They both like to destress by dancing.",
+   "LoCoMo:conv-49:110": "Evan twisted his knee, causing significant pain and making it difficult to maintain his usual fitness routine.",
+   "LoCoMo:conv-42:119": "He could get deep in thought, reflect on his life, or think up new recipes.",
+   "LongMemEval:gpt4_5501fe77": "TikTok, where you gained around 200 followers over the past three weeks.",
+   "LoCoMo:conv-48:166": "A nearby tranquil spot by a pond.",
+   "LoCoMo:conv-43:171": "A map of Middle-earth from The Lord of the Rings.",
+   "LongMemEval:4388e9dd": "Andy was wearing an untidy, stained white shirt.",
+   "LongMemEval:9bbe84a2": "Your previous goal was to reach level 100 before the end of the year.",
+   "LongMemEval:0977f2af": "You invested in an Instant Pot before getting the Air Fryer.",
+   "LongMemEval:2bf43736": "It was Chapter 4 of Book 1 in the second part, titled \"Vocal Prayer and Meditation.\"",
+   "LongMemEval:1faac195": "Emily lives in Denver.",
+   "LoCoMo:conv-49:154": "Evan apologized because he had been drunk and accidentally urinated near someone’s roses, embarrassing himself and upsetting his partner.",
+   "LoCoMo:conv-48:101": "She said she bought it a year earlier in Paris, though the context does not clearly identify which snake this referred to.",
+   "LoCoMo:conv-26:97": "Caroline attended an LGBTQ+ counseling workshop.",
+   "LoCoMo:conv-50:145": "He usually watches music videos, concerts, and documentaries about artists and their creative processes.",
+   "LongMemEval:ef9cf60a": "About $300 total: around $200 for the Tiffany necklace and $100 for the spa gift card.",
+   "LoCoMo:conv-50:153": "Dave likes capturing nature, especially sunsets, beaches, and waves.",
+   "LoCoMo:conv-42:146": "Joanna keeps writing because it helps her express and heal her feelings, create meaningful stories, and make a positive difference by bringing comfort to others. Supportive friends and family, feedback, and seeing her growth also keep her going.",
+   "LongMemEval:gpt4_5438fa52": "Your attendance at the cultural festival happened first. You attended it on May 26, 2023, while you had been taking Spanish classes for about three months by May 27.",
+   "LongMemEval:726462e0": "You got a 10% discount on your first purchase.",
+   "LongMemEval:41698283": "Your most recent lens purchase was a 70–200mm zoom lens.",
+   "LoCoMo:conv-44:76": "Usually about an hour, although it varies by day. She also takes them out multiple times a day.",
+   "LongMemEval:09ba9854_abs": "Insufficient evidence: the context gives a taxi cost of about $60 but does not state the bus fare.",
+   "LongMemEval:gpt4_d6585ce9": "Insufficient evidence: the records do not say who you went with to a music event on Saturday, April 15, 2023.",
+   "LoCoMo:conv-26:140": "One sign explicitly said “trans lives matter.” The other posters were described as expressing pride and strength, but their exact wording is not provided.",
+   "LoCoMo:conv-41:133": "The week before August 3, 2023, John took his kids to a military memorial. They were awestruck and humbled by the experience.",
+   "LoCoMo:conv-42:103": "Joanna recently watched and recommended \"Little Women\" to Nate on February 7, 2022.",
+   "LoCoMo:conv-26:101": "Yes. Melanie made the black-and-white flower-design bowl in her pottery class.",
+   "LongMemEval:3f1e9474": "You had a conversation with your friend Sarah about destiny.",
+   "LongMemEval:8550ddae": "You tried a lavender gin fizz recipe.",
+   "LongMemEval:gpt4_0a05b494": "You met the jam maker at the farmer’s market first, about two weeks before May 23; you met the Australian tourist on Thursday, May 18.",
+   "LoCoMo:conv-44:114": "Andrew is going on a picnic date with his girlfriend.",
+   "LoCoMo:conv-41:90": "John’s recent research and blog writing focused on politics and government, especially education reform and infrastructure development.",
+   "LongMemEval:5d3d2817": "Your previous occupation was marketing specialist at a small startup.",
+   "LoCoMo:conv-48:154": "She feels peace and gratitude for the time she spent with her mom.",
+   "LongMemEval:61f8c8f8": "You finished the 5K 10 minutes faster.",
+   "LoCoMo:conv-49:95": "The smartwatch helps Evan track his progress and stay motivated toward his health goals.",
+   "LongMemEval:gpt4_7de946e7": "The persistent cough came first; it was present before the skin tag removal on February 22.",
+   "LongMemEval:gpt4_45189cb4": "The order was: Lakers vs. Chicago Bulls, the College Football National Championship (Georgia vs. Alabama), then the Chiefs game.",
+   "LongMemEval:c9f37c46": "Approximately two months.",
+   "LongMemEval:0100672e": "$12 per coffee mug.",
+   "LongMemEval:a11281a2": "Approximately 100 followers, increasing from 250 to around 350.",
+   "LoCoMo:conv-50:157": "Nature’s beauty helps him appreciate life during tough times and feels like a breath of fresh air.",
+   "LongMemEval:gpt4_1a1dc16d": "The meeting with Rachel happened first, on April 10; the pride parade was on May 1.",
+   "LoCoMo:conv-42:96": "Nate enjoys action and science-fiction movies most; he also likes fantasy films.",
+   "LoCoMo:conv-42:140": "Joanna was inspired by Woodhaven’s interesting past, the notable people connected to it, and how much the place had changed.",
+   "LoCoMo:conv-48:176": "A session about releasing expectations and judgments, savoring the present, and appreciating the journey instead of focusing only on the finish line.",
+   "LongMemEval:gpt4_483dd43c": "Game of Thrones.",
+   "LongMemEval:cc5ded98": "About two hours each day.",
+   "LoCoMo:conv-50:37": "Yes. Calvin clearly enjoys music-related tours and live performances: he was excited about an upcoming tour, dreams of touring the world, and loves performing live. However, the context does not explicitly say he loves the specific activity of attending music tours.",
+   "LongMemEval:gpt4_2c50253f": "I don't have enough evidence to determine the exact wake-up time. You wake up 15 minutes earlier on Tuesdays and Thursdays, but the specific resulting time isn't stated.",
+   "LongMemEval:gpt4_d9af6064": "You set up the new router first, on January 15th. You set up the smart thermostat later, on February 10th.",
+   "LongMemEval:e48988bc": "The company mentioned was Patagonia.",
+   "LoCoMo:conv-50:88": "The context says Dave arranged regular walks with friends in the park; it does not establish that Calvin arranged them.",
+   "LongMemEval:cf22b7bf": "You have lost 10 pounds since you started going consistently to the gym 3 months ago.",
+   "LongMemEval:4baee567": "The Chiefs played the Jaguars 12 times at Arrowhead Stadium, based on the recorded regular-season statistics through 2021.",
+   "LoCoMo:conv-43:158": "John's team has seen the most growth in communication and bonding, which improved their performances by helping them understand each other's strengths and weaknesses.",
+   "LongMemEval:d6233ab6": "Yes, attending your high school reunion could be a good idea if reconnecting with old friends and reflecting on the past appeals to you. You have been thinking about old high school friends recently, so the reunion may offer a meaningful chance to catch up; consider going casually and leaving if it does not feel enjoyable.",
+   "LongMemEval:c7cf7dfd": "Fabriclore.",
+   "LongMemEval:95228167": "Check the guitar’s comfort, neck feel, tuning stability, intonation, pickup sound, and overall condition. If considering a Les Paul, listen for its warm tone and sustain; also test whether the weight and controls suit your playing.",
+   "LongMemEval:f4f1d8a4_abs": "Insufficient evidence.",
+   "LongMemEval:71017277": "Insufficient evidence.",
+   "LoCoMo:conv-41:66": "John’s interest was sparked by growing up and seeing how inadequate education and crumbling infrastructure harmed his neighborhood. He wanted to prevent future generations from experiencing the same problems.",
+   "LongMemEval:gpt4_7abb270c": "Science Museum, Metropolitan Museum of Art, Museum of History, Modern Art Gallery, Modern Art Museum, Natural History Museum.",
+   "LongMemEval:3ba21379": "A Ford F-150 pickup truck model.",
+   "LoCoMo:conv-50:71": "Calvin planned to stay in Japan for a few months before going to Boston.",
+   "LoCoMo:conv-47:125": "James prepared an omelette for the first time.",
+   "LoCoMo:conv-26:89": "Melanie thinks Caroline’s decision to adopt is amazing and kind. She believes Caroline will be an awesome mom and give the children a loving, safe, and supportive home.",
+   "LoCoMo:conv-49:91": "Sam agreed to try flavored seltzer water instead of soda and dark chocolate with high cocoa content instead of candy.",
+   "LoCoMo:conv-26:111": "They paint together, especially nature-inspired paintings.",
+   "LongMemEval:gpt4_9a159967": "United Airlines, with four explicitly mentioned flights in March. The American Airlines trip in April included connecting flights, but the complete flight count is not specified.",
+   "LongMemEval:07741c44": "You initially kept your old sneakers under your bed.",
+   "LoCoMo:conv-44:100": "She couldn't walk her dogs for a period of time because of a knee injury.",
+   "LongMemEval:89527b6b": "Insufficient evidence: the supplied context does not state the color of the Plesiosaur's scaly body.",
+   "LongMemEval:e56a43b9": "$5 off your next FreshMart purchase.",
+   "LongMemEval:06f04340": "Serve a fresh basil-and-mint dinner such as caprese salad with basil and mint, or Thai basil chicken finished with fresh mint. The context confirms basil and mint as your homegrown ingredients but does not specify others.",
+   "LoCoMo:conv-48:146": "Deborah recommends a gentle yoga flow focused on breathing and grounding, supplemented by mindful breathing: sit quietly, close your eyes, take deep breaths, and focus on the air moving in and out.",
+   "LongMemEval:945e3d21": "You attend yoga twice a week to help you relax and focus. A later record says you attend three times a week more generally, so the frequency specifically linked to anxiety relief is twice weekly.",
+   "LoCoMo:conv-44:121": "Andrew plans to take Scout, Toby, and Buddy to a nearby park for fresh air and fun, keeping them leashed while Scout gets used to being outside.",
+   "LongMemEval:c4f10528": "The restaurant is Miss Bee Providore, known for its Miss Bee’s Nasi Goreng.",
+   "LoCoMo:conv-42:4": "Insufficient evidence for a live pet that would not cause Joanna discomfort. She is allergic to most reptiles and animals with fur, as well as cockroaches; a stuffed animal is the only clearly safe option mentioned.",
+   "LoCoMo:conv-47:132": "John achieved the career milestone of making his first mobile game, a 2D adventure game with puzzles and exploration, scheduled to launch the following month.",
+   "LoCoMo:conv-49:150": "Evan suggested swimming, yoga, and walking. He also mentioned beach walks as a calming low-impact activity.",
+   "LoCoMo:conv-44:96": "Andrew learned about animals, plants, and ecosystems, including how they all work together and how interconnected nature is. He also concluded that humans need to look after it.",
+   "LoCoMo:conv-50:124": "Dave finds working on cars—restoring broken vehicles and creating car modifications—fulfilling. He describes it as both his passion and a form of therapy.",
+   "LongMemEval:36580ce8": "Bronchitis.",
+   "LoCoMo:conv-43:167": "Aragorn.",
+   "LoCoMo:conv-48:169": "Besides studying, Jolene has been focusing on her relationship with her partner, engineering experience and career goals, and maintaining balance through activities such as yoga, meditation, and trips to the beach.",
+   "LoCoMo:conv-49:136": "Evan said Sam should believe in himself and remember that his worth is not defined by his weight.",
+   "LoCoMo:conv-26:119": "Melanie felt tiny and in awe of the universe, as though she were part of something huge and awe-inspiring.",
+   "LoCoMo:conv-48:74": "They plan to try fresh pastries together at the cafe.",
+   "LongMemEval:c4ea545c": "Yes. You previously went to the gym three times a week—Tuesdays, Thursdays, and Saturdays—and later said you were going four times a week.",
+   "LongMemEval:e61a7584": "You have had Luna for about 9 months.",
+   "LoCoMo:conv-47:122": "$10 per cooking class.",
+   "LongMemEval:58470ed2": "Insufficient evidence.",
+   "LongMemEval:85fa3a3f": "$50 total.",
+   "LongMemEval:gpt4_e061b84g": "The Spring Sprint Triathlon.",
+   "LoCoMo:conv-50:78": "It was meant to remind Calvin why he keeps hustling as a musician.",
+   "LoCoMo:conv-42:128": "Spider-Man.",
+   "LongMemEval:eace081b": "Insufficient evidence; the context confirms you plan to stay on Oahu but does not specify where.",
+   "LoCoMo:conv-30:55": "It symbolizes freedom—dancing without worrying what people think, following her passions, and expressing herself.",
+   "LoCoMo:conv-50:98": "The audience was very engaged and sang along when Calvin performed one of his songs.",
+   "LongMemEval:94f70d80": "4 hours.",
+   "LoCoMo:conv-50:152": "A new vintage camera.",
+   "LoCoMo:conv-30:61": "A trophy.",
+   "LongMemEval:gpt4_cd90e484": "About two weeks.",
+   "LongMemEval:bb7c3b45": "$300",
+   "LoCoMo:conv-30:57": "Gina advises Jon to believe in himself, stay positive and persevere through difficulties, keep his larger goal and motivation in mind, reflect on his successes and progress, rely on supportive people, and use networking and relationship-building to grow the business.",
+   "LongMemEval:gpt4_4edbafa2": "3 June 2023.",
+   "LoCoMo:conv-26:115": "Flowers bring Melanie joy and symbolize growth, beauty, and appreciating small moments. They are also meaningful because they were an important part of her wedding decor and remind her of that loving, joyful day.",
+   "LoCoMo:conv-50:95": "Dave has been doing engine swaps and suspension modifications, and is learning body modifications to give a classic muscle car a modern twist.",
+   "LongMemEval:16c90bf4": "A pilsner or lager; a local beer from Ancash was also suggested for a more authentic touch.",
+   "LoCoMo:conv-30:44": "Gina says the dancers are graceful.",
+   "LoCoMo:conv-26:148": "She was thankful and relieved that her children enjoyed the Grand Canyon, especially after the frightening road-trip accident.",
+   "LoCoMo:conv-42:172": "Nate respects and admires Joanna’s ability to bounce back from setbacks. He sees her as resilient and encourages her to keep pursuing her dreams.",
+   "LoCoMo:conv-48:148": "Jolene has been using a bullet journal to track tasks and stay organized.",
+   "LoCoMo:conv-30:70": "Jon is working on opening a dance studio.",
+   "LongMemEval:7e00a6cb": "Insufficient evidence: the context mentions Stayokay Amsterdam Vondelpark and ClinkNOORD, but it does not identify which hostel was near the Red Light District.",
+   "LoCoMo:conv-43:129": "John will write the recipe down and mail it to the other person.",
+   "LoCoMo:conv-42:114": "Nate enjoys fantasy and sci-fi books, especially series involving adventure, magic, battles, and compelling characters.",
+   "LongMemEval:gpt4_98f46fc6": "The charity bake sale came first, on March 15, 2023; the charity gala was later mentioned as taking place on May 8, 2023.",
+   "LongMemEval:dc439ea3": "Insufficient evidence. The context mentions stick games and hand games, and separately describes a drum-and-dance competition featuring skilled dancers, but does not identify a traditional game performed by dancers.",
+   "LoCoMo:conv-48:177": "Jolene felt very positive about her progress. She was trying to be more mindful and grateful, appreciating small moments and wins, and said she was experiencing a new level of joy and happiness.",
+   "LoCoMo:conv-30:46": "Jon is looking for Marley flooring because it provides grip while allowing movement, is durable, and is easy to clean.",
+   "LoCoMo:conv-44:65": "During dog playdates in the park, Audrey chats with other dog owners while her dogs run, mingle, and make new friends.",
+   "LongMemEval:27016adc": "The renovation cost is 10% of the countryside property's $200,000 price: $20,000 ÷ $200,000 × 100 = 10%.",
+   "LoCoMo:conv-48:123": "Deborah and Anna discussed each other and realized that they inspire one another while watching the sunset by the sea.",
+   "LoCoMo:conv-44:113": "Audrey suggested trying a California roll or a salmon roll first, since they are easier for someone new to sushi.",
+   "LongMemEval:1c0ddc50": "During your commute, you could listen to podcasts—especially history podcasts, since you already enjoy “How I Built This”—or audiobooks, try language-learning audio, listen to music, or use the time for mindful breathing if you are riding the bus. With a 40-minute commute each way, you could plan one episode or a focused listening session per trip. If cycling, keep the activity audio-only and prioritize traffic awareness.",
+   "LoCoMo:conv-43:161": "John supports youth sports and fair opportunities for underserved communities, helping ensure that every child can access quality sports programs.",
+   "LoCoMo:conv-48:40": "Deborah lives close to the beach; she mentions a nearby beach and a park near her house with a forest trail and a beach. There is no evidence that she lives close to the mountains.",
+   "LongMemEval:5a4f22c0": "Rachel is currently working at TechCorp.",
+   "LongMemEval:e5ba910e_abs": "Insufficient evidence to determine the total: the headphones cost $378, but the iPad's price is not provided.",
+   "LoCoMo:conv-43:134": "One of Tim's favorite fantasy TV shows was referred to as \"That\" in the November 11 conversation.",
+   "LoCoMo:conv-42:166": "She described it as a romantic drama about memory and relationships, with an excellent story and acting.",
+   "LoCoMo:conv-26:104": "Becoming Nicole by Amy Ellis Nutt.",
+   "LoCoMo:conv-43:71": "The Minnesota Wolves.",
+   "LongMemEval:cc6d1ec1": "About two months.",
+   "LoCoMo:conv-44:120": "Audrey suggests puzzles, training, and hide-and-seek.",
+   "LongMemEval:e4e14d04": "About two weeks.",
+   "LoCoMo:conv-26:146": "They were frightened by the accident, but their brother was okay. Afterward, they enjoyed the Grand Canyon and relaxed.",
+   "LongMemEval:a82c026e": "The last boss in the Dark Souls 3 DLC.",
+   "LongMemEval:1de5cff2": "Insufficient evidence.",
+   "LoCoMo:conv-26:121": "Matt Patterson performed at the concert.",
+   "LongMemEval:f685340e": "Previously, you played tennis with your friends weekly. Now, you play every other week.",
+   "LoCoMo:conv-47:74": "John played CS:GO.",
+   "LoCoMo:conv-41:93": "Since starting family boot camps in April 2023, John and his family have gained more energy, strength, and endurance. They work out three times a week, support and motivate one another, and his kids have become excited about staying active.",
+   "LoCoMo:conv-43:172": "Tim will spend a semester abroad in Galway, Ireland.",
+   "LoCoMo:conv-30:76": "The sentiment is highly enthusiastic and positive. Jon and Gina are excited, supportive, and expect the grand opening to be fun and memorable, with Gina planning to attend.",
+   "LoCoMo:conv-43:149": "Tim had just finished reading \"A Dance with Dragons.\"",
+   "LongMemEval:6a1eabeb": "The record gives 27:12 as a personal-best charity 5K time. A later entry cites 25:50 as your personal best, so the current best is unclear.",
+   "LoCoMo:conv-48:97": "Yes. Jolene visited Rio de Janeiro recently, and Deborah said she visited Rio three years earlier.",
+   "LongMemEval:c14c00dd": "Insufficient evidence. You use a lavender-scented shampoo bought at Trader Joe’s, but its brand is not specified.",
+   "LongMemEval:76d63226": "Your new Samsung TV is 55 inches.",
+   "LongMemEval:faba32e5": "Alex marinated the BBQ ribs in the special sauce for 24 hours.",
+   "LoCoMo:conv-44:84": "The oldest is relaxed and wise, like a sage; the second is always ready to play; the third can be naughty but loves cuddling; and the youngest is lively and always up for an adventure.",
+   "LongMemEval:6ae235be": "The supported context identifies atmospheric distillation as a process used at the Lake Charles Refinery. The complete list of processes is not available in the supplied evidence.",
+   "LongMemEval:gpt4_6ed717ea": "You purchased the training pads for Luna first. They were bought about a month ago, while Max’s dog bed was purchased about three weeks ago.",
+   "LongMemEval:51b23612": "Insufficient evidence.",
+   "LongMemEval:720133ac": "The total was $75: a $50 vet consultation and $25 for three months of flea and tick medication.",
+   "LoCoMo:conv-42:135": "Joanna planned to make the recipe for her family that weekend.",
+   "LoCoMo:conv-44:95": "Audrey takes care of Peruvian Lilies.",
+   "LongMemEval:50635ada": "Premier Silver status.",
+   "LongMemEval:gpt4_f420262d": "JetBlue.",
+   "LoCoMo:conv-43:77": "40 points.",
+   "LoCoMo:conv-47:127": "James gets ideas from books, movies, and dreams.",
+   "LoCoMo:conv-43:103": "John made butternut squash soup, seasoned with sage.",
+   "LongMemEval:a1cc6108": "Insufficient evidence.",
+   "LoCoMo:conv-49:31": "Their health experiences seem to encourage a gradual, resilient approach: Evan draws on health scares and lifestyle changes to emphasize exercise, healthier eating, support, hobbies, and small steps, while Sam responds to health struggles by staying motivated, accepting support, and focusing on progress over perfection. Both appear to treat supportive relationships and manageable routines as ways to handle stress and challenges.",
+   "LoCoMo:conv-47:71": "James offered to help John find the perfect pet.",
+   "LoCoMo:conv-47:7": "Insufficient evidence.",
+   "LoCoMo:conv-48:135": "Spending time with Seraphim feels valuable and helps Jolene slow down and be more in tune with herself.",
+   "LoCoMo:conv-41:131": "Insufficient evidence for community service specifically on 31 July, 2023. The context does support that Maria volunteered at a shelter and did community work with church friends around that period.",
+   "LoCoMo:conv-48:144": "Jolene adopted Susie two years earlier when she was feeling lonely and wanted companionship.",
+   "LoCoMo:conv-50:118": "Calvin and Dave rely on hard work and determination to reach their goals. Calvin also uses collaboration, learning from others, positive support, and networking; Dave draws on encouragement and support from Calvin.",
+   "LoCoMo:conv-43:155": "John felt relieved and great; he viewed jogging without pain as a huge success and celebrated with his wife, friends, and family.",
+   "LongMemEval:gpt4_68e94287": "The post about the vegan chili recipe happened first. It was shared on March 9, 2023, while the #PlankChallenge participation occurred on March 15, 2023.",
+   "LoCoMo:conv-42:132": "Nate made vegan ice cream and shared it with people in his vegan diet group.",
+   "LoCoMo:conv-47:17": "The game’s title is not stated; John described it as a game about figuring out who the impostors are.",
+   "LongMemEval:3249768e": "Insufficient evidence—the context cuts off before the fifth bottle is listed.",
+   "LongMemEval:0e4e4c46": "132 points.",
+   "LoCoMo:conv-26:113": "Caroline saw many people who wanted to create loving homes for children in need.",
+   "LongMemEval:6b7dfb22": "Try changing your subject and process: paint autumn landscapes or still lifes, revisit flowers from Instagram, experiment with abstract painting, and use palette knives to add texture. A short themed challenge—such as your 30-day painting challenge—could also provide structure and fresh momentum.",
+   "LoCoMo:conv-50:83": "Dave feels achievement and purpose from fixing and restoring things—especially cars—and transforming something broken into something useful or beautiful. Helping people through his work, sharing his car-mod knowledge, and creating outlets like photography also give him fulfillment.",
+   "LoCoMo:conv-26:109": "Mel and her kids each made their own pots. One child’s creation was a cup decorated with a dog’s face.",
+   "LongMemEval:91b15a6e": "The minimum supported total is $5,150: $5,000 for the vintage diamond necklace plus at least $150 for the antique vanity.",
+   "LoCoMo:conv-44:20": "Chicken.",
+   "LoCoMo:conv-42:95": "Xenoblade Chronicles.",
+   "LoCoMo:conv-49:97": "Because it symbolizes strength and resilience, and caring for it motivates him through tough times.",
+   "LoCoMo:conv-43:164": "French.",
+   "LoCoMo:conv-42:124": "A gaming party.",
+   "LoCoMo:conv-49:104": "A bowl of spinach, avocado, and strawberries.",
+   "LoCoMo:conv-44:85": "Agility classes.",
+   "LongMemEval:2318644b": "Insufficient evidence for an exact amount. The Hawaii/Maui resort cost over $300 per night, while the Tokyo hostel cost around $30 per night, so Hawaii was more than $270 more per night.",
+   "LoCoMo:conv-47:105": "James planned to return on July 20, 2022.",
+   "LoCoMo:conv-42:104": "\"Little Women\" is about sisterhood, love, and reaching for your dreams.",
+   "LoCoMo:conv-42:88": "One of Joanna's favorite movies is \"Little Women.\"",
+   "LoCoMo:conv-50:126": "Shibuya Crossing is described as Tokyo's Times Square.",
+   "LoCoMo:conv-43:145": "A forest near John's hometown.",
+   "LoCoMo:conv-48:108": "She gained confidence from realizing she had achieved more than she imagined, including developing creative solutions for her engineering project.",
+   "LongMemEval:89941a94": "Yes. Besides a mountain bike and a commuter bike, you had a road bike. Later, you also mentioned purchasing a hybrid bike. The context does not establish when a gravel bike was purchased.",
+   "LongMemEval:08e075c7": "You had been using your Fitbit Charge 3 for 6 months on June 18, 2023—approximately 8½ months by September 4, 2023.",
+   "LongMemEval:gpt4_93159ced": "Insufficient evidence. The context says you had worked at NovaTech for about 4 years and 3 months, but it does not state how long you worked before starting there.",
+   "LoCoMo:conv-30:51": "Gina chose furniture and decor that reflected her personal style, made customers feel cozy and comfortable, and created an inviting shopping experience. She added a chandelier for a glamorous look that matched the store’s style.",
+   "LongMemEval:3d86fd0a": "You met Sophia at a coffee shop in the city.",
+   "LoCoMo:conv-48:134": "Jolene had Seraphim for about a year as of June 26, 2023.",
+   "LongMemEval:gpt4_8c8961ae": "You took the two-week Europe trip with your parents and younger brother first; the solo trip to Thailand was the following year.",
+   "LoCoMo:conv-30:40": "Jon’s favorite dance style is contemporary.",
+   "LoCoMo:conv-43:135": "Tim breaks studying into 25-minute sessions followed by 5-minute breaks to do something fun.",
+   "LongMemEval:gpt4_1e4a8aec": "About two weeks ago, you used a gardening app to track the weather and soil moisture while planning your gardening activities, including watering your tomato plants during a dry spell.",
+   "LoCoMo:conv-44:109": "Audrey’s dogs are best companions for outdoor adventures—walks, hikes, parks, trails, and exploring nature—as well as play, socializing, and providing comfort and companionship.",
+   "LongMemEval:2698e78f": "You said you see Dr. Smith every week. Earlier, you had said the sessions were every two weeks, so the frequency appears to have changed.",
+   "LoCoMo:conv-43:176": "John said it felt crazy and like a dream come true. He was especially happy that his hard work and training had paid off and that the hours of training had not been for nothing.",
+   "LoCoMo:conv-48:163": "Deborah took Luna from a shelter.",
+   "LoCoMo:conv-50:93": "Dave advised Calvin to stay focused, keep going, pursue his dreams, and stay motivated by collaborating with others and surrounding himself with positive energy.",
+   "LongMemEval:e8a79c70": "The recipe called for 2–3 eggs.",
+   "LongMemEval:gpt4_2d58bcd6": "You finished “The Hate U Give” first. You finished it a few days before your book club meeting, while you finished “The Nightingale” the following weekend.",
+   "LongMemEval:gpt4_fa19884d": "Insufficient evidence—the context says you started listening to a bluegrass band last Friday, but it does not name the band or artist.",
+   "LoCoMo:conv-42:183": "Nate is currently playing Xenoblade Chronicles, a fantasy RPG, and recommends it.",
+   "LoCoMo:conv-43:162": "Tim is excited about the new fantasy TV series The Wheel of Time.",
+   "LoCoMo:conv-47:143": "James and Samantha decided to move in together. They rented an apartment near McGee's bar."
+  },
+  "A2": {
+   "LongMemEval:a1eacc2a": "7 short stories.",
+   "LongMemEval:gpt4_e414231e": "4 days.",
+   "LongMemEval:a4996e51": "About 50 hours per week.",
+   "LongMemEval:80ec1f4f_abs": "Insufficient evidence.",
+   "LongMemEval:6b168ec8": "3 bikes.",
+   "LongMemEval:4d6b87c8": "25 titles.",
+   "LongMemEval:4f54b7c9": "5 antique items.",
+   "LongMemEval:edced276": "15 days in total: 10 days in Hawaii and 5 days in New York City.",
+   "LongMemEval:a9f6b44c": "2 distinct bikes: the road bike was serviced in March, and the commuter bike was planned for a front-tire replacement in March.",
+   "LongMemEval:d682f1a2": "2: Domino's Pizza and Fresh Fusion.",
+   "LongMemEval:10d9b85a": "3 days: April 10 for a lecture, plus April 17–18 for a two-day workshop.",
+   "LongMemEval:gpt4_4fc4f797": "38 days, from March 17, when you mentioned receiving judges' feedback, to April 24, the day after the April 23 preparation date when you planned to test the setup.",
+   "LongMemEval:2788b940": "5 fitness classes per typical week: BodyPump, Zumba twice, Hip Hop Abs, and yoga.",
+   "LongMemEval:08f4fc43": "30 days.",
+   "LongMemEval:5831f84d": "15 Crash Course videos.",
+   "LongMemEval:2e6d26dc": "At least 5 babies: Jasper, Max, Charlotte, Ava, and Lily.",
+   "LongMemEval:gpt4_2f8be40d": "At least 4 weddings: your cousin Rachel’s, your cousin Emily’s, your sister’s, and your friend Jen’s. The context suggests there may have been additional weddings, so an exact total is not supported.",
+   "LongMemEval:gpt4_1e4a8aeb": "6 days.",
+   "LongMemEval:gpt4_fa19884c": "6 days.",
+   "LongMemEval:60472f9c": "2 projects: Data Mining and Database Systems.",
+   "LongMemEval:eac54adc": "43 days ago.",
+   "LongMemEval:edced276_abs": "At least 10 days: Hawaii was a 10-day trip, but the context does not specify how many days you spent in Seattle.",
+   "LongMemEval:4b24c848": "5 tops.",
+   "LongMemEval:bbf86515": "4 days before.",
+   "LongMemEval:2ce6a0f2": "4 different art-related events.",
+   "LongMemEval:c18a7dc8": "Insufficient evidence.",
+   "LongMemEval:a08a253f": "3 days a week.",
+   "LongMemEval:95bcc1c8": "10 amateur comedians.",
+   "LongMemEval:a346bb18": "12 minutes.",
+   "LongMemEval:gpt4_e05b82a6": "10 times.",
+   "LongMemEval:8c18457d": "7 days.",
+   "LongMemEval:gpt4_6dc9b45b": "4 months ago.",
+   "LongMemEval:gpt4_468eb063": "9 days ago.",
+   "LongMemEval:6aeb4375_abs": "Insufficient evidence.",
+   "LongMemEval:6cb6f249": "17 days in total.",
+   "LongMemEval:06db6396": "5 projects.",
+   "LongMemEval:6a27ffc2": "30 videos.",
+   "LongMemEval:gpt4_74aed68e": "29 days.",
+   "LongMemEval:c960da58": "20 playlists.",
+   "LongMemEval:5c40ec5b": "Twice.",
+   "LongMemEval:gpt4_7a0daae1": "1 week.",
+   "LongMemEval:dcfa8644": "14 days.",
+   "LongMemEval:bcbe585f": "4 weeks and 2 days ago.",
+   "LongMemEval:6e984301": "3 weeks.",
+   "LongMemEval:7401057b": "Two free nights.",
+   "LongMemEval:c2ac3c61": "Five courses in total: three on Coursera and two on edX.",
+   "LongMemEval:a3838d2b": "Four charity events: Dance for a Cause, Walk for Wildlife, the charity golf tournament, and Food for Thought.",
+   "LongMemEval:6613b389": "Rachel got engaged about two months before your July 22 anniversary.",
+   "LongMemEval:af8d2e46": "7 shirts.",
+   "LongMemEval:gpt4_8e165409": "14 days.",
+   "LongMemEval:a3045048": "7 days.",
+   "LongMemEval:0f05491a": "The latest record says 120 stars, though an earlier correction said 125 stars.",
+   "LongMemEval:60bf93ed_abs": "Insufficient evidence.",
+   "LongMemEval:184da446": "You had read 220 pages so far.",
+   "LongMemEval:gpt4_85da3956": "About 6 weeks ago.",
+   "LongMemEval:ed4ddc30": "20 dozen eggs.",
+   "LongMemEval:ef66a6e5": "2 sports: swimming and tennis.",
+   "LongMemEval:21436231": "12 largemouth bass.",
+   "LongMemEval:982b5123": "About 3 months ago.",
+   "LongMemEval:00ca467f": "2 doctor's appointments.",
+   "LongMemEval:gpt4_b0863698": "7 days ago.",
+   "LongMemEval:gpt4_7bc6cf22": "12 days ago.",
+   "LongMemEval:gpt4_ab202e7f": "4 kitchen items.",
+   "LongMemEval:031748ae": "You led 4 engineers when you started the role, and you lead 5 engineers now.",
+   "LongMemEval:gpt4_372c3eed": "8 years.",
+   "LongMemEval:6aeb4375": "4 Korean restaurants.",
+   "LongMemEval:60bf93ed": "5 days.",
+   "LongMemEval:681a1674": "2 Marvel movies.",
+   "LongMemEval:4dfccbf7": "24 days.",
+   "LongMemEval:01493427": "25 new postcards.",
+   "LongMemEval:157a136e": "Insufficient evidence.",
+   "LongMemEval:370a8ff4": "11 weeks and 4 days had passed.",
+   "LongMemEval:8e9d538c": "17 skeins.",
+   "LongMemEval:gpt4_e072b769": "20 days ago, or 2 weeks and 6 days ago.",
+   "LongMemEval:c8090214": "7 days before.",
+   "LongMemEval:2ebe6c90": "21 days.",
+   "LongMemEval:gpt4_af6db32f": "17 days ago.",
+   "LongMemEval:88432d0a_abs": "Insufficient evidence.",
+   "LongMemEval:10e09553": "7 largemouth bass.",
+   "LongMemEval:9ee3ecd6": "300 points.",
+   "LongMemEval:gpt4_4ef30696": "1 day",
+   "LongMemEval:72e3ee87": "50 episodes",
+   "LongMemEval:88432d0a": "At least 3 times",
+   "LongMemEval:gpt4_1916e0ea": "54 days",
+   "LongMemEval:d23cf73b": "4 different cuisines: Ethiopian, Indian, Korean, and vegan cuisine.",
+   "LongMemEval:gpt4_a2d1d1f6": "3 days ago.",
+   "LongMemEval:2311e44b": "190 pages.",
+   "LongMemEval:b46e15ed": "Insufficient evidence to determine how many months have passed since two charity events occurred on consecutive days.",
+   "LongMemEval:gpt4_a1b77f9c": "8 weeks in total: 2 weeks on The Nightingale, 4 weeks on Sapiens, and 2 weeks on The Power.",
+   "LongMemEval:e3038f8c": "At least 95 rare items: 12 figurines, 57 records, 25 coins, and one first-edition book. The total may be higher because the vase and rare book collection were not quantified.",
+   "LongMemEval:81507db6": "3 graduation ceremonies.",
+   "LongMemEval:0bb5a684": "7 days before the team meeting.",
+   "LongMemEval:gpt4_1d4ab0c9": "24 days.",
+   "LongMemEval:gpt4_372c3eed_abs": "Insufficient evidence to determine the total; the durations of the associate's degree and Master's degree are not provided.",
+   "LongMemEval:gpt4_a56e767c": "3 film festivals: Austin Film Festival, Portland Film Festival, and AFI Fest.",
+   "LongMemEval:0db4c65d": "18 days.",
+   "LongMemEval:gpt4_59149c77": "7 days.",
+   "LongMemEval:45dc21b6": "3 recipes.",
+   "LongMemEval:9d25d4e0": "At least 3 distinct jewelry items: emerald earrings, a silver necklace, and an engagement ring. If the earrings are counted individually, that is 4 pieces.",
+   "LongMemEval:gpt4_31ff4165": "3 health-related devices: a Fitbit Versa 3, an Accu-Chek Aviva Nano system, and a nebulizer.",
+   "LongMemEval:9a707b81": "26 days ago.",
+   "LongMemEval:gpt4_2f91af09": "At least 23 pieces: 17 poems, 5 short stories, and 1 writing-challenge submission. The context does not establish whether this is the complete total.",
+   "LongMemEval:gpt4_8279ba02": "10 days ago.",
+   "LongMemEval:031748ae_abs": "Insufficient evidence for the number of engineers you lead as a Software Engineer Manager. The context mentions 4 engineers in a Senior Software Engineer role, and later 5 engineers.",
+   "LongMemEval:eeda8a6d_abs": "Insufficient evidence for a 30-gallon tank. The context supports 16 fish in the 20-gallon tank: 10 neon tetras, 5 golden honey gouramis, and 1 small pleco.",
+   "LongMemEval:b3c15d39": "5 days—from ordering it on February 5 to its arrival on February 10.",
+   "LongMemEval:gpt4_194be4b3": "3 musical instruments: a 5-piece Pearl Export drum set, a Korg B1 digital piano, and a guitar.",
+   "LongMemEval:gpt4_15e38248": "At least 3 pieces of furniture: a coffee table bought, an IKEA bookshelf assembled, and a kitchen table fixed. A mattress was also ordered, but the context does not clearly establish whether to count it as furniture or whether it had arrived.",
+   "LongMemEval:bf659f65": "2: Billie Eilish’s “Happier Than Ever” was downloaded, and The Whiskey Wanderers’ “Midnight Sky” EP was purchased.",
+   "LongMemEval:ba358f49": "Insufficient evidence: Rachel was getting married the following year (2023), but your age is not provided.",
+   "LongMemEval:gpt4_1d80365e": "2 days elapsed, from May 15 to May 17, spanning 3 calendar dates.",
+   "LongMemEval:8077ef71": "26 days ago.",
+   "LongMemEval:2a1811e2": "21 days.",
+   "LongMemEval:gpt4_7ddcf75f": "3 days ago.",
+   "LongMemEval:c8090214_abs": "7 days before.",
+   "LongMemEval:gpt4_7fce9456": "4 properties.",
+   "LongMemEval:46a3abf7": "2 currently: the 20-gallon community tank and the 1-gallon tank for your friend's kid. The 5-gallon betta tank was described as your old tank.",
+   "LongMemEval:a2f3aa27": "The latest exact count supported is 1,250 followers. Later, you said you thought you were close to 1,300, but no exact updated count is provided.",
+   "LongMemEval:28dc39ac": "At least approximately 140 hours: 70 hours in Assassin's Creed Odyssey, 5 in Hyper Light Drifter, 30 in The Last of Us Part II on hard, 10 in Celeste, and 25 in The Last of Us Part II on normal.",
+   "LongMemEval:6456829e": "You initially planted 5 tomato plants. The initial number of cucumber plants is not stated; later, you reported having 3 cucumber plants producing cucumbers.",
+   "LongMemEval:2c63a862": "14 days.",
+   "LongMemEval:f9e8c073": "Five sessions, according to your later recollection; an earlier record mentioned three sessions.",
+   "LongMemEval:5a7937c8": "3 days: December 10, 17, and 24.",
+   "LongMemEval:0ddfec37_abs": "Insufficient evidence: the records mention autographed baseballs, not autographed footballs.",
+   "LongMemEval:7024f17c": "Insufficient evidence to determine how many hours of jogging or yoga you did last week.",
+   "LongMemEval:311778f1": "10 hours.",
+   "LongMemEval:26bdc477": "5 trips.",
+   "LongMemEval:21d02d0d": "2 fun runs.",
+   "LongMemEval:gpt4_b5700ca9": "4 days ago.",
+   "LongMemEval:2311e44b_abs": "Insufficient evidence to determine how many pages you have left in \"Sapiens\".",
+   "LongMemEval:80ec1f4f": "2 different museums or galleries: the Natural History Museum and The Art Cube.",
+   "LongMemEval:8fb83627": "5 issues.",
+   "LongMemEval:b6019101": "5 MCU films.",
+   "LongMemEval:5e1b23de": "3 months ago.",
+   "LongMemEval:0ddfec37": "15 autographed baseballs.",
+   "LongMemEval:gpt4_4cd9eba1": "1 week.",
+   "LongMemEval:eeda8a6d": "17 fish in total: 16 in the 20-gallon tank and Bubbles, the betta, in the 10-gallon tank.",
+   "LoCoMo:conv-47:111": "John was playing and enjoying a new RPG, but its title is not specified.",
+   "LoCoMo:conv-48:16": "Jolene's snakes are named Susie and Seraphim.",
+   "LoCoMo:conv-41:108": "Maria said it felt like being in a fairy tale: the water sounded calming, the surroundings were beautiful, and the experience was truly magical."
+  },
+  "R": {
+   "LongMemEval:a1eacc2a": "7",
+   "LongMemEval:gpt4_e414231e": "4 days",
+   "LongMemEval:a4996e51": "50 hours per week",
+   "LongMemEval:80ec1f4f_abs": "Insufficient evidence",
+   "LongMemEval:6b168ec8": "3",
+   "LongMemEval:4d6b87c8": "25",
+   "LongMemEval:4f54b7c9": "5",
+   "LongMemEval:edced276": "15 days",
+   "LongMemEval:a9f6b44c": "2",
+   "LongMemEval:d682f1a2": "2",
+   "LongMemEval:10d9b85a": "3 days",
+   "LongMemEval:gpt4_4fc4f797": "38 days",
+   "LongMemEval:2788b940": "5",
+   "LongMemEval:08f4fc43": "30 days",
+   "LongMemEval:5831f84d": "15",
+   "LongMemEval:2e6d26dc": "5",
+   "LongMemEval:gpt4_2f8be40d": "4 weddings.",
+   "LongMemEval:gpt4_1e4a8aeb": "6 days.",
+   "LongMemEval:gpt4_fa19884c": "6 days.",
+   "LongMemEval:60472f9c": "2 projects: Data Mining and Database Systems.",
+   "LongMemEval:eac54adc": "19 days.",
+   "LongMemEval:edced276_abs": "Insufficient evidence for the total: Hawaii was a 10-day trip, but no Seattle trip duration is provided.",
+   "LongMemEval:4b24c848": "5 tops.",
+   "LongMemEval:bbf86515": "4 days.",
+   "LongMemEval:2ce6a0f2": "4",
+   "LongMemEval:c18a7dc8": "Insufficient evidence.",
+   "LongMemEval:a08a253f": "3 days a week",
+   "LongMemEval:95bcc1c8": "10",
+   "LongMemEval:a346bb18": "12 minutes",
+   "LongMemEval:gpt4_e05b82a6": "10 times",
+   "LongMemEval:8c18457d": "7 days",
+   "LongMemEval:gpt4_6dc9b45b": "4 months ago",
+   "LongMemEval:gpt4_468eb063": "9 days ago.",
+   "LongMemEval:6aeb4375_abs": "Insufficient evidence.",
+   "LongMemEval:6cb6f249": "17 days in total.",
+   "LongMemEval:06db6396": "5 projects.",
+   "LongMemEval:6a27ffc2": "30",
+   "LongMemEval:gpt4_74aed68e": "29 days",
+   "LongMemEval:c960da58": "20",
+   "LongMemEval:5c40ec5b": "2 times",
+   "LongMemEval:gpt4_7a0daae1": "1 week",
+   "LongMemEval:dcfa8644": "14 days",
+   "LongMemEval:bcbe585f": "Insufficient evidence",
+   "LongMemEval:6e984301": "3 weeks",
+   "LongMemEval:7401057b": "2 free nights",
+   "LongMemEval:c2ac3c61": "5 online courses",
+   "LongMemEval:a3838d2b": "4 charity events",
+   "LongMemEval:6613b389": "2 months before the anniversary",
+   "LongMemEval:af8d2e46": "7 shirts.",
+   "LongMemEval:gpt4_8e165409": "14 days.",
+   "LongMemEval:a3045048": "7 days.",
+   "LongMemEval:0f05491a": "120 stars.",
+   "LongMemEval:60bf93ed_abs": "Insufficient evidence.",
+   "LongMemEval:184da446": "220 pages.",
+   "LongMemEval:gpt4_85da3956": "6 weeks ago.",
+   "LongMemEval:ed4ddc30": "20 dozen eggs.",
+   "LongMemEval:ef66a6e5": "2",
+   "LongMemEval:21436231": "12",
+   "LongMemEval:982b5123": "About 5 months ago.",
+   "LongMemEval:00ca467f": "2",
+   "LongMemEval:gpt4_b0863698": "7 days ago.",
+   "LongMemEval:gpt4_7bc6cf22": "12 days ago.",
+   "LongMemEval:gpt4_ab202e7f": "4 kitchen items: the shelves were fixed, and the kitchen mat, faucet, and toaster were replaced.",
+   "LongMemEval:031748ae": "You led 4 engineers when you started the role, and you lead 5 engineers now.",
+   "LongMemEval:gpt4_372c3eed": "8 years",
+   "LongMemEval:6aeb4375": "4 Korean restaurants",
+   "LongMemEval:60bf93ed": "5 days",
+   "LongMemEval:681a1674": "2 Marvel movies",
+   "LongMemEval:4dfccbf7": "24 days.",
+   "LongMemEval:01493427": "25 postcards.",
+   "LongMemEval:157a136e": "Insufficient evidence.",
+   "LongMemEval:370a8ff4": "11 weeks and 4 days.",
+   "LongMemEval:8e9d538c": "17 skeins.",
+   "LongMemEval:gpt4_e072b769": "2 weeks and 6 days ago.",
+   "LongMemEval:c8090214": "7 days before.",
+   "LongMemEval:2ebe6c90": "21 days.",
+   "LongMemEval:gpt4_af6db32f": "17 days ago.",
+   "LongMemEval:88432d0a_abs": "Insufficient evidence.",
+   "LongMemEval:10e09553": "7 largemouth bass.",
+   "LongMemEval:9ee3ecd6": "300 points.",
+   "LongMemEval:gpt4_4ef30696": "1 day",
+   "LongMemEval:72e3ee87": "50 episodes",
+   "LongMemEval:88432d0a": "3 times",
+   "LongMemEval:gpt4_1916e0ea": "54 days",
+   "LongMemEval:d23cf73b": "4 different cuisines: Ethiopian, Indian, Korean, and vegan.",
+   "LongMemEval:gpt4_a2d1d1f6": "3 days ago.",
+   "LongMemEval:2311e44b": "190 pages.",
+   "LongMemEval:b46e15ed": "2 months ago.",
+   "LongMemEval:gpt4_a1b77f9c": "8 weeks",
+   "LongMemEval:e3038f8c": "95 rare items",
+   "LongMemEval:81507db6": "3 graduation ceremonies",
+   "LongMemEval:0bb5a684": "7 days",
+   "LongMemEval:gpt4_1d4ab0c9": "24 days.",
+   "LongMemEval:gpt4_372c3eed_abs": "Insufficient evidence.",
+   "LongMemEval:gpt4_a56e767c": "3 movie festivals: Austin Film Festival, Portland Film Festival, and AFI Fest.",
+   "LongMemEval:0db4c65d": "18 days.",
+   "LongMemEval:gpt4_59149c77": "7 days",
+   "LongMemEval:45dc21b6": "3 recipes",
+   "LongMemEval:9d25d4e0": "3 pieces: emerald earrings, a silver necklace, and an engagement ring.",
+   "LongMemEval:gpt4_31ff4165": "3 devices: a Fitbit Versa 3, an Accu-Chek Aviva Nano, and a nebulizer.",
+   "LongMemEval:9a707b81": "26 days ago.",
+   "LongMemEval:gpt4_2f91af09": "23 pieces of writing.",
+   "LongMemEval:gpt4_8279ba02": "10 days ago.",
+   "LongMemEval:031748ae_abs": "Insufficient evidence.",
+   "LongMemEval:eeda8a6d_abs": "Insufficient evidence.",
+   "LongMemEval:b3c15d39": "5 days.",
+   "LongMemEval:gpt4_194be4b3": "3: a drum set, a Korg B1 piano, and a guitar.",
+   "LongMemEval:gpt4_15e38248": "4: a coffee table, a mattress, an IKEA bookshelf, and a kitchen table.",
+   "LongMemEval:bf659f65": "2",
+   "LongMemEval:ba358f49": "Insufficient evidence.",
+   "LongMemEval:gpt4_1d80365e": "2 days",
+   "LongMemEval:8077ef71": "26 days",
+   "LongMemEval:2a1811e2": "21 days",
+   "LongMemEval:gpt4_7ddcf75f": "3 days ago",
+   "LongMemEval:c8090214_abs": "7 days",
+   "LongMemEval:gpt4_7fce9456": "4 properties",
+   "LongMemEval:46a3abf7": "3 tanks.",
+   "LongMemEval:a2f3aa27": "Insufficient evidence for your current Instagram follower count. The latest exact count recorded is 1,250; later, you said you thought you were nearing 1,300.",
+   "LongMemEval:28dc39ac": "140 hours total.",
+   "LongMemEval:6456829e": "8 plants initially: 5 tomato plants and 3 cucumber plants.",
+   "LongMemEval:2c63a862": "14 days.",
+   "LongMemEval:f9e8c073": "5 sessions.",
+   "LongMemEval:5a7937c8": "3 days: December 10, 17, and 24.",
+   "LongMemEval:0ddfec37_abs": "Insufficient evidence.",
+   "LongMemEval:7024f17c": "Insufficient evidence.",
+   "LongMemEval:311778f1": "10 hours.",
+   "LongMemEval:26bdc477": "5 trips.",
+   "LongMemEval:21d02d0d": "2 fun runs.",
+   "LongMemEval:gpt4_b5700ca9": "4 days ago.",
+   "LongMemEval:2311e44b_abs": "Insufficient evidence.",
+   "LongMemEval:80ec1f4f": "2: the Natural History Museum and The Art Cube.",
+   "LongMemEval:8fb83627": "5 issues.",
+   "LongMemEval:b6019101": "5",
+   "LongMemEval:5e1b23de": "3 months",
+   "LongMemEval:0ddfec37": "15",
+   "LongMemEval:gpt4_4cd9eba1": "1 week",
+   "LongMemEval:eeda8a6d": "17 fish in total.",
+   "LoCoMo:conv-47:111": "Insufficient evidence; the RPG's title is not stated.",
+   "LoCoMo:conv-48:16": "Susie and Seraphim.",
+   "LoCoMo:conv-41:108": "Maria said it felt like being in a fairy tale; the calming water and beautiful surroundings made it truly magical.",
+   "LongMemEval:c8f1aeed": "Insufficient evidence.",
+   "LoCoMo:conv-44:117": "In November, Audrey joined a dog owners group to learn how to care for her dogs better and took them to a pet salon for grooming.",
+   "LoCoMo:conv-43:100": "They played together for four years in high school.",
+   "LongMemEval:b46e15ee": "You participated in the “Walk for Hunger” charity event, walking 5 kilometers to raise money for a local food bank.",
+   "LoCoMo:conv-26:127": "A stained glass window for a local church.",
+   "LoCoMo:conv-41:75": "Before meeting Maria, Jean went through a divorce, lost her job, and became homeless.",
+   "LongMemEval:19b5f2b3_abs": "Insufficient evidence.",
+   "LongMemEval:1192316e": "About 1 hour 30 minutes total: 1 hour to get ready and 30 minutes to commute.",
+   "LongMemEval:73d42213": "Insufficient evidence; the context says you left home at 7:00 AM and returned to the office around 1:00 PM, but it does not state when you reached the clinic.",
+   "LoCoMo:conv-30:45": "Jon is highly enthusiastic and passionate about being part of the dance festival. He said he could not wait, was excited to perform, and believed the dancers would impress everyone.",
+   "LoCoMo:conv-48:185": "Deborah’s mom was passionate about travel. She was also interested in art and enjoyed reading and cooking.",
+   "LoCoMo:conv-30:47": "Gina found a wholesaler who agreed to work with her, helping her expand her clothing store and get closer to her customers.",
+   "LongMemEval:29f2956b": "30 minutes per day.",
+   "LoCoMo:conv-41:94": "Her dinner spread included salads, sandwiches, and homemade desserts, with a banana split sundae as her favorite.",
+   "LongMemEval:9aaed6a3": "$0.75.",
+   "LongMemEval:8752c811": "Insufficient evidence.",
+   "LoCoMo:conv-43:32": "California or Florida.",
+   "LoCoMo:conv-49:131": "Sam suggested Evan try yoga for stress relief and flexibility.",
+   "LongMemEval:gpt4_2ba83207": "Thrive Market, where you spent around $150.",
+   "LongMemEval:51c32626": "February 1st; the year is not specified.",
+   "LoCoMo:conv-48:138": "The group members helped and pushed each other during runs, while cheering one another on and offering advice. Being connected to people passionate about fitness made it easier for Deborah to stay motivated.",
+   "LongMemEval:09d032c9": "Try lowering screen brightness, shortening the screen timeout, turning off unnecessary location services, Bluetooth, and background app refresh, disabling push notifications you do not need, using Wi‑Fi when practical, and enabling battery-saver mode. Also check Battery settings for apps using unusually much power and replace the battery if its health is poor.",
+   "LoCoMo:conv-47:138": "James was inspired by his love of strategy games, especially Civilization and Total War, and wanted to challenge himself by creating his own. More broadly, his passion for gaming and storytelling—and earlier inspiration from The Witcher 3—encouraged him to bring his ideas to life.",
+   "LoCoMo:conv-42:158": "She shared a dairy-free chocolate cake with raspberries, made with almond flour, coconut oil, chocolate, and raspberries. She said it was her favorite for birthdays and special days.",
+   "LoCoMo:conv-43:73": "Fitting into the new team’s style of play.",
+   "LoCoMo:conv-48:133": "She was busy with an internship.",
+   "LongMemEval:gpt4_e061b84f": "The context supports two sports events: the Spring Sprint Triathlon on June 2, followed by the charity soccer tournament mentioned on June 17. Insufficient evidence identifies a third event.",
+   "LoCoMo:conv-48:179": "She recently played “Detroit” on the console with her partner.",
+   "LoCoMo:conv-44:80": "Roasted Chicken.",
+   "LoCoMo:conv-26:103": "\"Charlotte's Web.\"",
+   "LongMemEval:67e0d0f2": "20 online courses.",
+   "LoCoMo:conv-49:139": "Sam suggested putting a GPS sensor on Evan's keys.",
+   "LoCoMo:conv-42:188": "Nate is creating gaming content for YouTube.",
+   "LoCoMo:conv-42:110": "He chose bright purple because it was bold, matched his personality, and would help him stand out.",
+   "LoCoMo:conv-30:2": "They both like to dance to destress; dancing helps them express themselves and feel happy.",
+   "LoCoMo:conv-49:110": "Evan twisted his knee, causing significant pain and making it difficult to maintain his usual fitness routine.",
+   "LoCoMo:conv-42:119": "He feels he could get deep in thought and think about his life or new recipes.",
+   "LongMemEval:gpt4_5501fe77": "TikTok, where you gained around 200 followers over the past three weeks.",
+   "LoCoMo:conv-48:166": "She visits a nearby tranquil spot by a pond to meditate.",
+   "LoCoMo:conv-43:171": "A map of Middle-earth from The Lord of the Rings.",
+   "LongMemEval:4388e9dd": "Andy was wearing an untidy, stained white shirt.",
+   "LongMemEval:9bbe84a2": "Your previous goal was to reach level 100 before the end of the year.",
+   "LongMemEval:0977f2af": "You invested in an Instant Pot before getting the Air Fryer.",
+   "LongMemEval:2bf43736": "It was Chapter 4 of Book 1 of the second part, titled \"Vocal Prayer and Meditation.\"",
+   "LongMemEval:1faac195": "Emily lives in Denver.",
+   "LoCoMo:conv-49:154": "Evan apologized to his partner for having a drunken accident near the roses and urinating by them.",
+   "LoCoMo:conv-48:101": "Jolene bought the snake a year earlier, in Paris.",
+   "LoCoMo:conv-26:97": "Caroline attended an LGBTQ+ counseling workshop last Friday.",
+   "LoCoMo:conv-50:145": "Calvin usually watches music videos, concerts, and documentaries about artists and their creative processes.",
+   "LongMemEval:ef9cf60a": "About $300 total: around $200 for a Tiffany’s silver necklace and $100 for a spa gift card.",
+   "LoCoMo:conv-50:153": "Dave likes capturing nature, especially sunsets, beaches, and waves.",
+   "LoCoMo:conv-42:146": "Joanna is motivated by the knowledge that her writing can make a difference and bring comfort to others. Writing also helps her express and process her feelings, while supportive friends, family, feedback, personal growth, and meaningful moments keep her going through difficult periods.",
+   "LongMemEval:gpt4_5438fa52": "The start of your Spanish classes happened first; you had been taking them for about three months before the cultural festival on the previous day.",
+   "LongMemEval:726462e0": "You received a 10% discount on your first purchase.",
+   "LongMemEval:41698283": "Your most recent purchase was a 70–200mm zoom lens, specifically the Canon EF 70–200mm f/2.8L IS III USM.",
+   "LoCoMo:conv-44:76": "Audrey typically walks her dogs for about an hour, though it varies by day.",
+   "LongMemEval:09ba9854_abs": "Insufficient evidence to calculate the savings because the bus fare is not provided.",
+   "LongMemEval:gpt4_d6585ce9": "You went with a group of friends.",
+   "LoCoMo:conv-26:140": "They expressed pride and strength; one sign specifically said “Trans Lives Matter.”",
+   "LoCoMo:conv-41:133": "He visited a military memorial with his kids. It was meaningful, and the children were awestruck and humbled.",
+   "LoCoMo:conv-42:103": "Joanna recently watched and recommended \"Little Women\" to Nate on February 7, 2022.",
+   "LoCoMo:conv-26:101": "Yes. Melanie said she made the black-and-white bowl in her pottery class.",
+   "LongMemEval:3f1e9474": "Sarah.",
+   "LongMemEval:8550ddae": "A lavender gin fizz.",
+   "LongMemEval:gpt4_0a05b494": "The tourist from Australia.",
+   "LoCoMo:conv-44:114": "A picnic date with his girlfriend.",
+   "LoCoMo:conv-41:90": "Politics and government, especially education reform and infrastructure development.",
+   "LongMemEval:5d3d2817": "Marketing specialist at a small startup.",
+   "LoCoMo:conv-48:154": "She feels peace and gratitude for the time she spent with her mom.",
+   "LongMemEval:61f8c8f8": "I finished the 5K 10 minutes faster.",
+   "LoCoMo:conv-49:95": "The smartwatch helps Evan track his progress toward his health goals and provides a motivating reminder to keep going.",
+   "LongMemEval:gpt4_7de946e7": "The persistent cough came first; the skin tag was removed later, on February 22.",
+   "LongMemEval:gpt4_45189cb4": "The order was: Lakers vs. Chicago Bulls (around January 5), Georgia vs. Alabama in the College Football National Championship (around January 14), and the Chiefs game (by January 22).",
+   "LongMemEval:c9f37c46": "Approximately two months.",
+   "LongMemEval:0100672e": "$12 per mug.",
+   "LongMemEval:a11281a2": "Approximately 100 followers.",
+   "LoCoMo:conv-50:157": "Nature's beauty helps people appreciate life during tough times and provides a refreshing, uplifting feeling.",
+   "LongMemEval:gpt4_1a1dc16d": "The meeting with Rachel happened first, on April 10; the pride parade was on May 1.",
+   "LoCoMo:conv-42:96": "Nate most enjoys action, sci-fi, and fantasy movies.",
+   "LoCoMo:conv-42:140": "Joanna was inspired by Woodhaven's interesting history and how much it had changed.",
+   "LoCoMo:conv-48:176": "The session focused on releasing expectations and judgments, savoring the present, and appreciating the journey rather than focusing only on goals.",
+   "LongMemEval:gpt4_483dd43c": "You started watching \"Game of Thrones\" first.",
+   "LongMemEval:cc5ded98": "You dedicate about two hours each day to coding exercises.",
+   "LoCoMo:conv-50:37": "Yes. Calvin is enthusiastic about touring and dreams of touring the world, and he was excited about his upcoming tour.",
+   "LongMemEval:gpt4_2c50253f": "6:45 AM.",
+   "LongMemEval:gpt4_d9af6064": "The new router was set up first, on January 15; the smart thermostat was set up later, on February 10.",
+   "LongMemEval:e48988bc": "Patagonia.",
+   "LoCoMo:conv-50:88": "They arranged regular walks together in the park.",
+   "LongMemEval:cf22b7bf": "You’ve lost 10 pounds since you started going consistently to the gym 3 months ago.",
+   "LongMemEval:4baee567": "The Chiefs played the Jaguars at Arrowhead Stadium 12 times.",
+   "LoCoMo:conv-43:158": "The team saw the most growth in communication and bonding.",
+   "LongMemEval:d6233ab6": "Yes, attending could be a good idea if reconnecting and reflecting on the past appeal to you. Your nostalgia suggests it may be meaningful, but the context doesn’t show how you currently feel about specific classmates or the reunion itself, so consider whether you expect the experience to feel enjoyable or stressful.",
+   "LongMemEval:c7cf7dfd": "Fabriclore.",
+   "LongMemEval:95228167": "For a new guitar, consider the style you want to play and the tone you prefer. If you are considering a Les Paul, its warm, rich, sustainful tone suits rock, hard rock, and heavy metal. Check the guitar’s setup, playability, intonation, and tuning stability, and try it in person through an amp. For open D tuning, heavier strings around .012–.052 or .013–.056 can help maintain tension.",
+   "LongMemEval:f4f1d8a4_abs": "Insufficient evidence.",
+   "LongMemEval:71017277": "Insufficient evidence.",
+   "LoCoMo:conv-41:66": "Growing up, John saw how inadequate education and crumbling infrastructure affected his neighborhood. He did not want future generations to experience the same problems, which motivated his focus on properly funding schools and infrastructure.",
+   "LongMemEval:gpt4_7abb270c": "Science Museum; Metropolitan Museum of Art; Museum of History; Modern Art Gallery; Modern Art Museum; Natural History Museum.",
+   "LongMemEval:3ba21379": "A Ford F-150 pickup truck model.",
+   "LoCoMo:conv-50:71": "He planned to stay in Japan for a few months before going to Boston.",
+   "LoCoMo:conv-47:125": "James prepared an omelette for the first time.",
+   "LoCoMo:conv-26:89": "Melanie thinks Caroline’s decision to adopt is awesome and admirable. She believes Caroline will be an amazing mother and create a loving, supportive home for the children.",
+   "LoCoMo:conv-49:91": "Sam agreed to try flavored seltzer water instead of soda and dark chocolate with high cocoa content instead of candy.",
+   "LoCoMo:conv-26:111": "They paint together, especially nature-inspired paintings.",
+   "LongMemEval:gpt4_9a159967": "United Airlines",
+   "LongMemEval:07741c44": "Under the bed.",
+   "LoCoMo:conv-44:100": "A knee injury prevented Audrey from walking her dogs.",
+   "LongMemEval:89527b6b": "Insufficient evidence.",
+   "LongMemEval:e56a43b9": "$5 off your next FreshMart purchase.",
+   "LongMemEval:06f04340": "Serve a fresh basil-and-mint dinner, such as Thai basil chicken with a bright mint-and-basil salad.",
+   "LoCoMo:conv-48:146": "Deborah recommends a gentle yoga flow focused on breathing and grounding, using poses from her tutorial.",
+   "LongMemEval:945e3d21": "You later reported attending yoga classes three times a week to help clear your head; an earlier record said twice a week helped you relax and focus.",
+   "LoCoMo:conv-44:121": "Andrew plans to take Scout, Toby, and Buddy to a nearby park for fresh air and fun, keeping Scout leashed while he adjusts to being outside.",
+   "LongMemEval:c4f10528": "The restaurant is Miss Bee Providore, and its Nasi Goreng is called Miss Bee's Nasi Goreng.",
+   "LoCoMo:conv-42:4": "Insufficient evidence: Joanna is allergic to most reptiles, animals with fur, and cockroaches, but the context does not identify a pet that would definitely cause no discomfort.",
+   "LoCoMo:conv-47:132": "John achieved the milestone of making his first mobile game, a 2D adventure game with puzzles and exploration, scheduled to launch the following month.",
+   "LoCoMo:conv-49:150": "Evan suggested swimming, yoga, and walking, including relaxing beach walks. He also mentioned physical therapy and keeping exercise low-key while recovering.",
+   "LoCoMo:conv-44:96": "Andrew learned about animals, plants, and ecosystems, including how they all work together and are interconnected. He concluded that humans need to take care of nature.",
+   "LoCoMo:conv-50:124": "Dave finds working on cars—repairing, modifying, and bringing broken vehicles back to life—fulfilling. He describes it as both his passion and a form of therapy.",
+   "LongMemEval:36580ce8": "Bronchitis.",
+   "LoCoMo:conv-43:167": "Aragorn.",
+   "LoCoMo:conv-48:169": "Besides studying, Jolene has been focusing on her relationship with her partner, self-care through yoga and meditation, workouts, and gaining engineering experience through internships, workshops, and networking.",
+   "LoCoMo:conv-49:136": "Evan believes Sam should believe in himself and his abilities, remembering that his worth is not defined by his weight.",
+   "LoCoMo:conv-26:119": "Melanie felt amazed and awestruck, tiny in comparison with the universe, yet connected to something huge; she also felt thankful for life.",
+   "LoCoMo:conv-48:74": "They plan to try fresh pastries together at the cafe.",
+   "LongMemEval:c4ea545c": "Yes. Previously, you went to the gym on Tuesdays, Thursdays, and Saturdays—three times a week. Later, you said you were going four times a week.",
+   "LongMemEval:e61a7584": "You have had Luna for about 9 months.",
+   "LoCoMo:conv-47:122": "James pays $10 per cooking class.",
+   "LongMemEval:58470ed2": "Insufficient evidence.",
+   "LongMemEval:85fa3a3f": "$50.",
+   "LongMemEval:gpt4_e061b84g": "The Spring Sprint Triathlon.",
+   "LoCoMo:conv-50:78": "It was meant to remind Calvin why he keeps working hard as a musician.",
+   "LoCoMo:conv-42:128": "Spider-Man, especially Peter Parker.",
+   "LongMemEval:eace081b": "You’re planning to stay on Oahu. The specific accommodation is not provided.",
+   "LoCoMo:conv-30:55": "It symbolizes freedom—dancing without worrying about what people think, following her passions, and expressing herself.",
+   "LoCoMo:conv-50:98": "The audience was very engaged: they sang along when Calvin performed one of his songs, creating a magical moment.",
+   "LongMemEval:94f70d80": "4 hours.",
+   "LoCoMo:conv-50:152": "A new vintage camera.",
+   "LoCoMo:conv-30:61": "A trophy.",
+   "LongMemEval:gpt4_cd90e484": "About two weeks.",
+   "LongMemEval:bb7c3b45": "You saved $300: the heels originally retailed for $500, and you paid $200.",
+   "LoCoMo:conv-30:57": "Gina advises Jon to believe in himself, stay positive and motivated by his goals and successes, persevere through challenges, work hard, take breaks and dance to destress, seek support, build relationships and a strong brand identity, and network with people in his field.",
+   "LongMemEval:gpt4_4edbafa2": "June 3, 2023.",
+   "LoCoMo:conv-26:115": "Flowers bring Melanie joy and represent growth, beauty, and appreciating small moments. They also remind her of the love and happiness of her wedding day.",
+   "LoCoMo:conv-50:95": "Dave has been working on engine swaps, suspension modifications, and body modifications, giving a classic muscle car a modern twist.",
+   "LongMemEval:16c90bf4": "A pilsner or lager—specifically, a light- or medium-bodied beer.",
+   "LoCoMo:conv-30:44": "Gina says the dancers look graceful.",
+   "LoCoMo:conv-26:148": "Melanie was thankful that her children enjoyed the Grand Canyon a lot, especially after the frightening road-trip accident, and emphasized how much her family means to her.",
+   "LoCoMo:conv-42:172": "Nate respects and admires Joanna's ability to recover from setbacks and keep moving forward.",
+   "LoCoMo:conv-48:148": "Jolene has been using a bullet journal to track tasks and stay organized.",
+   "LoCoMo:conv-30:70": "Jon is working on opening a dance studio.",
+   "LongMemEval:7e00a6cb": "Insufficient evidence. The context mentions Stayokay Amsterdam Vondelpark and ClinkNOORD Hostel, but it does not identify which hostel was near the Red Light District.",
+   "LoCoMo:conv-43:129": "He will write the recipe down and mail it to Tim.",
+   "LoCoMo:conv-42:114": "Nate enjoys fantasy books, especially series featuring adventures, magic, battles, and interesting characters.",
+   "LongMemEval:gpt4_98f46fc6": "The charity bake sale came first, on March 15, 2023; the charity gala was on May 8, 2023.",
+   "LongMemEval:dc439ea3": "The context identifies the drum and dance competition as the powwow highlight, but it does not specify a traditional game performed by skilled dancers.",
+   "LoCoMo:conv-48:177": "Jolene felt very positive about her progress: practicing mindfulness and gratitude gave her a new level of joy and happiness, helped her appreciate small moments and wins, and supported greater relaxation, balance, and self-care.",
+   "LoCoMo:conv-30:46": "Jon is looking for Marley flooring because it provides grip while allowing movement, is durable, and is easy to clean.",
+   "LoCoMo:conv-44:65": "During dog playdates, Audrey chats with other dog owners while her dogs run, play, socialize, and make new friends.",
+   "LongMemEval:27016adc": "10%.",
+   "LoCoMo:conv-48:123": "They talked about each other and realized that they inspire one another.",
+   "LoCoMo:conv-44:113": "Audrey suggested trying a California roll or salmon roll first.",
+   "LongMemEval:1c0ddc50": "You could listen to podcasts such as “How I Built This,” try history podcasts, audiobooks, language-learning content, or music. During a bus commute, you could also read or do a short mindfulness session; avoid phone-based activities while cycling.",
+   "LoCoMo:conv-43:161": "John supports youth sports and fair opportunities for underserved communities, helping ensure every child can access quality sports programs.",
+   "LoCoMo:conv-48:40": "Deborah lives close to a beach, which she describes as nearby. There is insufficient evidence about whether she lives close to the mountains.",
+   "LongMemEval:5a4f22c0": "Rachel is currently working at TechCorp.",
+   "LongMemEval:e5ba910e_abs": "The headphones cost $378, but the iPad's price is not provided, so the total cost cannot be determined.",
+   "LoCoMo:conv-43:134": "Insufficient evidence: the show is referred to only as \"That,\" without a title.",
+   "LoCoMo:conv-42:166": "She described it as a romantic drama about memory and relationships, with a great idea and strong acting.",
+   "LoCoMo:conv-26:104": "Caroline recommended \"Becoming Nicole\" by Amy Ellis Nutt.",
+   "LoCoMo:conv-43:71": "John signed with the Minnesota Wolves.",
+   "LongMemEval:cc6d1ec1": "About two months.",
+   "LoCoMo:conv-44:120": "Audrey suggests puzzles, training, and hide-and-seek.",
+   "LongMemEval:e4e14d04": "You had been a member for about two weeks when you attended the meetup.",
+   "LoCoMo:conv-26:146": "The context only confirms that her son was okay after the accident. Later, the children enjoyed the Grand Canyon and relaxed, but their immediate emotional response is not specified.",
+   "LongMemEval:a82c026e": "You finally beat the last boss in the Dark Souls 3 DLC.",
+   "LongMemEval:1de5cff2": "Insufficient evidence.",
+   "LoCoMo:conv-26:121": "Matt Patterson performed at the concert.",
+   "LongMemEval:f685340e": "Previously, you played tennis with your friends weekly. Now, you play every other week.",
+   "LoCoMo:conv-47:74": "John played CS:GO.",
+   "LoCoMo:conv-41:93": "Since starting family boot camps in April 2023, John and his family have gained more energy, strength, and endurance. They work out three times a week, support one another, and his kids have become excited about staying active.",
+   "LoCoMo:conv-43:172": "Tim will spend a semester abroad in Galway, Ireland.",
+   "LoCoMo:conv-30:76": "The sentiment is highly positive and excited. Jon and Gina are eagerly anticipating the grand opening, expect it to be fun and memorable, and are supportive of Jon's studio.",
+   "LoCoMo:conv-43:149": "Tim had just finished reading \"A Dance with Dragons.\"",
+   "LongMemEval:6a1eabeb": "Your personal best time was 25:50. An earlier record mentions 27:12.",
+   "LoCoMo:conv-48:97": "Yes. Jolene visited Rio de Janeiro recently, and Deborah said she had been there three years earlier.",
+   "LongMemEval:c14c00dd": "Insufficient evidence: you use a lavender-scented shampoo bought at Trader Joe’s, but its brand is not specified.",
+   "LongMemEval:76d63226": "Your new Samsung TV is 55 inches.",
+   "LongMemEval:faba32e5": "Alex marinated the BBQ ribs for 24 hours.",
+   "LoCoMo:conv-44:84": "The oldest is relaxed and wise, the second is always ready for a game, the third can be naughty but loves cuddles, and the youngest is lively and adventurous.",
+   "LongMemEval:6ae235be": "The Lake Charles Refinery uses atmospheric distillation, which is the first step described in the supplied context. Insufficient evidence for the refinery’s other processes.",
+   "LongMemEval:gpt4_6ed717ea": "Insufficient evidence to determine whether the dog bed for Max or the training pads for Luna were purchased first.",
+   "LongMemEval:51b23612": "Insufficient evidence.",
+   "LongMemEval:720133ac": "$75 total: a $50 vet consultation and $25 for flea and tick medication.",
+   "LoCoMo:conv-42:135": "She planned to make the recipe for her family that weekend.",
+   "LoCoMo:conv-44:95": "Peruvian Lilies.",
+   "LongMemEval:50635ada": "Premier Silver status.",
+   "LongMemEval:gpt4_f420262d": "Insufficient evidence.",
+   "LoCoMo:conv-43:77": "40 points.",
+   "LoCoMo:conv-47:127": "James gets his ideas from books, movies, and dreams.",
+   "LoCoMo:conv-43:103": "Butternut squash soup, seasoned with sage.",
+   "LongMemEval:a1cc6108": "Insufficient evidence: Alex was 21, but your age when Alex was born is not stated.",
+   "LoCoMo:conv-49:31": "Their health experiences make them likely to approach stress and challenges through gradual, sustainable changes and mutual encouragement. Evan’s health scares and lifestyle improvements led him toward exercise, healthier eating, painting, walking, and yoga for stress relief. Sam’s weight-related struggles, gastritis, work stress, and difficulty staying active encouraged a progress-over-perfection mindset, small steps, healthier habits, yoga, and support from others. Both emphasize persistence, self-care, and supportive relationships rather than expecting instant results.",
+   "LoCoMo:conv-47:71": "James offered to help John find the perfect pet for him.",
+   "LoCoMo:conv-47:7": "Insufficient evidence; the shelter is identified as being in Stamford, but its state is not stated.",
+   "LoCoMo:conv-48:135": "Spending time with Seraphim feels valuable, calming, peaceful, and comforting for Jolene.",
+   "LoCoMo:conv-41:131": "Insufficient evidence; the supplied context does not mention Maria’s community service involvement on 31 July 2023.",
+   "LoCoMo:conv-48:144": "Jolene adopted Susie two years earlier when she was feeling lonely and wanted companionship.",
+   "LoCoMo:conv-50:118": "They use hard work, determination, mutual support, collaboration, and encouragement to reach their goals.",
+   "LoCoMo:conv-43:155": "He felt great and relieved; he viewed jogging without pain as a huge success and celebrated with family and friends.",
+   "LongMemEval:gpt4_68e94287": "The post about the vegan chili recipe happened first.",
+   "LoCoMo:conv-42:132": "Nate made vegan ice cream and shared it with people in his vegan diet group.",
+   "LoCoMo:conv-47:17": "Insufficient evidence—the game is described as one about identifying impostors, but its name is not given.",
+   "LongMemEval:3249768e": "Insufficient evidence—the context shows only the first two bottles: sweet vermouth and dry vermouth.",
+   "LongMemEval:0e4e4c46": "132 points.",
+   "LoCoMo:conv-26:113": "Caroline saw many people who wanted to create loving homes for children in need. She found the council meeting inspiring and emotional.",
+   "LongMemEval:6b7dfb22": "Try a fresh flower-painting study, perhaps focusing on realistic details, then reinterpret it with palette-knife texture. You could also draw inspiration from social media, experiment with landscapes or still lifes, or set a small goal within your 30-day painting challenge.",
+   "LoCoMo:conv-50:83": "Dave finds achievement and purpose in fixing and restoring things—especially cars—and transforming something broken into something functional or beautiful. Helping people, sharing his knowledge, and creating work that makes others happy add to that sense of fulfillment.",
+   "LoCoMo:conv-26:109": "Mel and her kids each made their own pots during the pottery workshop. The children also made a cute cup with a dog’s face on it.",
+   "LongMemEval:91b15a6e": "$5,150 total: $5,000 for the vintage diamond necklace and at least $150 for the antique vanity.",
+   "LoCoMo:conv-44:20": "Chicken, especially roasted chicken.",
+   "LoCoMo:conv-42:95": "Xenoblade Chronicles.",
+   "LoCoMo:conv-49:97": "He got the bonsai because it symbolizes strength and resilience, and caring for it motivates him through tough times.",
+   "LoCoMo:conv-43:164": "French.",
+   "LoCoMo:conv-42:124": "A gaming party.",
+   "LoCoMo:conv-49:104": "Sam shared photos of a bowl with spinach, avocado, and strawberries, and a grilled chicken-and-vegetable stir-fry.",
+   "LoCoMo:conv-44:85": "Agility classes.",
+   "LongMemEval:2318644b": "Insufficient evidence for an exact amount. Tokyo cost around $30 per night, while the Hawaii resort cost over $300 per night, so Hawaii was more than $270 more per night.",
+   "LoCoMo:conv-47:105": "James planned to return on July 20, 2022.",
+   "LoCoMo:conv-42:104": "\"Little Women\" is about sisterhood, love, and reaching for your dreams.",
+   "LoCoMo:conv-42:88": "One of Joanna's favorite movies is \"Little Women.\"",
+   "LoCoMo:conv-50:126": "Shibuya Crossing is described as Tokyo's Times Square.",
+   "LoCoMo:conv-43:145": "It was taken in a forest near John's hometown.",
+   "LoCoMo:conv-48:108": "She gained confidence, realized she had accomplished more than expected, and developed solutions for her engineering project.",
+   "LongMemEval:89941a94": "Yes. Besides the mountain bike and commuter bike, you had a road bike. The context also later mentions a hybrid bike, but its timing relative to the gravel-bike purchase is unclear.",
+   "LongMemEval:08e075c7": "You had been using your Fitbit Charge 3 for 9 months as of September 2, 2023.",
+   "LongMemEval:gpt4_93159ced": "Insufficient evidence. The context says you had worked at NovaTech for about 4 years and 3 months, but it does not say how long you worked before starting there.",
+   "LoCoMo:conv-30:51": "Gina chose furniture that was both attractive and comfortable, to reflect her personal style and make customers feel cozy. She added a chandelier for a glamorous look that matched the store’s style and wanted the space to feel like a welcoming oasis.",
+   "LongMemEval:3d86fd0a": "You met Sophia at a coffee shop in the city.",
+   "LoCoMo:conv-48:134": "About one year, based on Jolene saying on January 27, 2023, that she bought Seraphim a year earlier.",
+   "LongMemEval:gpt4_8c8961ae": "You took the solo trip to Thailand first.",
+   "LoCoMo:conv-30:40": "Jon's favorite dance style is contemporary.",
+   "LoCoMo:conv-43:135": "He stays motivated by breaking studying into 25-minute sessions followed by 5-minute breaks for something fun.",
+   "LongMemEval:gpt4_1e4a8aec": "You used a gardening app to track the weather and soil moisture levels.",
+   "LoCoMo:conv-44:109": "Audrey’s dogs are best companions for outdoor adventures—walks, hikes, exploring parks and trails—as well as playdates, exercise, and providing comfort and companionship.",
+   "LongMemEval:2698e78f": "You see Dr. Smith every week. Earlier, you said sessions were every two weeks, but the latest statement says weekly.",
+   "LoCoMo:conv-43:176": "John said it felt crazy and like all his hard work and training hours had finally paid off. He was thrilled and felt a strong sense of accomplishment.",
+   "LoCoMo:conv-48:163": "Deborah got Luna from a shelter.",
+   "LoCoMo:conv-50:93": "Dave advises Calvin to stay focused, keep pursuing his dreams and passion, surround himself with positive energy, collaborate with others, and keep going.",
+   "LongMemEval:e8a79c70": "The recipe called for 2–3 eggs.",
+   "LongMemEval:gpt4_2d58bcd6": "You finished reading \"The Hate U Give\" first.",
+   "LongMemEval:gpt4_fa19884d": "Insufficient evidence—the artist or band you started listening to last Friday is not named.",
+   "LoCoMo:conv-42:183": "Nate is currently playing and recommends \"Xenoblade Chronicles,\" a fantasy RPG.",
+   "LoCoMo:conv-43:162": "Tim is excited about the upcoming fantasy TV series \"The Wheel of Time.\"",
+   "LoCoMo:conv-47:143": "James and Samantha decided to move in together. They rented an apartment near McGee's bar."
+  }
+ },
+ "gate": {
+  "LongMemEval:a1eacc2a": {
+   "sufficient": true,
+   "confidence": 96,
+   "missing": ""
+  },
+  "LongMemEval:6b168ec8": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:edced276": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_4fc4f797": {
+   "sufficient": false,
+   "confidence": 97,
+   "missing": "The context does not explicitly state the date the new suspension setup was tested."
+  },
+  "LongMemEval:gpt4_2f8be40d": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "The complete list of weddings attended this year, including dates or confirmation that the mentioned weddings are exhaustive"
+  },
+  "LongMemEval:edced276_abs": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The duration of the Seattle trip"
+  },
+  "LongMemEval:bbf86515": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:2ce6a0f2": {
+   "sufficient": true,
+   "confidence": 96,
+   "missing": ""
+  },
+  "LongMemEval:a08a253f": {
+   "sufficient": true,
+   "confidence": 95,
+   "missing": ""
+  },
+  "LongMemEval:95bcc1c8": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_e05b82a6": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_468eb063": {
+   "sufficient": true,
+   "confidence": 92,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_74aed68e": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:5c40ec5b": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:a3838d2b": {
+   "sufficient": true,
+   "confidence": 94,
+   "missing": ""
+  },
+  "LongMemEval:af8d2e46": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:184da446": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:982b5123": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The date the San Francisco Airbnb was booked"
+  },
+  "LongMemEval:gpt4_7bc6cf22": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:4dfccbf7": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:8e9d538c": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:2ebe6c90": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_af6db32f": {
+   "sufficient": true,
+   "confidence": 96,
+   "missing": ""
+  },
+  "LongMemEval:88432d0a_abs": {
+   "sufficient": true,
+   "confidence": 94,
+   "missing": ""
+  },
+  "LongMemEval:9ee3ecd6": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_4ef30696": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:72e3ee87": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:88432d0a": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "A complete, date-grounded list of all baking events during the past two weeks"
+  },
+  "LongMemEval:gpt4_1916e0ea": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:2311e44b": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:81507db6": {
+   "sufficient": true,
+   "confidence": 96,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_a56e767c": {
+   "sufficient": true,
+   "confidence": 97,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_31ff4165": {
+   "sufficient": true,
+   "confidence": 85,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_2f91af09": {
+   "sufficient": false,
+   "confidence": 95,
+   "missing": "Whether the five short stories, 17 poems, and writing-challenge piece are all distinct works completed within the stated three-week period"
+  },
+  "LongMemEval:gpt4_8279ba02": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:28dc39ac": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The durations of all gaming sessions or games, and whether the two reported playthroughs of The Last of Us Part II should both be counted"
+  },
+  "LongMemEval:5a7937c8": {
+   "sufficient": false,
+   "confidence": 93,
+   "missing": "Complete list of faith-related activities participated in during December"
+  },
+  "LongMemEval:2311e44b_abs": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "Current page and total page count of Sapiens"
+  },
+  "LongMemEval:80ec1f4f": {
+   "sufficient": false,
+   "confidence": 88,
+   "missing": "Complete list of museums or galleries visited in February"
+  },
+  "LongMemEval:8fb83627": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:b6019101": {
+   "sufficient": false,
+   "confidence": 90,
+   "missing": "The exact MCU-film count for the three-month period ending on 17 June 2023; the latest count given is for a window ending 29 May."
+  },
+  "LongMemEval:gpt4_4cd9eba1": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-47:111": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The title of the RPG John was playing on 10 August 2022."
+  },
+  "LoCoMo:conv-48:16": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-41:108": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:c8f1aeed": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The state mentioned as the example is not present in the supplied context."
+  },
+  "LoCoMo:conv-44:117": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:100": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:b46e15ee": {
+   "sufficient": true,
+   "confidence": 90,
+   "missing": ""
+  },
+  "LoCoMo:conv-26:127": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-41:75": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:19b5f2b3_abs": {
+   "sufficient": false,
+   "confidence": 100,
+   "missing": "How long the stay in Korea lasted"
+  },
+  "LongMemEval:1192316e": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:73d42213": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The time she reached the clinic"
+  },
+  "LoCoMo:conv-30:45": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:185": {
+   "sufficient": true,
+   "confidence": 95,
+   "missing": ""
+  },
+  "LoCoMo:conv-30:47": {
+   "sufficient": true,
+   "confidence": 90,
+   "missing": ""
+  },
+  "LongMemEval:29f2956b": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-41:94": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:9aaed6a3": {
+   "sufficient": true,
+   "confidence": 96,
+   "missing": ""
+  },
+  "LongMemEval:8752c811": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The 27th parameter is not included; the list is truncated after item 6."
+  },
+  "LoCoMo:conv-43:32": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "The context states Tim planned to visit Universal Studios in September but does not identify which location or state."
+  },
+  "LoCoMo:conv-49:131": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_2ba83207": {
+   "sufficient": true,
+   "confidence": 94,
+   "missing": ""
+  },
+  "LongMemEval:51c32626": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The date or time of paper submission"
+  },
+  "LoCoMo:conv-48:138": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:09d032c9": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "Evidence about the phone battery problem or relevant battery-saving information"
+  },
+  "LoCoMo:conv-47:138": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:158": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:73": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:133": {
+   "sufficient": true,
+   "confidence": 93,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:179": {
+   "sufficient": true,
+   "confidence": 96,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_e061b84f": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "The context does not identify three sports events with dates sufficient to order them from earliest to latest."
+  },
+  "LoCoMo:conv-44:80": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-26:103": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:67e0d0f2": {
+   "sufficient": true,
+   "confidence": 95,
+   "missing": ""
+  },
+  "LoCoMo:conv-49:139": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:188": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:110": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-30:2": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-49:110": {
+   "sufficient": true,
+   "confidence": 90,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:119": {
+   "sufficient": true,
+   "confidence": 95,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_5501fe77": {
+   "sufficient": false,
+   "confidence": 97,
+   "missing": "Follower gains for all platforms over the same past-month period"
+  },
+  "LoCoMo:conv-48:166": {
+   "sufficient": true,
+   "confidence": 88,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:171": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:4388e9dd": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:9bbe84a2": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:0977f2af": {
+   "sufficient": true,
+   "confidence": 96,
+   "missing": ""
+  },
+  "LongMemEval:2bf43736": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:1faac195": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-49:154": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:101": {
+   "sufficient": false,
+   "confidence": 82,
+   "missing": "Which snake is meant and the exact purchase date"
+  },
+  "LoCoMo:conv-26:97": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:145": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:ef9cf60a": {
+   "sufficient": true,
+   "confidence": 92,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:153": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:146": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_5438fa52": {
+   "sufficient": true,
+   "confidence": 92,
+   "missing": ""
+  },
+  "LongMemEval:726462e0": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:41698283": {
+   "sufficient": false,
+   "confidence": 88,
+   "missing": "The context does not explicitly establish the purchase date or complete chronology of all lenses, so the most recently purchased lens cannot be determined with certainty."
+  },
+  "LoCoMo:conv-44:76": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:09ba9854_abs": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "Bus fare"
+  },
+  "LongMemEval:gpt4_d6585ce9": {
+   "sufficient": false,
+   "confidence": 95,
+   "missing": "Who accompanied the user to the music event last Saturday"
+  },
+  "LoCoMo:conv-26:140": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "The wording of all posters"
+  },
+  "LoCoMo:conv-41:133": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:103": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-26:101": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:3f1e9474": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:8550ddae": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_0a05b494": {
+   "sufficient": true,
+   "confidence": 90,
+   "missing": ""
+  },
+  "LoCoMo:conv-44:114": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-41:90": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:5d3d2817": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:154": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:61f8c8f8": {
+   "sufficient": 99,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-49:95": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_7de946e7": {
+   "sufficient": true,
+   "confidence": 95,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_45189cb4": {
+   "sufficient": true,
+   "confidence": 88,
+   "missing": ""
+  },
+  "LongMemEval:c9f37c46": {
+   "sufficient": true,
+   "confidence": 85,
+   "missing": ""
+  },
+  "LongMemEval:0100672e": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:a11281a2": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "The Instagram follower count at the beginning of the two-week period"
+  },
+  "LoCoMo:conv-50:157": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_1a1dc16d": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:96": {
+   "sufficient": true,
+   "confidence": 96,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:140": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:176": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_483dd43c": {
+   "sufficient": false,
+   "confidence": 97,
+   "missing": "The context does not establish which of The Crown or Game of Thrones was started first."
+  },
+  "LongMemEval:cc5ded98": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:37": {
+   "sufficient": true,
+   "confidence": 90,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_2c50253f": {
+   "sufficient": false,
+   "confidence": 95,
+   "missing": "The exact wake-up time on Tuesdays and Thursdays"
+  },
+  "LongMemEval:gpt4_d9af6064": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:e48988bc": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:88": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The context says Dave arranged walks with his friends, not what Calvin and his friends arranged."
+  },
+  "LongMemEval:cf22b7bf": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:4baee567": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:158": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:d6233ab6": {
+   "sufficient": false,
+   "confidence": 97,
+   "missing": "Details about the reunion and the person's preferences or circumstances needed to judge whether attending would be a good idea"
+  },
+  "LongMemEval:c7cf7dfd": {
+   "sufficient": false,
+   "confidence": 94,
+   "missing": "The store's complete identification and explicit confirmation that it is India-based and sells the requested materials"
+  },
+  "LongMemEval:95228167": {
+   "sufficient": false,
+   "confidence": 96,
+   "missing": "The guitar type, intended use, budget, and preferences needed for tailored buying advice"
+  },
+  "LongMemEval:f4f1d8a4_abs": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:71017277": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The context does not identify who gave the jewelry or clearly establish the jewelry-receipt event."
+  },
+  "LoCoMo:conv-41:66": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_7abb270c": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The context does not provide clear visit dates for all six museums, so their complete chronological order cannot be determined."
+  },
+  "LongMemEval:3ba21379": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:71": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-47:125": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-26:89": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-49:91": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-26:111": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_9a159967": {
+   "sufficient": false,
+   "confidence": 95,
+   "missing": "Complete flight history and flight counts for both March and April"
+  },
+  "LongMemEval:07741c44": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-44:100": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:89527b6b": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The Plesiosaur image and its body color are not included."
+  },
+  "LongMemEval:e56a43b9": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:06f04340": {
+   "sufficient": false,
+   "confidence": 90,
+   "missing": "The complete set of homegrown ingredients and a specific dinner recommendation are not provided."
+  },
+  "LoCoMo:conv-48:146": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:945e3d21": {
+   "sufficient": true,
+   "confidence": 85,
+   "missing": ""
+  },
+  "LoCoMo:conv-44:121": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:c4f10528": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:4": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "A specific pet type confirmed not to trigger Joanna's allergies"
+  },
+  "LoCoMo:conv-47:132": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-49:150": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-44:96": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:124": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:36580ce8": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:167": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:169": {
+   "sufficient": true,
+   "confidence": 90,
+   "missing": ""
+  },
+  "LoCoMo:conv-49:136": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-26:119": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:74": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:c4ea545c": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:e61a7584": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-47:122": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:58470ed2": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "Borges's statement about the center and circumference of the Library of Babel"
+  },
+  "LongMemEval:85fa3a3f": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_e061b84g": {
+   "sufficient": true,
+   "confidence": 92,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:78": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:128": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:eace081b": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-30:55": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:98": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:94f70d80": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:152": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-30:61": {
+   "sufficient": true,
+   "confidence": 97,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_cd90e484": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:bb7c3b45": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-30:57": {
+   "sufficient": true,
+   "confidence": 95,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_4edbafa2": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-26:115": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:95": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:16c90bf4": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-30:44": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-26:148": {
+   "sufficient": true,
+   "confidence": 94,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:172": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:148": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-30:70": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:7e00a6cb": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "The specific hostel near Amsterdam's Red Light District that was recommended"
+  },
+  "LoCoMo:conv-43:129": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:114": {
+   "sufficient": true,
+   "confidence": 97,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_98f46fc6": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:dc439ea3": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "The specific traditional game performed by skilled dancers is not identified."
+  },
+  "LoCoMo:conv-48:177": {
+   "sufficient": true,
+   "confidence": 96,
+   "missing": ""
+  },
+  "LoCoMo:conv-30:46": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-44:65": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:27016adc": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:123": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "Evidence concerns Deborah and Anna, not Jolene and Anna"
+  },
+  "LoCoMo:conv-44:113": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:1c0ddc50": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:161": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:40": {
+   "sufficient": true,
+   "confidence": 93,
+   "missing": ""
+  },
+  "LongMemEval:5a4f22c0": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:e5ba910e_abs": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The iPad's purchase cost"
+  },
+  "LoCoMo:conv-43:134": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The actual title of the fantasy TV show is not identified; it is only called \"That\"."
+  },
+  "LoCoMo:conv-42:166": {
+   "sufficient": true,
+   "confidence": 84,
+   "missing": ""
+  },
+  "LoCoMo:conv-26:104": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:71": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:cc6d1ec1": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-44:120": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:e4e14d04": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-26:146": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "How Melanie's children reacted or coped during the accident"
+  },
+  "LongMemEval:a82c026e": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:1de5cff2": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The brand using wild rubber sourced from the Amazon rainforest"
+  },
+  "LoCoMo:conv-26:121": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:f685340e": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-47:74": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-41:93": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:172": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-30:76": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:149": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:6a1eabeb": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:97": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:c14c00dd": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The shampoo brand"
+  },
+  "LongMemEval:76d63226": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:faba32e5": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-44:84": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:6ae235be": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "The complete list of refining processes used at the Lake Charles Refinery"
+  },
+  "LongMemEval:gpt4_6ed717ea": {
+   "sufficient": true,
+   "confidence": 95,
+   "missing": ""
+  },
+  "LongMemEval:51b23612": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "The identity or title of the Soviet cartoon mocking Western culture"
+  },
+  "LongMemEval:720133ac": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:135": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-44:95": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:50635ada": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_f420262d": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The airline flown on Valentine's Day is not stated."
+  },
+  "LoCoMo:conv-43:77": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-47:127": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:103": {
+   "sufficient": false,
+   "confidence": 95,
+   "missing": "The exact kind of soup John made is not explicitly stated."
+  },
+  "LongMemEval:a1cc6108": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The user's age or birth date when Alex was born is missing."
+  },
+  "LoCoMo:conv-49:31": {
+   "sufficient": true,
+   "confidence": 94,
+   "missing": ""
+  },
+  "LoCoMo:conv-47:71": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-47:7": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The state where Stamford is located"
+  },
+  "LoCoMo:conv-48:135": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-41:131": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "Maria's community service activity on 31 July 2023"
+  },
+  "LoCoMo:conv-48:144": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:118": {
+   "sufficient": true,
+   "confidence": 88,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:155": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_68e94287": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:132": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-47:17": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The board game’s name"
+  },
+  "LongMemEval:3249768e": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "The complete five-bottle list, including the fifth bottle"
+  },
+  "LongMemEval:0e4e4c46": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-26:113": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:6b7dfb22": {
+   "sufficient": true,
+   "confidence": 84,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:83": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-26:109": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:91b15a6e": {
+   "sufficient": true,
+   "confidence": 94,
+   "missing": ""
+  },
+  "LoCoMo:conv-44:20": {
+   "sufficient": false,
+   "confidence": 93,
+   "missing": "Explicit comparison showing which meat Audrey prefers over other meats"
+  },
+  "LoCoMo:conv-42:95": {
+   "sufficient": true,
+   "confidence": 88,
+   "missing": ""
+  },
+  "LoCoMo:conv-49:97": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:164": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:124": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-49:104": {
+   "sufficient": false,
+   "confidence": 78,
+   "missing": "Which of the two food photos shared on 19 August is being asked about"
+  },
+  "LoCoMo:conv-44:85": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:2318644b": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "Exact Hawaii accommodation cost per night"
+  },
+  "LoCoMo:conv-47:105": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:104": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-42:88": {
+   "sufficient": false,
+   "confidence": 95,
+   "missing": "Title of the movie Joanna called one of her favorites"
+  },
+  "LoCoMo:conv-50:126": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:145": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:108": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:89941a94": {
+   "sufficient": false,
+   "confidence": 93,
+   "missing": "The context does not mention the gravel bike purchase or establish its timing relative to the other bikes"
+  },
+  "LongMemEval:08e075c7": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_93159ced": {
+   "sufficient": false,
+   "confidence": 99,
+   "missing": "duration of work experience before starting at NovaTech"
+  },
+  "LoCoMo:conv-30:51": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:3d86fd0a": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:134": {
+   "sufficient": true,
+   "confidence": 90,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_8c8961ae": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-30:40": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:135": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_1e4a8aec": {
+   "sufficient": false,
+   "confidence": 96,
+   "missing": "A gardening activity explicitly dated or clearly linked to two weeks ago"
+  },
+  "LoCoMo:conv-44:109": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:2698e78f": {
+   "sufficient": true,
+   "confidence": 97,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:176": {
+   "sufficient": true,
+   "confidence": 99,
+   "missing": ""
+  },
+  "LoCoMo:conv-48:163": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-50:93": {
+   "sufficient": true,
+   "confidence": 98,
+   "missing": ""
+  },
+  "LongMemEval:e8a79c70": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_2d58bcd6": {
+   "sufficient": true,
+   "confidence": 95,
+   "missing": ""
+  },
+  "LongMemEval:gpt4_fa19884d": {
+   "sufficient": false,
+   "confidence": 98,
+   "missing": "The artist or band name listened to on Friday, March 31, 2023"
+  },
+  "LoCoMo:conv-42:183": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-43:162": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  },
+  "LoCoMo:conv-47:143": {
+   "sufficient": true,
+   "confidence": 100,
+   "missing": ""
+  }
+ },
+ "grades": {
+  "LongMemEval:a1eacc2a": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_e414231e": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:a4996e51": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:80ec1f4f_abs": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:6b168ec8": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:4d6b87c8": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:4f54b7c9": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:edced276": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:a9f6b44c": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:d682f1a2": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:10d9b85a": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_4fc4f797": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:2788b940": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:08f4fc43": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:5831f84d": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:2e6d26dc": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_2f8be40d": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:gpt4_1e4a8aeb": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_fa19884c": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:60472f9c": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:eac54adc": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:edced276_abs": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:4b24c848": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:bbf86515": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:2ce6a0f2": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:c18a7dc8": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:a08a253f": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:95bcc1c8": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:a346bb18": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_e05b82a6": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:8c18457d": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_6dc9b45b": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_468eb063": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:6aeb4375_abs": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:6cb6f249": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:06db6396": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:6a27ffc2": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_74aed68e": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:c960da58": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:5c40ec5b": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_7a0daae1": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:dcfa8644": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:bcbe585f": {
+   "A": true,
+   "R": false
+  },
+  "LongMemEval:6e984301": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:7401057b": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:c2ac3c61": {
+   "A": false,
+   "R": true
+  },
+  "LongMemEval:a3838d2b": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:6613b389": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:af8d2e46": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_8e165409": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:a3045048": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:0f05491a": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:60bf93ed_abs": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:184da446": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_85da3956": {
+   "A": true,
+   "R": false
+  },
+  "LongMemEval:ed4ddc30": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:ef66a6e5": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:21436231": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:982b5123": {
+   "A": false,
+   "R": true
+  },
+  "LongMemEval:00ca467f": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_b0863698": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_7bc6cf22": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_ab202e7f": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:031748ae": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_372c3eed": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:6aeb4375": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:60bf93ed": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:681a1674": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:4dfccbf7": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:01493427": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:157a136e": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:370a8ff4": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:8e9d538c": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_e072b769": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:c8090214": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:2ebe6c90": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_af6db32f": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:88432d0a_abs": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:10e09553": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:9ee3ecd6": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:gpt4_4ef30696": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:72e3ee87": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:88432d0a": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:gpt4_1916e0ea": {
+   "A": false,
+   "R": true
+  },
+  "LongMemEval:d23cf73b": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_a2d1d1f6": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:2311e44b": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:b46e15ed": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_a1b77f9c": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:e3038f8c": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:81507db6": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:0bb5a684": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_1d4ab0c9": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_372c3eed_abs": {
+   "A": null,
+   "R": null
+  },
+  "LongMemEval:gpt4_a56e767c": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:0db4c65d": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_59149c77": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:45dc21b6": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:9d25d4e0": {
+   "A": false,
+   "R": true
+  },
+  "LongMemEval:gpt4_31ff4165": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:9a707b81": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:gpt4_2f91af09": {
+   "A": false,
+   "R": true
+  },
+  "LongMemEval:gpt4_8279ba02": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:031748ae_abs": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:eeda8a6d_abs": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:b3c15d39": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_194be4b3": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:gpt4_15e38248": {
+   "A": false,
+   "R": true
+  },
+  "LongMemEval:bf659f65": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:ba358f49": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:gpt4_1d80365e": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:8077ef71": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:2a1811e2": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_7ddcf75f": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:c8090214_abs": {
+   "A": null,
+   "R": null
+  },
+  "LongMemEval:gpt4_7fce9456": {
+   "A": false,
+   "R": true
+  },
+  "LongMemEval:46a3abf7": {
+   "A": false,
+   "R": true
+  },
+  "LongMemEval:a2f3aa27": {
+   "A": null,
+   "R": null
+  },
+  "LongMemEval:28dc39ac": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:6456829e": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:2c63a862": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:f9e8c073": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:5a7937c8": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:0ddfec37_abs": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:7024f17c": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:311778f1": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:26bdc477": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:21d02d0d": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_b5700ca9": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:2311e44b_abs": {
+   "A": null,
+   "R": null
+  },
+  "LongMemEval:80ec1f4f": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:8fb83627": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:b6019101": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:5e1b23de": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:0ddfec37": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_4cd9eba1": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:eeda8a6d": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-47:111": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-48:16": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-41:108": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:c8f1aeed": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-44:117": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:100": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:b46e15ee": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-26:127": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-41:75": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:19b5f2b3_abs": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:1192316e": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:73d42213": {
+   "A": true,
+   "R": false
+  },
+  "LoCoMo:conv-30:45": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:185": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-30:47": {
+   "A": true,
+   "R": false
+  },
+  "LongMemEval:29f2956b": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-41:94": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:9aaed6a3": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:8752c811": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-43:32": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-49:131": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_2ba83207": {
+   "A": false,
+   "R": true
+  },
+  "LongMemEval:51c32626": {
+   "A": false,
+   "R": true
+  },
+  "LoCoMo:conv-48:138": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:09d032c9": {
+   "A": null,
+   "R": null
+  },
+  "LoCoMo:conv-47:138": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:158": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:73": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:133": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-48:179": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:gpt4_e061b84f": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-44:80": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-26:103": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:67e0d0f2": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-49:139": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:188": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:110": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-30:2": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-49:110": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:119": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:gpt4_5501fe77": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:166": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:171": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:4388e9dd": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:9bbe84a2": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:0977f2af": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:2bf43736": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:1faac195": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-49:154": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:101": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-26:97": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-50:145": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:ef9cf60a": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-50:153": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:146": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_5438fa52": {
+   "A": null,
+   "R": null
+  },
+  "LongMemEval:726462e0": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:41698283": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-44:76": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:09ba9854_abs": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_d6585ce9": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-26:140": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-41:133": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:103": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-26:101": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:3f1e9474": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:8550ddae": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_0a05b494": {
+   "A": true,
+   "R": false
+  },
+  "LoCoMo:conv-44:114": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-41:90": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:5d3d2817": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:154": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:61f8c8f8": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-49:95": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_7de946e7": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_45189cb4": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:c9f37c46": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:0100672e": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:a11281a2": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-50:157": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_1a1dc16d": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:96": {
+   "A": true,
+   "R": null
+  },
+  "LoCoMo:conv-42:140": {
+   "A": true,
+   "R": false
+  },
+  "LoCoMo:conv-48:176": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_483dd43c": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:cc5ded98": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-50:37": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_2c50253f": {
+   "A": false,
+   "R": true
+  },
+  "LongMemEval:gpt4_d9af6064": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:e48988bc": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-50:88": {
+   "A": false,
+   "R": true
+  },
+  "LongMemEval:cf22b7bf": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:4baee567": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:158": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:d6233ab6": {
+   "A": null,
+   "R": false
+  },
+  "LongMemEval:c7cf7dfd": {
+   "A": null,
+   "R": null
+  },
+  "LongMemEval:95228167": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:f4f1d8a4_abs": {
+   "A": null,
+   "R": null
+  },
+  "LongMemEval:71017277": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-41:66": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_7abb270c": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:3ba21379": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-50:71": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-47:125": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-26:89": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-49:91": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-26:111": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_9a159967": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:07741c44": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-44:100": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:89527b6b": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:e56a43b9": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:06f04340": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-48:146": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:945e3d21": {
+   "A": false,
+   "R": true
+  },
+  "LoCoMo:conv-44:121": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:c4f10528": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:4": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-47:132": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-49:150": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-44:96": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-50:124": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:36580ce8": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:167": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:169": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-49:136": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-26:119": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:74": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:c4ea545c": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:e61a7584": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-47:122": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:58470ed2": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:85fa3a3f": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_e061b84g": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-50:78": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:128": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:eace081b": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-30:55": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-50:98": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:94f70d80": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-50:152": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-30:61": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_cd90e484": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:bb7c3b45": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-30:57": {
+   "A": false,
+   "R": true
+  },
+  "LongMemEval:gpt4_4edbafa2": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-26:115": {
+   "A": true,
+   "R": false
+  },
+  "LoCoMo:conv-50:95": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:16c90bf4": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-30:44": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-26:148": {
+   "A": null,
+   "R": null
+  },
+  "LoCoMo:conv-42:172": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:148": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-30:70": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:7e00a6cb": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-43:129": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:114": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_98f46fc6": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:dc439ea3": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-48:177": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-30:46": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-44:65": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:27016adc": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:123": {
+   "A": false,
+   "R": true
+  },
+  "LoCoMo:conv-44:113": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:1c0ddc50": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:161": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:40": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:5a4f22c0": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:e5ba910e_abs": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:134": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:166": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-26:104": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:71": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:cc6d1ec1": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-44:120": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:e4e14d04": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-26:146": {
+   "A": true,
+   "R": false
+  },
+  "LongMemEval:a82c026e": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:1de5cff2": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-26:121": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:f685340e": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-47:74": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-41:93": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:172": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-30:76": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:149": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:6a1eabeb": {
+   "A": null,
+   "R": true
+  },
+  "LoCoMo:conv-48:97": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:c14c00dd": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:76d63226": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:faba32e5": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-44:84": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:6ae235be": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:gpt4_6ed717ea": {
+   "A": true,
+   "R": null
+  },
+  "LongMemEval:51b23612": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:720133ac": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:135": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-44:95": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:50635ada": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_f420262d": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-43:77": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-47:127": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:103": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:a1cc6108": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-49:31": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-47:71": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-47:7": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-48:135": {
+   "A": false,
+   "R": true
+  },
+  "LoCoMo:conv-41:131": {
+   "A": null,
+   "R": false
+  },
+  "LoCoMo:conv-48:144": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-50:118": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:155": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_68e94287": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:132": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-47:17": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:3249768e": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:0e4e4c46": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-26:113": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:6b7dfb22": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-50:83": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-26:109": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:91b15a6e": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-44:20": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:95": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-49:97": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:164": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-42:124": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-49:104": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-44:85": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:2318644b": {
+   "A": null,
+   "R": null
+  },
+  "LoCoMo:conv-47:105": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:104": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-42:88": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-50:126": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:145": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:108": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:89941a94": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:08e075c7": {
+   "A": null,
+   "R": true
+  },
+  "LongMemEval:gpt4_93159ced": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-30:51": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:3d86fd0a": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:134": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_8c8961ae": {
+   "A": null,
+   "R": true
+  },
+  "LoCoMo:conv-30:40": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:135": {
+   "A": false,
+   "R": false
+  },
+  "LongMemEval:gpt4_1e4a8aec": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-44:109": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:2698e78f": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-43:176": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-48:163": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-50:93": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:e8a79c70": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_2d58bcd6": {
+   "A": true,
+   "R": true
+  },
+  "LongMemEval:gpt4_fa19884d": {
+   "A": false,
+   "R": false
+  },
+  "LoCoMo:conv-42:183": {
+   "A": true,
+   "R": null
+  },
+  "LoCoMo:conv-43:162": {
+   "A": true,
+   "R": true
+  },
+  "LoCoMo:conv-47:143": {
+   "A": true,
+   "R": true
+  }
+ },
+ "judge_errors": [
+  {
+   "answer_key": "5e4bca0cc91c73f14b5b327066651a64d74492994c2fc3be4930bb9a616410e0",
+   "order": 0,
+   "error": "Judge alleges omission of text present in answer",
+   "raw": {
+    "id": "answer-2",
+    "assessments": [
+     {
+      "criterion_id": "reference",
+      "verdict": "fail",
+      "answer_quotes": [],
+      "missing_claim": "Training pads for Luna",
+      "reason": "The answer states that the evidence is insufficient and does not identify the training pads for Luna as the item purchased first."
+     }
+    ]
+   }
+  },
+  {
+   "answer_key": "092376c4c0c4febdcdd50728d82f88bf54a144f2f41ca84b14d66926e00af523",
+   "order": 1,
+   "error": "Fabricated or ambiguous answer quote",
+   "raw": {
+    "id": "answer-0",
+    "assessments": [
+     {
+      "criterion_id": "reference",
+      "verdict": "pass",
+      "answer_quotes": [
+       "\"Xenoblade Chronicles\""
+      ],
+      "missing_claim": "",
+      "reason": "The answer supplies the requested game and recommendation without contradiction."
+     }
+    ]
+   }
+  }
+ ],
+ "missing": {
+  "A": [],
+  "R": [],
+  "gate": []
+ }
+}

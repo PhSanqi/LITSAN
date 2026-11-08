@@ -1,0 +1,84 @@
+{
+ "sets": {
+  "p3-tune-pool.json": {
+   "sha256": "55de0d9273273c32",
+   "uses": [
+    {
+     "purpose": "tune",
+     "criteria": "P3-SLOTS-CRITERIA.md",
+     "date": "2026-11-07",
+     "note": ""
+    },
+    {
+     "purpose": "tune",
+     "criteria": "P4-BUDGET-CRITERIA.md",
+     "date": "2026-11-07",
+     "note": ""
+    },
+    {
+     "purpose": "tune",
+     "criteria": "P5-LEAN-ADAPTIVE-CRITERIA.md",
+     "date": "2026-11-07",
+     "note": ""
+    },
+    {
+     "purpose": "tune",
+     "criteria": "P6-FOLLOWUP-NOVELTY-CRITERIA.md",
+     "date": "2026-11-07",
+     "note": "dev 50, holdout 57, fresh 85, signal tune 457 (back-filled)"
+    }
+   ]
+  },
+  "signal-set.json": {
+   "sha256": "27e8088d8919ef7a",
+   "uses": [
+    {
+     "purpose": "tune",
+     "criteria": "P3-SLOTS-CRITERIA.md",
+     "date": "2026-11-07",
+     "note": "457 tune half"
+    },
+    {
+     "purpose": "confirm",
+     "criteria": "P3-SLOTS-CRITERIA.md",
+     "date": "2026-11-07",
+     "note": "468 confirm half, use 1 of 3 (back-filled)"
+    },
+    {
+     "purpose": "confirm",
+     "criteria": "P4-BUDGET-CRITERIA.md",
+     "date": "2026-11-07",
+     "note": "use 2"
+    },
+    {
+     "purpose": "confirm",
+     "criteria": "P5-LEAN-ADAPTIVE-CRITERIA.md",
+     "date": "2026-11-07",
+     "note": "use 3"
+    }
+   ]
+  },
+  "graph-holdout-locomo.json": {
+   "sha256": "b392b3b3663dbe0b",
+   "uses": [
+    {
+     "purpose": "final",
+     "criteria": "P2-PACKING-CRITERIA.md",
+     "date": "2026-11-07",
+     "note": "used once as P2 fresh (back-filled)"
+    }
+   ]
+  },
+  "followup-residual.json": {
+   "sha256": "5b389aaa7e7d6a1e",
+   "uses": [
+    {
+     "purpose": "final",
+     "criteria": "P7-FIRST-CALL-SWEEP-CRITERIA.md",
+     "date": "2026-11-08",
+     "note": "run once: N4200, 3 picks, R4"
+    }
+   ]
+  }
+ }
+}

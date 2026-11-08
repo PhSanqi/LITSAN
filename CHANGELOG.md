@@ -1,5 +1,16 @@
 # Changelog
 
+## Raw-turn evidence and context-budget updates
+
+- Fix: `litsan_context` no longer drops the L2 timeline from the brief capsule when undistilled L1 turns are newer than the latest L2 revision, which had silently disabled derived-fact retrieval. The first L2 item is budgeted before the other collections; `LITSAN_CONTEXT_RESERVE_L2=0` restores the old order.
+- 修复：当存在比最新 L2 修订更新的未蒸馏 L1 轮次时，`litsan_context` 不再把 L2 时间线挤出 brief 胶囊（此前会悄悄关闭派生事实检索）。第一个 L2 条目先于其他集合分配预算；`LITSAN_CONTEXT_RESERVE_L2=0` 恢复旧顺序。
+- Raw evidence behind facts (opt-in): with `LITSAN_DERIVED_FACT_RETRIEVAL=semantic` and `LITSAN_DERIVED_RAW_EVIDENCE=always`, `litsan_context` returns the exact raw turns behind the selected derived facts.
+- 事实背后的原始证据（需显式开启）：设置 `LITSAN_DERIVED_FACT_RETRIEVAL=semantic` 与 `LITSAN_DERIVED_RAW_EVIDENCE=always` 后，`litsan_context` 会返回所选派生事实背后的原始轮次。
+- Experimental context-budget flags (all off by default): `LITSAN_DERIVED_RAW_EVIDENCE_ORDER`, `_SEMANTIC_LEAD`, `_MAX`, `_BYTES` (one compact raw-evidence entry under a byte budget) and `LITSAN_CONTEXT_LEAN=1` (drops diagnostics and repeated metadata in brief mode).
+- 实验性上下文预算开关（均默认关闭）：`LITSAN_DERIVED_RAW_EVIDENCE_ORDER`、`_SEMANTIC_LEAD`、`_MAX`、`_BYTES`（字节预算下的单个紧凑原始证据条目）以及 `LITSAN_CONTEXT_LEAN=1`（brief 模式下去掉诊断与重复元数据）。
+- Benchmarks: `benchmarks/retrieval/locomo-derived/` adds rounds P2–P7 with hash-frozen criteria, question-set ledger, results and a public findings summary (`FINDINGS.md`); `research/answer-side/` adds the sufficiency-gate and no-hedged-counts study. Benchmark data is read from `LITSAN_BENCH_DATA`.
+- 基准：`benchmarks/retrieval/locomo-derived/` 新增 P2–P7 轮次，含哈希冻结的标准、题集台账、结果与公开结论摘要（`FINDINGS.md`）；`research/answer-side/` 新增充分性门控与禁止含糊计数研究。基准数据从 `LITSAN_BENCH_DATA` 读取。
+
 ## Maintenance quality, governance and memory-repair updates
 
 - L3/L4 governance: `litsan_memory plan` now accepts only the current canonical L3/L4 revision as its base, and an `execute` refused before writing keeps its single-use authorization for a retry with fresh confirmation.

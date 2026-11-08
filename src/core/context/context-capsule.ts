@@ -35,6 +35,11 @@ export interface ContextCapsuleInput {
   detail?: "brief" | "full";
   queryTerms?: readonly string[];
   query?: string;
+  /**
+   * Keep the first distilled L2 project item (the project timeline) inside the byte budget even when
+   * fresh undistilled L1 turns and the other collections would have used it up. Default true.
+   */
+  reserveL2Timeline?: boolean;
 }
 
 export interface ContextCapsule {
@@ -143,7 +148,8 @@ export function buildContextCapsule(input: ContextCapsuleInput): ContextCapsule 
     maxContentBytes,
     maxItemContentBytes,
     isBrief,
-    queryTerms
+    queryTerms,
+    reserveL2Timeline: input.reserveL2Timeline !== false
   });
 
   return {
@@ -179,6 +185,7 @@ function applyContextBudget(
     maxItemContentBytes: number;
     isBrief: boolean;
     queryTerms: readonly string[];
+    reserveL2Timeline: boolean;
   }
 ): {
   items: ContextCollections;
@@ -200,18 +207,49 @@ function applyContextBudget(
   let droppedItems = 0;
   const decisions: ContextBudgetDecision[] = [];
 
-  while (remaining > 0 && keys.some((key) => (cursor.get(key) ?? 0) < input[key].length)) {
+  // The L2 timeline is what the derived-fact path is built from (exactProjectRevisions in the context tool), and
+  // it is small next to fresh L1 turns. Budget it first, outside the round-robin, so that fresh turns and the other
+  // collections cannot starve it; it is put back at its own place in the list afterwards.
+  let queue: ContextCollections = input;
+  let pinned: { item: ContextItem; index: number; emitted: ContextItem } | null = null;
+  if (options.reserveL2Timeline) {
+    // Evidence refs are attached after the capsule is built, so the layer is the only marker available here.
+    const index = input.projectMemory.findIndex((item) => item.provenance?.memoryLayer === "L2");
+    // Already reached by the first rounds of the round-robin in the same order: nothing to protect.
+    if (index > 0) {
+      const allowance = Math.min(options.maxItemContentBytes, remaining);
+      if (allowance >= 256) {
+        const item = input.projectMemory[index]!;
+        const bounded = boundContextItem(item, allowance, { isBrief: options.isBrief, queryTerms: options.queryTerms });
+        pinned = { item, index, emitted: bounded.item };
+        emittedContentBytes += bounded.emittedBytes;
+        remaining -= bounded.emittedBytes;
+        if (bounded.truncated) truncatedItems += 1;
+        decisions.push({
+          collection: "projectMemory",
+          id: item.id,
+          result: bounded.truncated ? "truncated" : "kept",
+          reason: bounded.truncated ? "item_byte_limit" : "within_budget",
+          originalBytes: Buffer.byteLength(item.content, "utf8"),
+          emittedBytes: bounded.emittedBytes
+        });
+        queue = { ...input, projectMemory: input.projectMemory.filter((_, position) => position !== index) };
+      }
+    }
+  }
+
+  while (remaining > 0 && keys.some((key) => (cursor.get(key) ?? 0) < queue[key].length)) {
     let progressed = false;
     for (const key of keys) {
       const index = cursor.get(key) ?? 0;
-      if (index >= input[key].length) continue;
+      if (index >= queue[key].length) continue;
       cursor.set(key, index + 1);
       progressed = true;
-      const item = input[key][index]!;
+      const item = queue[key][index]!;
       const allowance = Math.min(options.maxItemContentBytes, remaining);
       if (allowance < 256) {
-        for (let droppedIndex = index; droppedIndex < input[key].length; droppedIndex += 1) {
-          const dropped = input[key][droppedIndex]!;
+        for (let droppedIndex = index; droppedIndex < queue[key].length; droppedIndex += 1) {
+          const dropped = queue[key][droppedIndex]!;
           decisions.push({
             collection: key,
             id: dropped.id,
@@ -221,8 +259,8 @@ function applyContextBudget(
             emittedBytes: 0
           });
         }
-        droppedItems += input[key].length - index;
-        cursor.set(key, input[key].length);
+        droppedItems += queue[key].length - index;
+        cursor.set(key, queue[key].length);
         continue;
       }
       const bounded = boundContextItem(item, allowance, {
@@ -248,9 +286,9 @@ function applyContextBudget(
 
   for (const key of keys) {
     const index = cursor.get(key) ?? 0;
-    if (index < input[key].length) {
-      for (let droppedIndex = index; droppedIndex < input[key].length; droppedIndex += 1) {
-        const dropped = input[key][droppedIndex]!;
+    if (index < queue[key].length) {
+      for (let droppedIndex = index; droppedIndex < queue[key].length; droppedIndex += 1) {
+        const dropped = queue[key][droppedIndex]!;
         decisions.push({
           collection: key,
           id: dropped.id,
@@ -260,8 +298,12 @@ function applyContextBudget(
           emittedBytes: 0
         });
       }
-      droppedItems += input[key].length - index;
+      droppedItems += queue[key].length - index;
     }
+  }
+
+  if (pinned) {
+    output.projectMemory.splice(Math.min(pinned.index, output.projectMemory.length), 0, pinned.emitted);
   }
 
   return {

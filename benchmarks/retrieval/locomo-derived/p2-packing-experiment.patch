@@ -1,0 +1,95 @@
+diff --git a/src/derived-fact-retrieval.ts b/src/derived-fact-retrieval.ts
+index cfcf5780..3ca81a78 100644
+--- a/src/derived-fact-retrieval.ts
++++ b/src/derived-fact-retrieval.ts
+@@ -186,6 +186,7 @@ export async function retrieveDerivedRevisionEvidence(input: {
+   maxFacts?: number;
+   includeRawEvidence?: boolean;
+   maxRawEvidence?: number;
++  rawEvidenceOrder?: RawEvidenceOrder;
+   expandEventSeries?: boolean;
+   annotateTemporalEvidence?: boolean;
+   temporalEvidenceOnly?: boolean;
+@@ -325,7 +326,8 @@ export async function retrieveDerivedRevisionEvidence(input: {
+       fallbackEvidenceRefs: input.revisions
+         .filter((revision) => revision.layer === "L2")
+         .flatMap((revision) => revision.source_evidence_refs),
+-      maxEvidence: maxRawEvidence
++      maxEvidence: maxRawEvidence,
++      order: input.rawEvidenceOrder
+     });
+     rawEvidence = direct.evidence;
+     directEvidenceRefs = direct.directRefs;
+@@ -452,6 +454,7 @@ async function directEvidenceFromFacts(input: {
+   cachedSourceEvidence: ReadonlyArray<PersistedDerivedFactRevisionIndex["source_evidence"][number]>;
+   fallbackEvidenceRefs: readonly string[];
+   maxEvidence: number;
++  order?: RawEvidenceOrder;
+ }): Promise<{
+   evidence: DerivedEvidenceRetrievalHit[];
+   directRefs: number;
+@@ -542,12 +545,38 @@ async function directEvidenceFromFacts(input: {
+     right.text.length - left.text.length
+   );
+   return {
+-    evidence: ranked.slice(0, input.maxEvidence),
++    evidence: orderRawEvidence(ranked, [...byRef.keys()], input.order).slice(0, input.maxEvidence),
+     directRefs: byRef.size,
+     lexicalFallbackRefs
+   };
+ }
+ 
++/**
++ * "semantic" keeps the query-similarity order over every source turn of the
++ * revision. "cited_first" puts the turns cited by the selected facts first, in
++ * fact-score order; "fused" combines both ranks by reciprocal-rank fusion.
++ */
++export type RawEvidenceOrder = "semantic" | "cited_first" | "fused";
++
++function orderRawEvidence(
++  ranked: DerivedEvidenceRetrievalHit[],
++  citedRefs: readonly string[],
++  order: RawEvidenceOrder = "semantic"
++): DerivedEvidenceRetrievalHit[] {
++  if (order === "semantic" || citedRefs.length === 0) return ranked;
++  const citationRank = new Map(citedRefs.map((ref, index) => [ref, index]));
++  if (order === "cited_first") {
++    const cited = ranked.filter((hit) => citationRank.has(hit.evidence_ref))
++      .sort((left, right) => citationRank.get(left.evidence_ref)! - citationRank.get(right.evidence_ref)!);
++    return [...cited, ...ranked.filter((hit) => !citationRank.has(hit.evidence_ref))];
++  }
++  const fused = ranked.map((hit, semanticRank) => {
++    const citation = citationRank.get(hit.evidence_ref);
++    return { hit, score: 1 / (61 + semanticRank) + (citation === undefined ? 0 : 1 / (61 + citation)) };
++  });
++  return fused.sort((left, right) => right.score - left.score).map((item) => item.hit);
++}
++
+ function captureEventText(event: {
+   user_text?: string;
+   assistant_text?: string;
+diff --git a/src/shell/catalog/context.ts b/src/shell/catalog/context.ts
+index 522f5ccd..ace3da50 100644
+--- a/src/shell/catalog/context.ts
++++ b/src/shell/catalog/context.ts
+@@ -149,6 +149,10 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
+       // Harness only through derived facts. "always" returns the exact turns behind the
+       // selected facts even when the fact bundle already looks sufficient.
+       const rawEvidenceAlways = env("DERIVED_RAW_EVIDENCE")?.trim().toLocaleLowerCase() === "always";
++      const rawOrderRaw = env("DERIVED_RAW_EVIDENCE_ORDER")?.trim().toLocaleLowerCase();
++      const rawEvidenceOrder = rawOrderRaw === "cited_first" || rawOrderRaw === "fused" ? rawOrderRaw : undefined;
++      const rawEvidenceMax = Math.trunc(Number(env("DERIVED_RAW_EVIDENCE_MAX")));
++      const alwaysRawMax = rawEvidenceMax >= 1 && rawEvidenceMax <= 16 ? rawEvidenceMax : 8;
+       let adaptiveEvidence: Array<{ evidence_ref: string; text: string; score: number; matched_terms: string[] }> = [];
+       if (derivedMode) {
+         const baseDerived = await retrieveDerivedRevisionEvidence({
+@@ -177,7 +181,8 @@ export function contextTools(deps: ContextToolDeps): ToolDefinition[] {
+               mode: derivedMode,
+               maxFacts: 12,
+               includeRawEvidence: true,
+-              maxRawEvidence: seriesExpansionNeeded || rawEvidenceAlways ? 8 : pointTemporalNeedsRaw || relativeTemporalQuery ? 4 : 6,
++              maxRawEvidence: rawEvidenceAlways ? alwaysRawMax : seriesExpansionNeeded ? 8 : pointTemporalNeedsRaw || relativeTemporalQuery ? 4 : 6,
++              ...(rawEvidenceOrder ? { rawEvidenceOrder } : {}),
+               ...(temporalQuery ? { annotateTemporalEvidence: true } : {}),
+               ...(pointTemporalQuery ? { bindEventIdentity: true } : {}),
+               ...((pointTemporalNeedsRaw || relativeTemporalQuery) && baseDerived.evidence_sufficiency.status === "sufficient" && !seriesExpansionNeeded

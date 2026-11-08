@@ -186,6 +186,8 @@ export async function retrieveDerivedRevisionEvidence(input: {
   maxFacts?: number;
   includeRawEvidence?: boolean;
   maxRawEvidence?: number;
+  rawEvidenceOrder?: RawEvidenceOrder;
+  rawEvidenceSemanticLead?: number;
   expandEventSeries?: boolean;
   annotateTemporalEvidence?: boolean;
   temporalEvidenceOnly?: boolean;
@@ -195,7 +197,7 @@ export async function retrieveDerivedRevisionEvidence(input: {
   const query = input.query.trim();
   const requestedMode = input.mode ?? derivedFactRetrievalMode();
   const maxFacts = Math.max(1, Math.min(24, Math.trunc(input.maxFacts ?? 8)));
-  const maxRawEvidence = Math.max(0, Math.min(16, Math.trunc(input.maxRawEvidence ?? 4)));
+  const maxRawEvidence = Math.max(0, Math.min(48, Math.trunc(input.maxRawEvidence ?? 4)));
   const factCandidates = input.revisions.flatMap((revision) => factCandidatesForRevision(revision));
 
   let semanticError: string | undefined;
@@ -325,7 +327,9 @@ export async function retrieveDerivedRevisionEvidence(input: {
       fallbackEvidenceRefs: input.revisions
         .filter((revision) => revision.layer === "L2")
         .flatMap((revision) => revision.source_evidence_refs),
-      maxEvidence: maxRawEvidence
+      maxEvidence: maxRawEvidence,
+      order: input.rawEvidenceOrder,
+      semanticLead: input.rawEvidenceSemanticLead
     });
     rawEvidence = direct.evidence;
     directEvidenceRefs = direct.directRefs;
@@ -452,6 +456,8 @@ async function directEvidenceFromFacts(input: {
   cachedSourceEvidence: ReadonlyArray<PersistedDerivedFactRevisionIndex["source_evidence"][number]>;
   fallbackEvidenceRefs: readonly string[];
   maxEvidence: number;
+  order?: RawEvidenceOrder;
+  semanticLead?: number;
 }): Promise<{
   evidence: DerivedEvidenceRetrievalHit[];
   directRefs: number;
@@ -542,10 +548,54 @@ async function directEvidenceFromFacts(input: {
     right.text.length - left.text.length
   );
   return {
-    evidence: ranked.slice(0, input.maxEvidence),
+    evidence: orderRawEvidence(ranked, [...byRef.keys()], input.order, input.semanticLead).slice(0, input.maxEvidence),
     directRefs: byRef.size,
     lexicalFallbackRefs
   };
+}
+
+/**
+ * "semantic" keeps the query-similarity order over every source turn of the
+ * revision. "cited_first" puts the turns cited by the selected facts first, in
+ * fact-score order; "fused" combines both ranks by reciprocal-rank fusion.
+ */
+export type RawEvidenceOrder = "semantic" | "cited_first" | "fused" | "interleave";
+
+function orderRawEvidence(
+  ranked: DerivedEvidenceRetrievalHit[],
+  citedRefs: readonly string[],
+  order: RawEvidenceOrder = "semantic",
+  semanticLead = 0
+): DerivedEvidenceRetrievalHit[] {
+  if (order === "semantic" || citedRefs.length === 0) return ranked;
+  // Keep the first semanticLead turns of the semantic order, then reorder the rest.
+  if (semanticLead > 0) {
+    return [...ranked.slice(0, semanticLead), ...orderRawEvidence(ranked.slice(semanticLead), citedRefs, order)];
+  }
+  const citationRank = new Map(citedRefs.map((ref, index) => [ref, index]));
+  if (order === "cited_first") {
+    const cited = ranked.filter((hit) => citationRank.has(hit.evidence_ref))
+      .sort((left, right) => citationRank.get(left.evidence_ref)! - citationRank.get(right.evidence_ref)!);
+    return [...cited, ...ranked.filter((hit) => !citationRank.has(hit.evidence_ref))];
+  }
+  if (order === "interleave") {
+    // Alternate the best remaining semantic turn and the best remaining cited turn.
+    const cited = ranked.filter((hit) => citationRank.has(hit.evidence_ref))
+      .sort((left, right) => citationRank.get(left.evidence_ref)! - citationRank.get(right.evidence_ref)!);
+    const out: DerivedEvidenceRetrievalHit[] = [];
+    const seen = new Set<string>();
+    for (let i = 0; i < ranked.length; i += 1) {
+      for (const hit of [ranked[i], cited[i]]) {
+        if (hit && !seen.has(hit.evidence_ref)) { seen.add(hit.evidence_ref); out.push(hit); }
+      }
+    }
+    return out;
+  }
+  const fused = ranked.map((hit, semanticRank) => {
+    const citation = citationRank.get(hit.evidence_ref);
+    return { hit, score: 1 / (61 + semanticRank) + (citation === undefined ? 0 : 1 / (61 + citation)) };
+  });
+  return fused.sort((left, right) => right.score - left.score).map((item) => item.hit);
 }
 
 function captureEventText(event: {

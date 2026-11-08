@@ -1,0 +1,990 @@
+{
+ "fresh": [
+  {
+   "id": "LoCoMo:conv-26:32",
+   "conv": "conv-26",
+   "category": 1,
+   "question": "What LGBTQ+ events has Caroline participated in?",
+   "gold": "Pride parade, school speech, support group",
+   "evidence": [
+    "D1:3",
+    "D3:1",
+    "D5:1",
+    "D8:17"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-26:43",
+   "conv": "conv-26",
+   "category": 1,
+   "question": "What kind of art does Caroline make?",
+   "gold": "abstract art",
+   "evidence": [
+    "D11:12",
+    "D11:8",
+    "D9:14"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-26:52",
+   "conv": "conv-26",
+   "category": 1,
+   "question": "What are Melanie's pets' names?",
+   "gold": "Oliver, Luna, Bailey",
+   "evidence": [
+    "D13:4",
+    "D7:18"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-26:55",
+   "conv": "conv-26",
+   "category": 1,
+   "question": "What subject have Caroline and Melanie both painted?",
+   "gold": "Sunsets",
+   "evidence": [
+    "D14:5",
+    "D8:6"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-26:76",
+   "conv": "conv-26",
+   "category": 1,
+   "question": "When did Melanie go on a hike after the roadtrip?",
+   "gold": "19 October 2023",
+   "evidence": [
+    "D18:17"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-30:10",
+   "conv": "conv-30",
+   "category": 2,
+   "question": "When did Gina team up with a local artist for some cool designs?",
+   "gold": "February, 2023",
+   "evidence": [
+    "D5:5"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-30:17",
+   "conv": "conv-30",
+   "category": 1,
+   "question": "Why did Gina decide to start her own clothing store?",
+   "gold": "She always loved fashion trends and finding unique pieces and she lost her job so decided it was time to start her own business.",
+   "evidence": [
+    "D1:3",
+    "D6:8"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-30:27",
+   "conv": "conv-30",
+   "category": 1,
+   "question": "Did Jon and Gina both participate in dance competitions?",
+   "gold": "Yes",
+   "evidence": [
+    "D14:14",
+    "D1:14",
+    "D1:16",
+    "D1:17",
+    "D9:10"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-30:29",
+   "conv": "conv-30",
+   "category": 1,
+   "question": "Which cities has Jon visited?",
+   "gold": "Paris, Rome",
+   "evidence": [
+    "D15:1",
+    "D2:4"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-41:18",
+   "conv": "conv-41",
+   "category": 1,
+   "question": "Who did John go to yoga with?",
+   "gold": "Rob",
+   "evidence": [
+    "D10:1",
+    "D7:16"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-41:21",
+   "conv": "conv-41",
+   "category": 1,
+   "question": "What areas of the U.S. has John been to or is planning to go to?",
+   "gold": "Pacific northwest, east coast",
+   "evidence": [
+    "D11:5",
+    "D12:17"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-41:32",
+   "conv": "conv-41",
+   "category": 1,
+   "question": "What outdoor activities has John done with his colleagues?",
+   "gold": "Hiking, mountaineering",
+   "evidence": [
+    "D16:2",
+    "D18:2"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-41:35",
+   "conv": "conv-41",
+   "category": 1,
+   "question": "What states has Maria vacationed at?",
+   "gold": "Oregon, Florida",
+   "evidence": [
+    "D18:3",
+    "D19:23"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-41:51",
+   "conv": "conv-41",
+   "category": 2,
+   "question": "When did Maria start volunteering at the homeless shelter?",
+   "gold": "Around August 2022",
+   "evidence": [
+    "D27:4"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-41:53",
+   "conv": "conv-41",
+   "category": 2,
+   "question": "When did John help renovate his hometown community center?",
+   "gold": "2022",
+   "evidence": [
+    "D28:11"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-41:58",
+   "conv": "conv-41",
+   "category": 2,
+   "question": "When did Maria get Coco?",
+   "gold": "Two weeks before 11 August 2023",
+   "evidence": [
+    "D30:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-41:7",
+   "conv": "conv-41",
+   "category": 1,
+   "question": "What items des John mention having as a child?",
+   "gold": "A doll, a film camera",
+   "evidence": [
+    "D3:15",
+    "D5:13"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-41:9",
+   "conv": "conv-41",
+   "category": 1,
+   "question": "Who gave Maria's family money when she was younger and her family was going through tough times?",
+   "gold": "Her aunt",
+   "evidence": [
+    "D5:8",
+    "D6:9"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-42:11",
+   "conv": "conv-42",
+   "category": 1,
+   "question": "What is Joanna allergic to?",
+   "gold": "Most reptiles,animals with fur,cockroaches, dairy",
+   "evidence": [
+    "D2:23",
+    "D4:4",
+    "D5:11"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-42:30",
+   "conv": "conv-42",
+   "category": 1,
+   "question": "What kind of writings does Joanna do?",
+   "gold": "Screenplays,books, online blog posts, journal",
+   "evidence": [
+    "D17:14",
+    "D18:1",
+    "D18:5",
+    "D2:3"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-42:39",
+   "conv": "conv-42",
+   "category": 2,
+   "question": "When did Nate attend a cooking show?",
+   "gold": "The Monday before 14September, 2022",
+   "evidence": [
+    "D21:4"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-42:47",
+   "conv": "conv-42",
+   "category": 1,
+   "question": "What places has Nate met new people?",
+   "gold": "A tournament and agaming convention.",
+   "evidence": [
+    "D14:8",
+    "D23:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-42:61",
+   "conv": "conv-42",
+   "category": 1,
+   "question": "What mediums does Nate use to play games?",
+   "gold": "Gamecube, PC,Playstation.",
+   "evidence": [
+    "D22:2",
+    "D27:15",
+    "D27:21"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-42:70",
+   "conv": "conv-42",
+   "category": 1,
+   "question": "What activities does Nate do with his turtles?",
+   "gold": "takes them onwalks, holds them,feeds themstrawberries, givesthem baths.",
+   "evidence": [
+    "D25:21",
+    "D25:23",
+    "D28:31"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-42:81",
+   "conv": "conv-42",
+   "category": 1,
+   "question": "What recipes has Joanna made?",
+   "gold": "dairy free vanilla cake with strawberry filling and coconut cream frosting, parfait, strawberry chocolate cake, chocolate coconut cupcakes, chocolate raspberry tart, chocolate cake with raspberries, blueberry cheesecake bars",
+   "evidence": [
+    "D10:11",
+    "D10:9",
+    "D19:8",
+    "D20:10",
+    "D20:2",
+    "D21:11",
+    "D21:17",
+    "D21:3",
+    "D22:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-43:0",
+   "conv": "conv-43",
+   "category": 1,
+   "question": "what are John's goals with regards to his basketball career?",
+   "gold": "improve shooting percentage, win a championship",
+   "evidence": [
+    "D11:17",
+    "D1:9",
+    "D6:15"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-43:1",
+   "conv": "conv-43",
+   "category": 1,
+   "question": "What are John's goals for his career that are not related to his basketball skills?",
+   "gold": "get endorsements, build his brand, do charity work",
+   "evidence": [
+    "D11:17",
+    "D6:15"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-43:11",
+   "conv": "conv-43",
+   "category": 1,
+   "question": "What sports does John like besides basketball?",
+   "gold": "surfing",
+   "evidence": [
+    "D1:7",
+    "D2:14",
+    "D3:1",
+    "D3:25"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-43:2",
+   "conv": "conv-43",
+   "category": 1,
+   "question": "What items does John collect?",
+   "gold": "sneakers, fantasy movie DVDs, jerseys",
+   "evidence": [
+    "D12:18",
+    "D1:15",
+    "D27:20"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-43:30",
+   "conv": "conv-43",
+   "category": 1,
+   "question": "Which cities has John been to?",
+   "gold": "Seattle, Chicago, New York, and Paris.",
+   "evidence": [
+    "D27:36",
+    "D3:19",
+    "D6:3",
+    "D9:6"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-43:42",
+   "conv": "conv-43",
+   "category": 1,
+   "question": "What has John cooked?",
+   "gold": "Soup, a slow cooker meal, and honey garlic chicken with roasted veg.",
+   "evidence": [
+    "D10:4",
+    "D15:30",
+    "D15:31",
+    "D15:32"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-43:52",
+   "conv": "conv-43",
+   "category": 1,
+   "question": "What does John do to supplement his basketball training?",
+   "gold": "Yoga, strength training",
+   "evidence": [
+    "D20:2",
+    "D8:5"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-43:58",
+   "conv": "conv-43",
+   "category": 2,
+   "question": "When did John attend the Harry Potter trivia?",
+   "gold": "August 2023.",
+   "evidence": [
+    "D22:2",
+    "D4:8"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-43:69",
+   "conv": "conv-43",
+   "category": 2,
+   "question": "When will Tim leave for Ireland?",
+   "gold": "February, 2024",
+   "evidence": [
+    "D28:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-43:7",
+   "conv": "conv-43",
+   "category": 1,
+   "question": "Which geographical locations has Tim been to?",
+   "gold": "California, London, the Smoky Mountains",
+   "evidence": [
+    "D14:16",
+    "D1:18",
+    "D3:2"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-43:9",
+   "conv": "conv-43",
+   "category": 1,
+   "question": "Which endorsement deals has John been offered?",
+   "gold": "basketball shoes and gear deal with Nike, potential sponsorship with Gatorade, Moxie a popular beverage company, outdoor gear company",
+   "evidence": [
+    "D25:2",
+    "D29:4",
+    "D3:13",
+    "D3:15"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-44:1",
+   "conv": "conv-44",
+   "category": 2,
+   "question": "When did Andrew start his new job as a financial analyst?",
+   "gold": "The week before March 27, 2023",
+   "evidence": [
+    "D1:2"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-44:23",
+   "conv": "conv-44",
+   "category": 1,
+   "question": "What are some problems that Andrew faces before he adopted Toby?",
+   "gold": "Finding the right dog and pet-friendly apartments close to open spaces",
+   "evidence": [
+    "D2:12",
+    "D5:3",
+    "D5:5",
+    "D5:7"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-44:24",
+   "conv": "conv-44",
+   "category": 1,
+   "question": "Did Audrey and Andrew grow up with a pet dog?",
+   "gold": "Yes",
+   "evidence": [
+    "D13:10",
+    "D2:16"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-44:25",
+   "conv": "conv-44",
+   "category": 2,
+   "question": "When did Andrew and his girlfriend go fishing?",
+   "gold": "weekend before August 24, 2023",
+   "evidence": [
+    "D17:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-44:39",
+   "conv": "conv-44",
+   "category": 1,
+   "question": "What did Audrey get wtih having so many dogs?",
+   "gold": "Companionship",
+   "evidence": [
+    "D23:18",
+    "D2:15"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-44:40",
+   "conv": "conv-44",
+   "category": 1,
+   "question": "What is a good place for dogs to run around freely and meet new friends?",
+   "gold": "The dog park",
+   "evidence": [
+    "D14:2",
+    "D23:10",
+    "D4:25"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-44:48",
+   "conv": "conv-44",
+   "category": 1,
+   "question": "What does Andrew view his pets as?",
+   "gold": "Family",
+   "evidence": [
+    "D15:14",
+    "D28:18"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-44:49",
+   "conv": "conv-44",
+   "category": 1,
+   "question": "What does Audrey view her pets as?",
+   "gold": "Family",
+   "evidence": [
+    "D15:15",
+    "D23:18"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-44:50",
+   "conv": "conv-44",
+   "category": 1,
+   "question": "What is a skill that Audrey learned to take care of her dogs?",
+   "gold": "Grooming",
+   "evidence": [
+    "D16:2",
+    "D17:4"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-47:2",
+   "conv": "conv-47",
+   "category": 1,
+   "question": "Which places or events have John and James planned to meet at?",
+   "gold": "VR Club, McGee's, baseball game",
+   "evidence": [
+    "D1:36",
+    "D21:15",
+    "D23:5",
+    "D23:6"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-47:34",
+   "conv": "conv-47",
+   "category": 1,
+   "question": "Which countries did James visit in July 2022?",
+   "gold": "Canada, Greenland",
+   "evidence": [
+    "D16:9",
+    "D17:22"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-47:39",
+   "conv": "conv-47",
+   "category": 2,
+   "question": "When did John start his job in IT?",
+   "gold": "2019",
+   "evidence": [
+    "D18:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-47:41",
+   "conv": "conv-47",
+   "category": 2,
+   "question": "When did James meet Samantha?",
+   "gold": "August 9, 2022",
+   "evidence": [
+    "D19:12"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-47:45",
+   "conv": "conv-47",
+   "category": 1,
+   "question": "What kind of beer does McGee's bar serve?",
+   "gold": "Stout, lager",
+   "evidence": [
+    "D21:15",
+    "D21:17",
+    "D23:3"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-47:48",
+   "conv": "conv-47",
+   "category": 2,
+   "question": "When did James, Samantha and John go to the baseball game together?",
+   "gold": "September 11, 2022",
+   "evidence": [
+    "D23:5",
+    "D23:6"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-47:51",
+   "conv": "conv-47",
+   "category": 1,
+   "question": "Which new games did John start play during the course of the conversation with James?",
+   "gold": "AC Valhalla, Witcher 3, FIFA 23, Dungeons of the Dragons, futuristic dystopian game",
+   "evidence": [
+    "D19:7",
+    "D24:1",
+    "D24:3",
+    "D30:14",
+    "D5:4",
+    "D8:20"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-47:65",
+   "conv": "conv-47",
+   "category": 2,
+   "question": "When did James and his family visit Mark and Josh?",
+   "gold": "November 7, 2022",
+   "evidence": [
+    "D31:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-47:9",
+   "conv": "conv-47",
+   "category": 1,
+   "question": "What are the names of James's dogs?",
+   "gold": "Ned, Daisy, Max",
+   "evidence": [
+    "D1:14",
+    "D5:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-48:10",
+   "conv": "conv-48",
+   "category": 2,
+   "question": "When was Deborah's parents' wedding?",
+   "gold": "in 1993",
+   "evidence": [
+    "D2:3"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-48:24",
+   "conv": "conv-48",
+   "category": 1,
+   "question": "What new yoga poses did Deborah try?",
+   "gold": "Warrior II, Dancer Pose (Natarajasana), Tree pose",
+   "evidence": [
+    "D14:15",
+    "D14:3",
+    "D4:14"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-48:39",
+   "conv": "conv-48",
+   "category": 1,
+   "question": "What time management techniques do Deborah and Jolene use?",
+   "gold": "the Pomodoro Technique - 25 minutes work and 5-minute break, scheduler or to-do list, The Eisenhower Matrix, bullet journal",
+   "evidence": [
+    "D10:13",
+    "D10:4",
+    "D10:5",
+    "D10:6",
+    "D18:3"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-48:4",
+   "conv": "conv-48",
+   "category": 2,
+   "question": "When did Jolene's mom gift her a pendant?",
+   "gold": "in 2010",
+   "evidence": [
+    "D1:8"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-48:44",
+   "conv": "conv-48",
+   "category": 2,
+   "question": "When did Deborah go to an art show with Anna?",
+   "gold": "on 9 April, 2023",
+   "evidence": [
+    "D12:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-48:68",
+   "conv": "conv-48",
+   "category": 2,
+   "question": "When did Deborah visit Brazil?",
+   "gold": "2020",
+   "evidence": [
+    "D23:18"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-48:7",
+   "conv": "conv-48",
+   "category": 2,
+   "question": "Which country were Jolene and her mother visiting in 2010?",
+   "gold": "France",
+   "evidence": [
+    "D1:8"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-48:73",
+   "conv": "conv-48",
+   "category": 1,
+   "question": "Did Jolene teach herself how to play the console?",
+   "gold": "yes",
+   "evidence": [
+    "D24:8",
+    "D2:28"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-48:78",
+   "conv": "conv-48",
+   "category": 2,
+   "question": "Where did Jolene and her partner spend most of September 2023?",
+   "gold": "Phuket",
+   "evidence": [
+    "D2:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-48:79",
+   "conv": "conv-48",
+   "category": 1,
+   "question": "Has Deborah tried surfing?",
+   "gold": "yes",
+   "evidence": [
+    "D28:11",
+    "D29:25"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-48:80",
+   "conv": "conv-48",
+   "category": 1,
+   "question": "Has Jolene tried surfing?",
+   "gold": "no",
+   "evidence": [
+    "D10:20",
+    "D29:26",
+    "D29:30"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-48:88",
+   "conv": "conv-48",
+   "category": 1,
+   "question": "What activities does Deborah pursue besides practicing and teaching yoga?",
+   "gold": "biking, going to art shows, running, organizing workshops to practice mindfulness and self-care, surfing, gardening",
+   "evidence": [
+    "D12:1",
+    "D15:1",
+    "D15:11",
+    "D28:11",
+    "D29:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-49:21",
+   "conv": "conv-49",
+   "category": 1,
+   "question": "How does Evan describe the woman and his feelings for her that he met in Canada?",
+   "gold": "He says she's cool, incredible, like something out of a movie, and that he feels alive around her. Every moment with her is fun and energetic, also Evan feels really lucky to have someone who gets him.",
+   "evidence": [
+    "D23:3",
+    "D5:1",
+    "D5:3"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-49:24",
+   "conv": "conv-49",
+   "category": 2,
+   "question": "What significant event happened in Sam's life towards the end of summer 2023?",
+   "gold": "He fell in love with a Canadian woman",
+   "evidence": [
+    "D5:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-49:36",
+   "conv": "conv-49",
+   "category": 1,
+   "question": "What kind of foods or recipes has Sam recommended to Evan?",
+   "gold": "grilled vegetables, grilled chicken and veggie stir-fry, poutine",
+   "evidence": [
+    "D23:26",
+    "D7:8",
+    "D8:7"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-49:45",
+   "conv": "conv-49",
+   "category": 2,
+   "question": "Which places in Canada was Evan visiting in July 2023?",
+   "gold": "Banff, Rocky Mountains",
+   "evidence": [
+    "D8:27",
+    "D9:10",
+    "D9:8"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-49:49",
+   "conv": "conv-49",
+   "category": 1,
+   "question": "Who was injured in Evan's family?",
+   "gold": "Evan's son and Evan himself",
+   "evidence": [
+    "D11:2",
+    "D11:3",
+    "D7:1",
+    "D7:10",
+    "D7:9",
+    "D9:2"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-49:50",
+   "conv": "conv-49",
+   "category": 1,
+   "question": "What kind of hobbies does Evan pursue?",
+   "gold": "painting, hiking, reading books, biking, skiing, snowboarding, ice skating, swimming, camping, kayaking",
+   "evidence": [
+    "D1:14",
+    "D1:6",
+    "D25:10",
+    "D25:8",
+    "D4:8",
+    "D6:1",
+    "D8:30",
+    "D9:6"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-49:55",
+   "conv": "conv-49",
+   "category": 1,
+   "question": "What recurring adventure does Evan have with strangers?",
+   "gold": "Helping lost tourists and experiencing unexpected adventures in the city.",
+   "evidence": [
+    "D11:6",
+    "D14:2"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-49:60",
+   "conv": "conv-49",
+   "category": 2,
+   "question": "Which new activity does Sam take up in October 2023?",
+   "gold": "kayaking",
+   "evidence": [
+    "D13:8"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-49:64",
+   "conv": "conv-49",
+   "category": 1,
+   "question": "Which ailment does Sam have to face due to his weight?",
+   "gold": "gastritis",
+   "evidence": [
+    "D12:1",
+    "D14:1",
+    "D2:6",
+    "D7:2"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-49:73",
+   "conv": "conv-49",
+   "category": 2,
+   "question": "When is Evan planning a big family reunion?",
+   "gold": "Summer 2024",
+   "evidence": [
+    "D19:11"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-49:82",
+   "conv": "conv-49",
+   "category": 1,
+   "question": "What is a stress reliever for Sam?",
+   "gold": "Unhealthy snacks, sweets, yoga, places with beautiful views",
+   "evidence": [
+    "D10:6",
+    "D13:2",
+    "D13:4",
+    "D16:17",
+    "D16:23",
+    "D18:8"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-50:15",
+   "conv": "conv-50",
+   "category": 1,
+   "question": "Why does Dave regularly visit parks?",
+   "gold": "because it relaxes and calms him",
+   "evidence": [
+    "D1:16",
+    "D8:4"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-50:23",
+   "conv": "conv-50",
+   "category": 1,
+   "question": "What is Dave's main passion?",
+   "gold": "auto engineering",
+   "evidence": [
+    "D13:3",
+    "D3:12",
+    "D4:5",
+    "D5:5"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-50:24",
+   "conv": "conv-50",
+   "category": 1,
+   "question": "Can Dave work with engines?",
+   "gold": "yes",
+   "evidence": [
+    "D13:7",
+    "D20:1",
+    "D22:5"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-50:46",
+   "conv": "conv-50",
+   "category": 1,
+   "question": "What is Dave's favorite activity?",
+   "gold": "Restoring cars",
+   "evidence": [
+    "D19:7",
+    "D21:4",
+    "D22:7"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-50:50",
+   "conv": "conv-50",
+   "category": 2,
+   "question": "When did Calvin buy his second Ferrari?",
+   "gold": "first week of October 2023",
+   "evidence": [
+    "D23:16"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-50:55",
+   "conv": "conv-50",
+   "category": 2,
+   "question": "When did Calvin visit some of the sights in Boston with a former high school friend?",
+   "gold": "October 24, 2023",
+   "evidence": [
+    "D26:1"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-50:6",
+   "conv": "conv-50",
+   "category": 1,
+   "question": "Which types of cars does Dave like the most?",
+   "gold": "classic vintage cars",
+   "evidence": [
+    "D1:2",
+    "D3:12",
+    "D4:5",
+    "D4:7"
+   ]
+  },
+  {
+   "id": "LoCoMo:conv-50:66",
+   "conv": "conv-50",
+   "category": 1,
+   "question": "Do all of Dave's car restoration projects go smoothly?",
+   "gold": "No",
+   "evidence": [
+    "D13:7",
+    "D20:1",
+    "D25:17",
+    "D27:10"
+   ]
+  }
+ ]
+}

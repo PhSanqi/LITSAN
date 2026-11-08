@@ -7,6 +7,7 @@ export type TurnKnowledgeKind = "L1" | "L2" | "L3" | "L4" | "GlobalState" | "arc
 
 export interface TurnKnowledgePassage {
   heading?: string;
+  evidence_ref?: string;
   text: string;
   matched_terms: string[];
   score: number;
@@ -141,6 +142,10 @@ export interface BuildTurnKnowledgePlanInput {
   detail?: "brief" | "full";
   dedupe?: boolean;
   adaptiveEvidence?: readonly AdaptiveEvidenceCandidate[];
+  /** Upper bound on supporting entries when adaptive evidence is present (default 8). */
+  maxAdaptiveSupportingEntries?: number;
+  /** Emit plain adaptive raw turns as one entry whose passages carry their own evidence_ref. */
+  compactAdaptiveEvidence?: boolean;
   policy?: Partial<TurnKnowledgePolicy>;
 }
 
@@ -339,12 +344,22 @@ export async function buildTurnKnowledgePlan(input: BuildTurnKnowledgePlanInput)
     }));
   }
 
+  const compactRaw: TurnKnowledgePassage[] = [];
   for (const candidate of input.adaptiveEvidence ?? []) {
     const text = candidate.text.trim();
     if (!text || !candidate.evidence_ref.trim()) continue;
     const eventFamilyTemporal = text.startsWith("[Event family ");
     const normalizedTemporal = text.startsWith("[Event series temporal normalization:");
     const structuralTemporal = eventFamilyTemporal || normalizedTemporal;
+    if (input.compactAdaptiveEvidence && !structuralTemporal) {
+      compactRaw.push({
+        evidence_ref: candidate.evidence_ref,
+        text: boundText(text, Math.max(policy.maxPassageChars, 1200)),
+        matched_terms: [],
+        score: Math.round(Math.max(0, candidate.score) * 100)
+      });
+      continue;
+    }
     supporting.push({
       role: "supporting",
       kind: "L1",
@@ -355,12 +370,23 @@ export async function buildTurnKnowledgePlan(input: BuildTurnKnowledgePlanInput)
         ? eventFamilyTemporal
           ? "Bounded exact L1 temporal event-family evidence. Use the grouped members together for order, interval or window reasoning; it remains supporting evidence and does not override Current Truth."
           : "Bounded exact L1 evidence with source-grounded temporal normalization. Use the normalized time together with the raw statement; it remains supporting evidence and does not override Current Truth."
-        : "Exact raw evidence admitted only because the derived fact bundle was not sufficient. Use it to ground missing details without overriding Current Truth.",
+        : "Exact raw evidence behind the selected derived facts. Use it to ground details the facts leave out, without overriding Current Truth.",
       passages: [{
         text: boundText(text, Math.max(policy.maxPassageChars, 1200)),
         matched_terms: (candidate.matched_terms ?? []).slice(0, 16),
         score: Math.max(0, candidate.score) * 100
       }]
+    });
+  }
+
+  if (compactRaw.length > 0) {
+    supporting.push({
+      role: "supporting",
+      kind: "L1",
+      id: "adaptive:raw-evidence",
+      reason: "adaptive_evidence_hydration",
+      use: "Exact raw turns behind the selected derived facts, plus the closest matching source turns; each passage names its evidence_ref. Use them to ground details the facts leave out, without overriding Current Truth.",
+      passages: compactRaw
     });
   }
 
@@ -442,7 +468,8 @@ export async function buildTurnKnowledgePlan(input: BuildTurnKnowledgePlanInput)
   );
   const boundedRequired = required.slice(0, policy.maxRequiredEntries);
   const supportingLimit = input.adaptiveEvidence?.length
-    ? Math.max(policy.maxSupportingEntries, Math.min(8, policy.maxSupportingEntries + input.adaptiveEvidence.length))
+    ? Math.max(policy.maxSupportingEntries, Math.min(Math.max(8, Math.min(24, Math.trunc(input.maxAdaptiveSupportingEntries ?? 8))),
+      policy.maxSupportingEntries + input.adaptiveEvidence.length))
     : policy.maxSupportingEntries;
   const boundedSupporting = dedupeSupportingPassages(
     boundedRequired,
