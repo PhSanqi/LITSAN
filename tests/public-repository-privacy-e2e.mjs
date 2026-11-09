@@ -48,6 +48,10 @@ const sensitivePathHashes = new Set([
   "ffad357d4c282b5022a7b597371f9c04c967a1a25a31a7c0e2ed305e6dfa98e6"
 ]);
 const email = /[A-Za-z0-9._%+-]+@([A-Za-z0-9.-]+\.[A-Za-z]{2,})/g;
+// RFC 2606 / RFC 6761 reserved names: these can never be real mailboxes.
+const reservedEmailDomain = (domain) =>
+  ["example.com", "example.net", "example.org"].includes(domain) ||
+  /(^|\.)(test|invalid|example|localhost)$/.test(domain);
 const violations = [];
 const digest = (value) => createHash("sha256").update(value.toLocaleLowerCase()).digest("hex");
 const sensitiveToken = (value) => {
@@ -93,7 +97,7 @@ for (const file of tracked) {
   if (!file.startsWith("vendor/")) {
     for (const match of text.matchAll(email)) {
       const domain = match[1].toLowerCase();
-      if (domain !== "example.com" && domain !== "example.org") {
+      if (!reservedEmailDomain(domain)) {
         violations.push(`${file}: non-example email domain ${domain}`);
       }
     }
