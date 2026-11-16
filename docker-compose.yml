@@ -1,0 +1,28 @@
+# LITSAN in Docker: Memory Core + MCP gateway with persistent state in a volume.
+#   docker compose up -d --build
+#   MCP:    http://127.0.0.1:13001/mcp
+#   health: http://127.0.0.1:13001/memhub/health
+# Host port 13001 avoids a natively installed LITSAN on 3001; change LITSAN_HOST_PORT to taste.
+name: litsan
+services:
+  litsan:
+    build: .
+    image: litsan:local
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    environment:
+      # Read on the first start of an empty volume only (stored in /data/memhub.env).
+      LITSAN_USERNAME: ${LITSAN_USERNAME:-local}
+      LITSAN_EMAIL: ${LITSAN_EMAIL:-}
+      LITSAN_PUBLIC_HOST: ${LITSAN_PUBLIC_HOST:-}
+      # Optional retrieval switches, read on every start, e.g. semantic derived-fact retrieval:
+      # LITSAN_DERIVED_FACT_RETRIEVAL: semantic
+    ports:
+      # Loopback only: every connection through this port is a trusted local client.
+      - "127.0.0.1:${LITSAN_HOST_PORT:-13001}:3001"
+    volumes:
+      - litsan-data:/data
+
+volumes:
+  litsan-data:

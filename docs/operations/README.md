@@ -7,5 +7,6 @@ LITSAN (formerly Memhub). Legacy `MEMHUB_*` / `MEMMY_*` environment variables st
 - [Remote authentication](remote-auth.md)
 - [Cloudflare Tunnel](cloudflare-tunnel.md)
 - [Memory Core migration](migration.md)
+- [Docker (multi-arch container) / Docker 多架构容器](docker.md)
 
 Server deployments choose their own authenticated public hostname. Examples use `memory.example.com`.

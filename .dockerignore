@@ -1,0 +1,19 @@
+# Build context = sources only; dependencies and build output are produced in the image.
+**/node_modules
+dist
+.tsbuild
+.git
+.github
+.review-runtime
+runtime-releases
+release
+recovery
+_public-site
+.memhub
+benchmarks
+research
+tests
+**/*.log
+**/*.sqlite*
+.env
+.env.*

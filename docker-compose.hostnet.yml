@@ -1,0 +1,14 @@
+# Override for hosts where Docker has no usable bridge network (e.g. daemon.json
+# "bridge": "none", or no free address pool): share the host network instead.
+#   docker compose -f docker-compose.yml -f docker-compose.hostnet.yml up -d
+# Every port then lives on the host, so all three are moved off the defaults of a
+# native LITSAN install (3001/18960) and the MCP listener stays on loopback.
+services:
+  litsan:
+    network_mode: host
+    ports: !reset []
+    environment:
+      LITSAN_LISTEN_HOST: 127.0.0.1
+      LITSAN_LISTEN_PORT: ${LITSAN_HOST_PORT:-13001}
+      LITSAN_GATEWAY_INTERNAL_PORT: ${LITSAN_HOSTNET_GATEWAY_PORT:-23101}
+      LITSAN_CORE_PORT: ${LITSAN_HOSTNET_CORE_PORT:-28960}
